@@ -3,17 +3,47 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: PostgreSQL 读书笔记 | PostgreSQL DBA</title>
+  <title>《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="https://dreamer-yzy.github.com/tags/PostgreSQL-读书笔记/">
+  <meta name="description" content="主要解决的问题
+如何找出SQL语句等价的变换形式，使得SQL执行更高效。
+可优化的思路
+（1）子句局部优化。
+如等价谓词重写，WHERE和HAVING条件化简中的大部分情况。
+
+（2）子句间关联优化。
+子句与子句之间关联的语义存在优化的可能，如外连接消除、连接消除、子查询优化、视图重写等。
+
+（3）局部与整体的优化。
+协同局部与整体。如OR重写并集规则需要考虑UNION操作（UNION是变换后的整">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记">
+<meta property="og:url" content="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="主要解决的问题
+如何找出SQL语句等价的变换形式，使得SQL执行更高效。
+可优化的思路
+（1）子句局部优化。
+如等价谓词重写，WHERE和HAVING条件化简中的大部分情况。
+
+（2）子句间关联优化。
+子句与子句之间关联的语义存在优化的可能，如外连接消除、连接消除、子查询优化、视图重写等。
+
+（3）局部与整体的优化。
+协同局部与整体。如OR重写并集规则需要考虑UNION操作（UNION是变换后的整">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记">
+<meta name="twitter:description" content="主要解决的问题
+如何找出SQL语句等价的变换形式，使得SQL执行更高效。
+可优化的思路
+（1）子句局部优化。
+如等价谓词重写，WHERE和HAVING条件化简中的大部分情况。
+
+（2）子句间关联优化。
+子句与子句之间关联的语义存在优化的可能，如外连接消除、连接消除、子查询优化、视图重写等。
+
+（3）局部与整体的优化。
+协同局部与整体。如OR重写并集规则需要考虑UNION操作（UNION是变换后的整">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -67,140 +97,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-《数据库查询优化器的艺术》第三章物理查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" class="article-date">
-  <time datetime="2014-12-03T14:09:15.000Z" itemprop="datePublished">12月 3 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/">《数据库查询优化器的艺术》第三章物理查询优化学习笔记</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="代价模型">代价模型</h1>
-<pre><code>总代价 = IO 代价 + <span class="built_in">CPU</span> 代价
-COST = P * a_page_cpu_time + W * T
-
-P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
-T：访问的元组。反映了<span class="built_in">CPU</span>花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是<span class="built_in">CPU</span>）。如果是索引扫描，则还会包括索引读取的花费。
-W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，又称选择率（selectivity）。选择率用于表示在关系R中，满足条件“A&lt;op&gt;a”的元组数与R的所有元组N的比值。
-</code></pre><h1 id="单表扫描算法">单表扫描算法</h1>
-<pre><code>全表扫描，局部扫描。单表扫描与IO操作密切相关。
-
-1）顺序扫描（SeqScan）。当无索引可用，或访问表中的大部分数据，或表的数据量很小时，使用顺序扫描效果较好。
-
-2）索引扫描（IndexScan）。根据索引键读索引，找出物理元组的位置。【如果选择率很高，不适宜使用索引扫描】
-
-3）只读索引扫描（IndexOnlyScan）。根据索引键读索引，索引中的数据能够满足条件判断，不需要读取数据页面。比索引扫描少了读取数据的IO花费。
-
-4）行扫描（RowIdScan）。用于直接定位表中的某一行。对于元组，通常为元组增加特殊的列，通过特殊的列计算出元组r物理位置，然后直接读取元组对应的页面，获取元组。在PostgreSQL中称为【Tid】扫描，此种方式是在元组头上增加名为【CTID】的列，用这列的值可直接计算本条元组的物理存储位置。
-
-5）并行表扫描（ParallelTableScan）。对同一个表，并行地、通过顺序的方式获取表的数据，结果是得到一个完整的表数据。
-
-6）并行索引扫描（ParallelIndexScan）。对同一个表，并行地、通过索引的方式获取表的数据，将结果合并在一起。
-
-7）组合多个索引扫描（MultipleIndexScan）。
-</code></pre><h1 id="顺序扫描代价估算公式">顺序扫描代价估算公式</h1>
-<pre><code>COST = N_page <span class="keyword">*</span> a_tuple_IO_time + N_tuple <span class="keyword">*</span> a_tuple_CPU_time
-</code></pre><h1 id="索引扫描代价估算公式">索引扫描代价估算公式</h1>
-<pre><code><span class="constant">COST</span> = C_index + N_page_index * a_tuple_IO_time
-<span class="constant">C_index：索引的IO花费。C_index</span> = N_page_index * a_page_IO_time
-<span class="constant">N_page_index：索引作用下的可用元组数。N_page_index</span> = N_tuple * 索引选择率
-</code></pre><h1 id="索引">索引</h1>
-<pre><code>本质上是通过索引直接定位表的物理元组，加快数据获取的方式，所以索引优化的手段是物理查询优化。
-</code></pre><h1 id="如何利用索引">如何利用索引</h1>
-<pre><code><span class="number">1</span>）索引列作为条件出现在 <span class="keyword">WHERE</span>，HAVING， <span class="keyword">ON</span> 子句中。
-
-<span class="number">2</span>）索引列是被连接的表（内表）对象的列且存在于连接条件中
-
-除了上述两种情况，还有一些特殊情况可以使用索引，如：排序操作、在索引列上求<span class="keyword">MIN</span>、<span class="keyword">MAX</span>值等。
-</code></pre><p>（1）对表做查询，没有列对应作为过滤条件（如出现在WHERE子句中），只能做顺序扫描。</p>
-<p>（2）对表做查询，有列对象且索引列作为过滤条件，可做索引扫描。</p>
-<p>（3）对表做查询，有列对象作为过滤条件，但索引列被运算符“-”处理，查询优化器不能在执行前进行取反运算，这时不可利用索引扫描，只能做顺序扫描。</p>
-<p>（4）对表做查询，有列对象作为过滤条件，且目标列没有超出索引列，可做只读索引扫描，这种扫描方式比单纯的索引扫描的效率更高。</p>
-<p>（5）对表做查询，有索引存在，但选择条件不包括索引列对象，只能使用顺序扫描。</p>
-<p>（6）对表做查询，有索引存在，选择条件包括索引列对象，可使用索引扫描，对选择条件中不存在索引的列作为过滤器被使用。</p>
-<p>（7）对表做查询，有索引存在，选择条件包括索引列对象，但索引列对象位于一个表达式中，参与了运算，不是“key=常量”格式，则索引不可使用，只能是顺序扫描。如：<br>    select a.<em> from a where a.a1 + a.a3 = 2；（a1列是索引），这时只能做顺序扫描。<br>    或<br>    select a.</em> from a where a.a1 = 2 - a.a3 ；（a1列是索引），这时只能做顺序扫描。</p>
-<p>（8）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &gt; 或 &lt; ，可做索引扫描。</p>
-<p>（9）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &lt;&gt; ，不可做索引扫描。</p>
-<p>（10）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符BETWEEN-AND ，可做索引扫描。</p>
-<h1 id="索引列的位置对使用索引的影响">索引列的位置对使用索引的影响</h1>
-<pre><code>（<span class="number">1</span>）索引列出现在目标列，通常不可使用索引（但不是全部情况下不能使用索引）
-
-（<span class="number">2</span>）聚集函数<span class="keyword">MIN</span> <span class="subst">/</span> <span class="keyword">MAX</span>用在索引列上，出现在目标列，可使用索引。
-
-（<span class="number">3</span>）索引列出现在<span class="keyword">WHERE</span>子句中，可使用索引。
-
-（<span class="number">4</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为连接条件，有时不可使用索引。（这取决于代价估算模型）
-
-（<span class="number">5</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为限制条件满足“key <span class="subst">&lt;</span>op<span class="subst">&gt;</span> 常量 ”格式可用索引。
-
-（<span class="number">6</span>）（<span class="number">5</span>）索引列出现在 <span class="keyword">WHERE</span>子句中，但与子查询比较，格式上不满足<span class="string">"key &lt;op&gt; 常量"</span>，不可用索引。
-</code></pre><h1 id="索引列对GROUP_BY子句的影响">索引列对GROUP BY子句的影响</h1>
-<pre><code>（<span class="number">1</span>）索引列出现在 <span class="keyword">group</span> <span class="keyword">by</span> 子句中，不触发索引扫描。
-
-（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现索引列，【且】<span class="keyword">GROUP</span> <span class="keyword">BY</span> 子句出现索引列，索引扫描被使用。
-
-（<span class="number">3</span>）<span class="keyword">WHERE</span>子句中出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>子句出现索引列，索引扫描不被使用。
-</code></pre><h1 id="索引列对HAVING子句的影响">索引列对HAVING子句的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>和HAVING子句出现索引列，索引扫描被使用。
-</code></pre><h1 id="索引列对ORDER_BY子句的影响">索引列对ORDER BY子句的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句出现索引列，可使用索引。
-
-（<span class="number">2</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句使用非索引列，不可使用索引扫描。
-</code></pre><h1 id="索引列对_DISTINCT_的影响">索引列对 DISTINCT 的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">DISTINCT</span> 子句管辖范围内出现索引列，不可使用索引。
-</code></pre><h1 id="联合索引对索引使用的影响">联合索引对索引使用的影响</h1>
-<pre><code><span class="input"><span class="prompt">（1）使用联合索引的全部索引键，可触发索引的使用。
-
-（2）使用联合索引的前缀部分索引键。如：key_part_1 &lt;op&gt;</span> 常量。可触发索引的使用。</span>
-<span class="input"><span class="prompt">
-（3）使用部分索引，但不是联合索引的前缀部分，如“key_part_2 &lt;op&gt;</span> 常量<span class="string">"，不可触发索引的使用。
-
-（4）使用索引索引的全部索引键，但索引键不是AND操作，不可触发索引的使用。</span></span>
-</code></pre><h1 id="多个索引对索引使用的影响">多个索引对索引使用的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引，优选最简单的索引。（但这也是要根据代价估算模型来决定的）
-
-（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引且索引键有重叠部分，优选最简单的索引。
-</code></pre><h1 id="聚簇索引">聚簇索引</h1>
-<blockquote>
-<p>是指表的一个或多个列作为索引的关键字，以关键字的具体值为依据，把所有具有相同值的元组连续放在外存上。当从磁盘扫描读取的块进入内存时，相同值的其他元组在内存中的概率增大，能有效减少IO。即：聚簇索引确定表中数据的物理顺序。聚簇索引对于那些经常要搜索范围值的列特别有效。使用聚簇索引找到包含第一个值的行后，便可以确保包含后续索引值的行在物理相邻。</p>
-</blockquote>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="s0k9kxisikyoh19h" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" class="article-date">
   <time datetime="2014-12-03T14:05:59.000Z" itemprop="datePublished">12月 3 2014</time>
@@ -217,8 +114,8 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/">《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记</a>
+    <h1 class="article-title" itemprop="name">
+      《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记
     </h1>
   
 
@@ -553,135 +450,29 @@ sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-《数据库查询优化器的艺术》第一章学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" class="article-date">
-  <time datetime="2014-12-02T11:05:02.000Z" itemprop="datePublished">12月 2 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
+    <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
         
+          《数据库查询优化器的艺术》第三章物理查询优化学习笔记
+        
+      </div>
+    </a>
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/">《数据库查询优化器的艺术》第一章学习笔记</a>
-    </h1>
   
+    <a href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">自行测试的1亿条数据中PostgreSQL性能</div>
+    </a>
+  
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="数据库管理系统">数据库管理系统</h1>
-<pre><code>数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-</code></pre><h1 id="查询优化的目标">查询优化的目标</h1>
-<pre><code>使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，<span class="built_in">CPU</span>，网络传输等）达到最小。
-</code></pre><h1 id="查询优化技术（广义）">查询优化技术（广义）</h1>
-<pre><code>查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-</code></pre><h1 id="查询优化技术（狭义）">查询优化技术（狭义）</h1>
-<pre><code>查询重写规则
-查询算法优化
-</code></pre><h1 id="代数优化（逻辑优化）">代数优化（逻辑优化）</h1>
-<pre><code>主要依据关系代数的等价变换做一些逻辑变换。查询重写规则属于逻辑优化。
-</code></pre><h1 id="非代数优化（物理优化）">非代数优化（物理优化）</h1>
-<pre><code>主要根据数据读取，表连接方式，表连接顺序，排序等技术对查询进行优化。查询算法优化，属于物理优化。运用了基于代价估算的多表连接算法求解最小花费的技术。
-</code></pre><h1 id="数据库调优">数据库调优</h1>
-<pre><code>目标是使数据库有更高的吞吐量以及更短的响应时间。它是全局的。而查询优化技术是SQL层面的，局部的优化。
-</code></pre><h1 id="查询重用">查询重用</h1>
-<pre><code>指尽可能利用先前的执行结果，以达到节约查询计算全过程的时间并减少资源消耗的目的。
-（1）查询结果的重用
-在缓冲区分配一块缓冲块，存放该SQL语句文本和最后的结果集，当遇到同样的SQL输入时，可直接把结果返回。它节约了查询计划生成时间和查询执行过程的时间，减少了查询执行全过程的资源消耗。
-
-（2）查询计划的重用
-缓存一条查询语句的执行计划及其相应语法树结构。查询计划的重用技术减少了查询计划生成的时间和资源消耗
-</code></pre><h1 id="查询重写规则">查询重写规则</h1>
-<pre><code>它是一种等价转换。即对于任何相关模式的任意状态都会产生相同的结果。目标：
-（<span class="number">1</span>）将查询转换为等价的，效率更高的形式。
-（<span class="number">2</span>）尽量将查询重写为等价，简单且不受表顺序限制的形式，为物理查询优化阶段提供更多的选择。如：视图的重写，子查询的合并转换等。
-重写的主要依据是关系代数。它是查询重写规则的理论支持。
-它有<span class="number">3</span>个角度，第<span class="number">4</span>个是物理优化。
-（<span class="number">1</span>）语法级
-（<span class="number">2</span>）代数级
-（<span class="number">3</span>）语义级
-（<span class="number">4</span>）物理级：即基于代价估算模型，比较得出代价最小的，是从连接路径中选择代价最小的路径的过程。
-
-主要思路：
-<span class="number">1</span>）将过程性查询转换为描述性的查询，如视图重写
-<span class="number">2</span>）将复杂的查询（嵌套子查询，外连接，嵌套连接）尽可能转换为多表连接查询
-<span class="number">3</span>）将效率低的谓词转换为等价的效率高的谓词（如等价谓词重写）
-<span class="number">4</span>）利用等式和不等式的性质，简化 <span class="keyword">WHERE</span>， HAVING 和 <span class="keyword">ON</span> 条件
-
-核心是：等价转换，只有等价才能转换。
-</code></pre><h1 id="查询算法优化">查询算法优化</h1>
-<pre><code>查询优化即求解给定查询语句的高效执行计划的过程。
-
-单表结点获取数据的方式有：
-（1）直接通过IO获取
-（2）通过索引获取数据
-（3）通过索引定位数据的位置再经IO到数据块中获取数据
-这是从物理存储到内存解析成逻辑字段的过程。
-
-查询计划的策略：
-（1）基于规则优化
-（2）基于代价优化。
-PG和MySQL采取了基于规则和代价估算的查询优化策略。
-</code></pre><h1 id="多表连接优化算法">多表连接优化算法</h1>
-<pre><code><span class="params">SYSTEM</span>-R算法
-启发式搜索算法 
-贪婪算法 
-动态规划算法
-遗传算法
-</code></pre><h1 id="并行查询优化">并行查询优化</h1>
-<pre><code>单机：找到查询的一个具有最小执行花费的执行计划
-并行：寻找具有最小响应时间的查询执行计划
-
-并行查询：
-（<span class="number">1</span>）操作内并行：将同一操作，如单表扫描操作，两表连接操作，排序操作等分解成多个独立的子操作，由不同的<span class="built_in">CPU</span>同时执行。
-（<span class="number">2</span>）操作间并行：一条SQL查询语句可以分解成多个子操作，由多个<span class="built_in">CPU</span>执行。
-</code></pre><h1 id="分布式查询优化">分布式查询优化</h1>
-<pre><code><span class="attribute">查询策略优化（主要是数据传输策略）和局部处理优化（传统的单结点数据库的查询优化技术）是查询优化的重点。
-
-主要目标：
-减少传输的次数和数据量
-
-分布式代价估算模型
-总代价 </span>=<span class="string"> IO代价 + CPU代价 + 通信代价</span>
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="tuv4xroyhpghio2h" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
 
-
-  
-  
 </section>
         
           <aside id="sidebar">
