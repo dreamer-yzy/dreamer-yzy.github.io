@@ -69,6 +69,56 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-PostgreSQL-进程构架" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/04/PostgreSQL-进程构架/" class="article-date">
+  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="ps_aux_|_grep_postgres">ps aux | grep <strong>postgres</strong></h1>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">postgres <span class="number">31964</span>  <span class="number">0.0</span>  <span class="number">0.3</span> <span class="number">162180</span> <span class="number">12436</span> pts/<span class="number">0</span>    S    <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> /usr/<span class="built_in">local</span>/pg/bin/postgres -D /usr/<span class="built_in">local</span>/pg/data</div><div class="line">postgres <span class="number">31966</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162312</span>  <span class="number">2192</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: checkpointer <span class="built_in">process</span>                  </div><div class="line">postgres <span class="number">31967</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>  <span class="number">1820</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: writer <span class="built_in">process</span>                       </div><div class="line">postgres <span class="number">31968</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>   <span class="number">960</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: wal writer <span class="built_in">process</span>                   </div><div class="line">postgres <span class="number">31969</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">163032</span>  <span class="number">2064</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: autovacuum launcher <span class="built_in">process</span>           </div><div class="line">postgres <span class="number">31970</span>  <span class="number">0.0</span>  <span class="number">0.0</span>  <span class="number">18000</span>   <span class="number">948</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: stats collector <span class="built_in">process</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgre<span class="variable">s:</span> logger proces<span class="variable">s:</span>  在PostgreSQL中称为SysLogger(<span class="number">8.0</span>)，用于整个系统的日志输出；</div><div class="line">postgre<span class="variable">s:</span> checkpointer proces<span class="variable">s:</span>  在PostgreSQL中称为Checkpointer(<span class="number">9.2</span>），用于处理checkpoints；</div><div class="line">postgre<span class="variable">s:</span> writer proces<span class="variable">s:</span>  在PostgreSQL中称为BgWriter，用于将脏页刷出到磁盘；</div><div class="line">postgre<span class="variable">s:</span> wal writer proces<span class="variable">s:</span>  在PostgreSQL中称为WalWriter(<span class="number">8.3</span>)，处理预写日志输出；</div><div class="line">postgre<span class="variable">s:</span> autovacuum launcher proces<span class="variable">s:</span>   在PostgreSQL中称为AutoVacuum(<span class="number">8.1</span>)，用于系统的自动清理；</div><div class="line">postgre<span class="variable">s:</span> archiver proces<span class="variable">s:</span>  在PostgreSQL中称为PgArch，用于预写日志归档；</div><div class="line">postgre<span class="variable">s:</span> stats collector proces<span class="variable">s:</span>  在PostgreSQL中称为PgStat，用于统计数据收集。</div></pre></td></tr></table></figure>
+
+<p><img src="/img/postgres-process-arch.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/" data-id="l3j9qu4lpzti0oa5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL基础学习（一）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/03/PostgreSQL基础学习（一）/" class="article-date">
@@ -122,7 +172,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/PostgreSQL基础学习（一）/" data-id="n13xd7ly3jbig8kn" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/PostgreSQL基础学习（一）/" data-id="531dkw9zuuoypf2d" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -253,7 +303,7 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="qyjytkwakd6mnwuz" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="gecufvr7qnm2fh12" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -610,7 +660,7 @@ sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="j7z4wkqhw1xhxyot" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="uezrnk1lbybrowhx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -691,7 +741,7 @@ select <span class="command">count</span>(<span class="property">id</span>) <spa
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="75oucqe6uxfachui" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="saal2fa91470kdtx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
@@ -815,7 +865,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="xkus78ixzkus7sbx" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="wwpd5q6fbs54l0vi" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -836,7 +886,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">5</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">5</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">1</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">6</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">6</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -845,7 +895,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -854,7 +904,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 10.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 15.00px;">PostgreSQL 读书笔记</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
+      <a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 13.33px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 16.67px;">PostgreSQL 读书笔记</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
     </div>
   </div>
 
@@ -863,7 +913,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">6</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -873,6 +923,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
+          </li>
         
           <li>
             <a href="/2014/12/03/PostgreSQL基础学习（一）/">PostgreSQL基础学习（一）</a>
@@ -888,10 +942,6 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
         
           <li>
             <a href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/">自行测试的1亿条数据中PostgreSQL性能</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/">《数据库查询优化器的艺术》第一章学习笔记</a>
           </li>
         
       </ul>
