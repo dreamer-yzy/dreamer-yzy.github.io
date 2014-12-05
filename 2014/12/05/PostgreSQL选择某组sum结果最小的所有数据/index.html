@@ -3,21 +3,39 @@
 <head>
   <meta charset="utf-8">
   
-  <title>PostgreSQL 进程构架 | PostgreSQL DBA</title>
+  <title>PostgreSQL选择某组sum结果最小的所有数据 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
+  <meta name="description" content="在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。
+比如，有张表如下：
+1path(int)  cost(decimal)
+
+想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：
+
+我写的SQL：
+12with">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PostgreSQL 进程构架">
-<meta property="og:url" content="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/">
+<meta property="og:title" content="PostgreSQL选择某组sum结果最小的所有数据">
+<meta property="og:url" content="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
-<meta property="og:image" content="/img/postgres-process-arch.png">
+<meta property="og:description" content="在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。
+比如，有张表如下：
+1path(int)  cost(decimal)
+
+想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：
+
+我写的SQL：
+12with">
+<meta property="og:image" content="/img/postgresql-sum-window-fucntion.png">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL 进程构架">
-<meta name="twitter:description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
+<meta name="twitter:title" content="PostgreSQL选择某组sum结果最小的所有数据">
+<meta name="twitter:description" content="在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。
+比如，有张表如下：
+1path(int)  cost(decimal)
+
+想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：
+
+我写的SQL：
+12with">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -71,10 +89,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-PostgreSQL-进程构架" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-PostgreSQL选择某组sum结果最小的所有数据" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/04/PostgreSQL-进程构架/" class="article-date">
-  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4 2014</time>
+    <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" class="article-date">
+  <time datetime="2014-12-05T13:46:10.000Z" itemprop="datePublished">12月 5 2014</time>
 </a>
     
   <div class="article-category">
@@ -89,7 +107,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      PostgreSQL 进程构架
+      PostgreSQL选择某组sum结果最小的所有数据
     </h1>
   
 
@@ -97,22 +115,27 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="ps_aux_|_grep_postgres">ps aux | grep <strong>postgres</strong></h1>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">postgres <span class="number">31964</span>  <span class="number">0.0</span>  <span class="number">0.3</span> <span class="number">162180</span> <span class="number">12436</span> pts/<span class="number">0</span>    S    <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> /usr/<span class="built_in">local</span>/pg/bin/postgres -D /usr/<span class="built_in">local</span>/pg/data</div><div class="line">postgres <span class="number">31966</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162312</span>  <span class="number">2192</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: checkpointer <span class="built_in">process</span>                  </div><div class="line">postgres <span class="number">31967</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>  <span class="number">1820</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: writer <span class="built_in">process</span>                       </div><div class="line">postgres <span class="number">31968</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>   <span class="number">960</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: wal writer <span class="built_in">process</span>                   </div><div class="line">postgres <span class="number">31969</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">163032</span>  <span class="number">2064</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: autovacuum launcher <span class="built_in">process</span>           </div><div class="line">postgres <span class="number">31970</span>  <span class="number">0.0</span>  <span class="number">0.0</span>  <span class="number">18000</span>   <span class="number">948</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: stats collector <span class="built_in">process</span></div></pre></td></tr></table></figure>
+        <p>在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。</p>
+<p>比如，有张表如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function">path</span>(int)  <span class="function">cost</span>(<span class="value">decimal</span>)</div></pre></td></tr></table></figure>
 
+<p>想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：</p>
+<p><img src="/img/postgresql-sum-window-fucntion.png" alt=""></p>
+<h2 id="我写的SQL：">我写的SQL：</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">with cte as (<span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path ) <span class="keyword">as</span> sum_cost <span class="keyword">from</span> tcost)</span></div><div class="line"><span class="keyword">select</span> path , cost <span class="keyword">from</span> cte <span class="keyword">where</span> sum_cost = (<span class="keyword">select</span> <span class="keyword">min</span>(sum_cost) <span class="keyword">from</span> cte);</div></pre></td></tr></table></figure>
 
-
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgre<span class="variable">s:</span> logger proces<span class="variable">s:</span>  在PostgreSQL中称为SysLogger(<span class="number">8.0</span>)，用于整个系统的日志输出；</div><div class="line">postgre<span class="variable">s:</span> checkpointer proces<span class="variable">s:</span>  在PostgreSQL中称为Checkpointer(<span class="number">9.2</span>），用于处理checkpoints；</div><div class="line">postgre<span class="variable">s:</span> writer proces<span class="variable">s:</span>  在PostgreSQL中称为BgWriter，用于将脏页刷出到磁盘；</div><div class="line">postgre<span class="variable">s:</span> wal writer proces<span class="variable">s:</span>  在PostgreSQL中称为WalWriter(<span class="number">8.3</span>)，处理预写日志输出；</div><div class="line">postgre<span class="variable">s:</span> autovacuum launcher proces<span class="variable">s:</span>   在PostgreSQL中称为AutoVacuum(<span class="number">8.1</span>)，用于系统的自动清理；</div><div class="line">postgre<span class="variable">s:</span> archiver proces<span class="variable">s:</span>  在PostgreSQL中称为PgArch，用于预写日志归档；</div><div class="line">postgre<span class="variable">s:</span> stats collector proces<span class="variable">s:</span>  在PostgreSQL中称为PgStat，用于统计数据收集。</div></pre></td></tr></table></figure>
-
-<p><img src="/img/postgres-process-arch.png" alt=""></p>
+<h4 id="我的解题思路">我的解题思路</h4>
+<p>在没有接触到PostgreSQL之前，我一直使用MySQL，每次想到“组”这个字，总会想到 group by 。虽然可能使用group by 也可能实现相同的结果，但是经常需要表自身join表，所以性能方面对于数据量大的表话，是满足不了要求的，即使是有索引。因为索引最适合于那种存在索引，而且选择率低的表，否则的话，索引的优势其实和全表扫描差不多，甚至有时候，常常是全表扫描比索引的全表扫描性能还要好。（当然，在PostgreSQL中，如果是只读索引来扫描的话，性能是最好的）。因为MySQL的 InnoDB 是索引组织表，所以索引全表和普通的全表扫描，性能几乎是没有差别。但是在PostgreSQL中，这种差别就很明显了，选择率大的索引全表扫描，比顺序全表扫描SeqScan慢好多。</p>
+<p>说远了，回到题目上来。这思路虽然也是要分组，但这种分组跟group by 的分组差得比较远，这种需要一种“窗口函数”（Window Function，在Oracle里叫分析函数）来处理这钟需求，而且这种窗口函数的性能是比那种需要自表连接的性能快好多的，即使是没有索引情况下。之前在群里也遇到这种情况，利用窗口函数几秒钟就可以出结果，但那种自连接的（特别在数据量大的情况下）要几十分钟。这种窗口分组来处理数据，可以避免好多性能问题，而且非常易于理解。</p>
+<p>所以，对于PostgreSQL，一有那种需要那种类似窗口的分组操作，首先要想到 Window Function，真的是非常好用。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/" data-id="d3yc79y5g7edywxn" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="8gy6rcylo0j5wxgy" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
 
     </footer>
   </div>
@@ -120,19 +143,10 @@
     
 <nav id="article-nav">
   
-    <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          PostgreSQL选择某组sum结果最小的所有数据
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/03/PostgreSQL基础学习（一）/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2014/12/04/PostgreSQL-进程构架/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">PostgreSQL基础学习（一）</div>
+      <div class="article-nav-title">PostgreSQL 进程构架</div>
     </a>
   
 </nav>
@@ -143,7 +157,7 @@
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-PostgreSQL-进程构架" data-title="PostgreSQL 进程构架" data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/"></div>
+    <div class="ds-thread" data-thread-key="post-PostgreSQL选择某组sum结果最小的所有数据" data-title="PostgreSQL选择某组sum结果最小的所有数据" data-url="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
