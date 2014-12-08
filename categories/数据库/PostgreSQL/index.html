@@ -69,6 +69,131 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-PostgreSQL窗口函数" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/08/PostgreSQL窗口函数/" class="article-date">
+  <time datetime="2014-12-08T13:05:48.000Z" itemprop="datePublished">12月 8 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/08/PostgreSQL窗口函数/">PostgreSQL窗口函数</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="什么是窗口函数">什么是窗口函数</h2>
+<p><a href="http://www.postgresql.org/docs/9.3/static/functions-window.html" target="_blank" rel="external">PostgreSQL窗口函数</a></p>
+<blockquote>
+<p>窗口函数提供跨行相关的当前查询行集执行计算的能力。仅当调用跟着OVER子句的聚集函数，作为窗口函数；否则它们作为常规的聚合函数。</p>
+<p>我个人的理解：窗口也是一种分组，但和 group by 的分组不同。窗口，可以提供分组之外，还可以执行对每个窗口进行计算。可以相像成是group by 后，然后对每个分组进行计算，而不像Group by ，只是单纯地分组。</p>
+</blockquote>
+<h2 id="窗口函数的语法">窗口函数的语法</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">function_name ([expression [, expression <span class="keyword">...</span> ]]) OVER window_name</div><div class="line">function_name ([expression [, expression <span class="keyword">...</span> ]]) OVER ( window_definition )</div><div class="line">function_name ( * ) OVER window_name</div><div class="line">function_name ( * ) OVER ( window_definition )</div></pre></td></tr></table></figure>
+
+<blockquote>
+<p>窗口函数的调用总是包含一个OVER子句，即窗口函数的名称和参数。 该语法区别于普通函数或聚合功能。OVER子句决定究竟将 查询的行如何通过窗口函数拆分处理。OVER子句内的PARTITION BY分区指定 行划分成组，或分区，共享相同的PARTITION BY值。 对于每一行，窗口函数通过同一个分区作为当前行的行进行计算</p>
+<p>如果OVER不使用PARTITION BY时即代表整个表。</p>
+</blockquote>
+<h2 id="典型的窗口函数用法">典型的窗口函数用法</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path ) <span class="keyword">as</span> sum_cost <span class="keyword">from</span> tcost;</span></div></pre></td></tr></table></figure>
+
+<h2 id="内置的窗口函数">内置的窗口函数</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Function</th>
+<th style="text-align:left">Return Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">row_number() 行号</td>
+<td style="text-align:left">bigint</td>
+<td>number of the current row within its partition, counting from 1 。返回当前窗口的行数，计数从1开始。主要就是遇到相同排名时的区别，即相同的数值，排名是不同的，而且也不是确定的。</td>
+</tr>
+<tr>
+<td style="text-align:left">rank() 排名（保持间隔）</td>
+<td style="text-align:left">bigint</td>
+<td>rank of the current row with gaps; same as row_number of its first peer。当前窗口中，相同的数值排名是相同的，但是还是会保留间隔的。比如：1，1，3。如果是 row_number 会是 1，2，3。也可能是：1，2，3这样子下去，这个看数据是否有相同。</td>
+</tr>
+<tr>
+<td style="text-align:left">dense_rank() 排名（不保持间隔）</td>
+<td style="text-align:left">bigint</td>
+<td>rank of the current row without gaps; this function counts peer groups。这个函数与 rank() 一样，只是它不会保持间隔的，相同的数据在同一排名，然后会是下一个排名。如：1,1,2,3,3,4等。</td>
+</tr>
+<tr>
+<td style="text-align:left">percent_rank() 排名的百分比</td>
+<td style="text-align:left">double precision</td>
+<td>relative rank of the current row: (rank - 1) / (total rows - 1)。这条是得出结果的公式。可知相同的排名，结果是一样的。</td>
+</tr>
+<tr>
+<td style="text-align:left">cume_dist()</td>
+<td style="text-align:left">double precision</td>
+<td>relative rank of the current row: (number of rows preceding or peer with current row) / (total rows)。即小于等于当前行值的行数/总行数。结果为 0&lt;结果&lt;=1</td>
+</tr>
+<tr>
+<td style="text-align:left">ntile(num_buckets integer) 可以将结果集放到我们指定数目的组中</td>
+<td style="text-align:left">integer</td>
+<td>integer ranging from 1 to the argument value, dividing the partition as equally as possible。组的数目从1开始计。分组的依据：1,每组的记录数不能大于它上一组的记录数。2,所有组中的记录要么都相同，要么从某组开始后面所有组的记录数都与该组的记录数相同</td>
+</tr>
+<tr>
+<td style="text-align:left">lag(value any [, offset integer [, default any ]])</td>
+<td style="text-align:left">same type as value</td>
+<td>returns value evaluated at the row that is offset rows before the current row within the partition; if there is no such row, instead return default. Both offset and default are evaluated with respect to the current row. If omitted, offset defaults to 1 and default to null 。向前获得相对于当前记录指定距离的那条记录的数据</td>
+</tr>
+<tr>
+<td style="text-align:left">lead(value any [, offset integer [, default any ]])</td>
+<td style="text-align:left">same type as value</td>
+<td>returns value evaluated at the row that is offset rows after the current row within the partition; if there is no such row, instead return default. Both offset and default are evaluated with respect to the current row. If omitted, offset defaults to 1 and default to null。向后获得相对于当前记录指定距离的那条记录的数据</td>
+</tr>
+<tr>
+<td style="text-align:left">first_value(value any)</td>
+<td style="text-align:left">same type as value</td>
+<td>returns value evaluated at the row that is the first row of the window frame。获取当前窗口的第一个值。</td>
+</tr>
+<tr>
+<td style="text-align:left">last_value(value any)</td>
+<td style="text-align:left">same type as value</td>
+<td>returns value evaluated at the row that is the last row of the window frame 。获取当前窗口的最后一个值。</td>
+</tr>
+<tr>
+<td style="text-align:left">nth_value(value any, nth integer)</td>
+<td style="text-align:left">same type as value</td>
+<td>returns value evaluated at the row that is the nth row of the window frame (counting from 1); null if no such row。获取窗口中第N个值。</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dreamer-yzy.github.com/2014/12/08/PostgreSQL窗口函数/" data-id="pic833t55uzph7hr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL选择某组sum结果最小的所有数据" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" class="article-date">
@@ -112,7 +237,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="bp4prbj0e3bvtcz8" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="0y24w7w3266mq4s1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
@@ -162,7 +287,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/" data-id="6v8nq3t12db7vnev" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/" data-id="k4lqwrk07t7kdxh1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -227,7 +352,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/PostgreSQL基础学习（一）/" data-id="05dr6sx4p1w89px5" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/PostgreSQL基础学习（一）/" data-id="rq87cca8mjppaak0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -358,7 +483,7 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="dn6egnt8taaocuds" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="wba93tgfu868swm4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -715,7 +840,7 @@ sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="uowknwgaip9i4nbh" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="4izk2kezysy9sl0s" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -796,7 +921,7 @@ select <span class="command">count</span>(<span class="property">id</span>) <spa
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="7ymdzry1kdrzjc8l" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="664jif8lii6h7rzu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
@@ -920,7 +1045,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="od6tzdi0fwzpdbjh" class="article-share-link">Share</a>
+      <a data-url="https://dreamer-yzy.github.com/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="16j0hwnlp1a46qoq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -941,7 +1066,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">3</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">4</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -950,7 +1075,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -959,7 +1084,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 15.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 15.00px;">PostgreSQL 读书笔记</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
+      <a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 16.67px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
     </div>
   </div>
 
@@ -968,7 +1093,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">9</span></li></ul>
     </div>
   </div>
 
@@ -978,6 +1103,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/12/08/PostgreSQL窗口函数/">PostgreSQL窗口函数</a>
+          </li>
         
           <li>
             <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">PostgreSQL选择某组sum结果最小的所有数据</a>
@@ -993,10 +1122,6 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
         
           <li>
             <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/">《数据库查询优化器的艺术》第三章物理查询优化学习笔记</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/">《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记</a>
           </li>
         
       </ul>
