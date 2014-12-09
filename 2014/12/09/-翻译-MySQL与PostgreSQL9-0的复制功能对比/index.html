@@ -3,17 +3,25 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: PostgreSQL 基础学习 | PostgreSQL DBA</title>
+  <title>[翻译]MySQL与PostgreSQL9.0的复制功能对比 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="https://dreamer-yzy.github.com/tags/PostgreSQL-基础学习/">
+  <meta name="description" content="源文地址
+作者:Robin Schumacher 和 Gary Carter,EnterpriseDB 公司
+原文:Replication is one of the most popular features used in RDBMS’s today. Replication is used for disaster recovery purposes (i.e. backup or warm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[翻译]MySQL与PostgreSQL9.0的复制功能对比">
+<meta property="og:url" content="https://dreamer-yzy.github.com/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="源文地址
+作者:Robin Schumacher 和 Gary Carter,EnterpriseDB 公司
+原文:Replication is one of the most popular features used in RDBMS’s today. Replication is used for disaster recovery purposes (i.e. backup or warm">
+<meta property="og:image" content="/img/postgresql-mysql-replication-mysql.png">
+<meta property="og:image" content="/img/postgresql-mysql-replication-postgresql.png">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="[翻译]MySQL与PostgreSQL9.0的复制功能对比">
+<meta name="twitter:description" content="源文地址
+作者:Robin Schumacher 和 Gary Carter,EnterpriseDB 公司
+原文:Replication is one of the most popular features used in RDBMS’s today. Replication is used for disaster recovery purposes (i.e. backup or warm">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,9 +88,7 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" class="article-date">
   <time datetime="2014-12-09T14:03:42.000Z" itemprop="datePublished">12月 9 2014</time>
@@ -99,8 +105,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
+    <h1 class="article-title" itemprop="name">
+      [翻译]MySQL与PostgreSQL9.0的复制功能对比
     </h1>
   
 
@@ -266,307 +272,40 @@ ga('send', 'pageview');
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-PostgreSQL窗口函数" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/08/PostgreSQL窗口函数/" class="article-date">
-  <time datetime="2014-12-08T13:05:48.000Z" itemprop="datePublished">12月 8 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/08/PostgreSQL窗口函数/">PostgreSQL窗口函数</a>
-    </h1>
+    <a href="/2014/12/08/PostgreSQL窗口函数/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">PostgreSQL窗口函数</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="什么是窗口函数">什么是窗口函数</h2>
-<p><a href="http://www.postgresql.org/docs/9.3/static/functions-window.html" target="_blank" rel="external">PostgreSQL窗口函数</a></p>
-<blockquote>
-<p>窗口函数提供跨行相关的当前查询行集执行计算的能力。仅当调用跟着OVER子句的聚集函数，作为窗口函数；否则它们作为常规的聚合函数。</p>
-<p>我个人的理解：窗口也是一种分组，但和 group by 的分组不同。窗口，可以提供分组之外，还可以执行对每个窗口进行计算。可以相像成是group by 后，然后对每个分组进行计算，而不像Group by ，只是单纯地分组。</p>
-</blockquote>
-<h2 id="窗口函数的语法">窗口函数的语法</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">function_name ([expression [, expression <span class="keyword">...</span> ]]) OVER window_name</div><div class="line">function_name ([expression [, expression <span class="keyword">...</span> ]]) OVER ( window_definition )</div><div class="line">function_name ( * ) OVER window_name</div><div class="line">function_name ( * ) OVER ( window_definition )</div></pre></td></tr></table></figure>
-
-<blockquote>
-<p>窗口函数的调用总是包含一个OVER子句，即窗口函数的名称和参数。 该语法区别于普通函数或聚合功能。OVER子句决定究竟将 查询的行如何通过窗口函数拆分处理。OVER子句内的PARTITION BY分区指定 行划分成组，或分区，共享相同的PARTITION BY值。 对于每一行，窗口函数通过同一个分区作为当前行的行进行计算</p>
-<p>如果OVER不使用PARTITION BY时即代表整个表。</p>
-</blockquote>
-<h2 id="典型的窗口函数用法">典型的窗口函数用法</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path ) <span class="keyword">as</span> sum_cost <span class="keyword">from</span> tcost;</span></div></pre></td></tr></table></figure>
-
-<h2 id="内置的窗口函数">内置的窗口函数</h2>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Function</th>
-<th style="text-align:left">Return Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">row_number() 行号</td>
-<td style="text-align:left">bigint</td>
-<td>number of the current row within its partition, counting from 1 。返回当前窗口的行数，计数从1开始。主要就是遇到相同排名时的区别，即相同的数值，排名是不同的，而且也不是确定的。</td>
-</tr>
-<tr>
-<td style="text-align:left">rank() 排名（保持间隔）</td>
-<td style="text-align:left">bigint</td>
-<td>rank of the current row with gaps; same as row_number of its first peer。当前窗口中，相同的数值排名是相同的，但是还是会保留间隔的。比如：1，1，3。如果是 row_number 会是 1，2，3。也可能是：1，2，3这样子下去，这个看数据是否有相同。</td>
-</tr>
-<tr>
-<td style="text-align:left">dense_rank() 排名（不保持间隔）</td>
-<td style="text-align:left">bigint</td>
-<td>rank of the current row without gaps; this function counts peer groups。这个函数与 rank() 一样，只是它不会保持间隔的，相同的数据在同一排名，然后会是下一个排名。如：1,1,2,3,3,4等。</td>
-</tr>
-<tr>
-<td style="text-align:left">percent_rank() 排名的百分比</td>
-<td style="text-align:left">double precision</td>
-<td>relative rank of the current row: (rank - 1) / (total rows - 1)。这条是得出结果的公式。可知相同的排名，结果是一样的。</td>
-</tr>
-<tr>
-<td style="text-align:left">cume_dist()</td>
-<td style="text-align:left">double precision</td>
-<td>relative rank of the current row: (number of rows preceding or peer with current row) / (total rows)。即小于等于当前行值的行数/总行数。结果为 0&lt;结果&lt;=1</td>
-</tr>
-<tr>
-<td style="text-align:left">ntile(num_buckets integer) 可以将结果集放到我们指定数目的组中</td>
-<td style="text-align:left">integer</td>
-<td>integer ranging from 1 to the argument value, dividing the partition as equally as possible。组的数目从1开始计。分组的依据：1,每组的记录数不能大于它上一组的记录数。2,所有组中的记录要么都相同，要么从某组开始后面所有组的记录数都与该组的记录数相同</td>
-</tr>
-<tr>
-<td style="text-align:left">lag(value any [, offset integer [, default any ]])</td>
-<td style="text-align:left">same type as value</td>
-<td>returns value evaluated at the row that is offset rows before the current row within the partition; if there is no such row, instead return default. Both offset and default are evaluated with respect to the current row. If omitted, offset defaults to 1 and default to null 。向前获得相对于当前记录指定距离的那条记录的数据</td>
-</tr>
-<tr>
-<td style="text-align:left">lead(value any [, offset integer [, default any ]])</td>
-<td style="text-align:left">same type as value</td>
-<td>returns value evaluated at the row that is offset rows after the current row within the partition; if there is no such row, instead return default. Both offset and default are evaluated with respect to the current row. If omitted, offset defaults to 1 and default to null。向后获得相对于当前记录指定距离的那条记录的数据</td>
-</tr>
-<tr>
-<td style="text-align:left">first_value(value any)</td>
-<td style="text-align:left">same type as value</td>
-<td>returns value evaluated at the row that is the first row of the window frame。获取当前窗口的第一个值。</td>
-</tr>
-<tr>
-<td style="text-align:left">last_value(value any)</td>
-<td style="text-align:left">same type as value</td>
-<td>returns value evaluated at the row that is the last row of the window frame 。获取当前窗口的最后一个值。</td>
-</tr>
-<tr>
-<td style="text-align:left">nth_value(value any, nth integer)</td>
-<td style="text-align:left">same type as value</td>
-<td>returns value evaluated at the row that is the nth row of the window frame (counting from 1); null if no such row。获取窗口中第N个值。</td>
-</tr>
-</tbody>
-</table>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/08/PostgreSQL窗口函数/" data-id="q29tpqaufsrv1ncj" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
 
 
-  
-    <article id="post-PostgreSQL选择某组sum结果最小的所有数据" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" class="article-date">
-  <time datetime="2014-12-05T13:46:10.000Z" itemprop="datePublished">12月 5 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">PostgreSQL选择某组sum结果最小的所有数据</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。</p>
-<p>比如，有张表如下：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function">path</span>(int)  <span class="function">cost</span>(<span class="value">decimal</span>)</div></pre></td></tr></table></figure>
-
-<p>想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：</p>
-<p><img src="/img/postgresql-sum-window-fucntion.png" alt=""></p>
-<h2 id="我写的SQL：">我写的SQL：</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">with cte as (<span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path ) <span class="keyword">as</span> sum_cost <span class="keyword">from</span> tcost)</span></div><div class="line"><span class="keyword">select</span> path , cost <span class="keyword">from</span> cte <span class="keyword">where</span> sum_cost = (<span class="keyword">select</span> <span class="keyword">min</span>(sum_cost) <span class="keyword">from</span> cte);</div></pre></td></tr></table></figure>
-
-<h4 id="我的解题思路">我的解题思路</h4>
-<p>在没有接触到PostgreSQL之前，我一直使用MySQL，每次想到“组”这个字，总会想到 group by 。虽然可能使用group by 也可能实现相同的结果，但是经常需要表自身join表，所以性能方面对于数据量大的表话，是满足不了要求的，即使是有索引。因为索引最适合于那种存在索引，而且选择率低的表，否则的话，索引的优势其实和全表扫描差不多，甚至有时候，常常是全表扫描比索引的全表扫描性能还要好。（当然，在PostgreSQL中，如果是只读索引来扫描的话，性能是最好的）。因为MySQL的 InnoDB 是索引组织表，所以索引全表和普通的全表扫描，性能几乎是没有差别。但是在PostgreSQL中，这种差别就很明显了，选择率大的索引全表扫描，比顺序全表扫描SeqScan慢好多。</p>
-<p>说远了，回到题目上来。这思路虽然也是要分组，但这种分组跟group by 的分组差得比较远，这种需要一种“窗口函数”（Window Function，在Oracle里叫分析函数）来处理这钟需求，而且这种窗口函数的性能是比那种需要自表连接的性能快好多的，即使是没有索引情况下。之前在群里也遇到这种情况，利用窗口函数几秒钟就可以出结果，但那种自连接的（特别在数据量大的情况下）要几十分钟。这种窗口分组来处理数据，可以避免好多性能问题，而且非常易于理解。</p>
-<p>所以，对于PostgreSQL，一有那种需要那种类似窗口的分组操作，首先要想到 Window Function，真的是非常好用。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="4ykp9rsnir7jrjsv" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-PostgreSQL-进程构架" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/04/PostgreSQL-进程构架/" class="article-date">
-  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="ps_aux_|_grep_postgres">ps aux | grep <strong>postgres</strong></h1>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">postgres <span class="number">31964</span>  <span class="number">0.0</span>  <span class="number">0.3</span> <span class="number">162180</span> <span class="number">12436</span> pts/<span class="number">0</span>    S    <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> /usr/<span class="built_in">local</span>/pg/bin/postgres -D /usr/<span class="built_in">local</span>/pg/data</div><div class="line">postgres <span class="number">31966</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162312</span>  <span class="number">2192</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: checkpointer <span class="built_in">process</span>                  </div><div class="line">postgres <span class="number">31967</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>  <span class="number">1820</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: writer <span class="built_in">process</span>                       </div><div class="line">postgres <span class="number">31968</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>   <span class="number">960</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: wal writer <span class="built_in">process</span>                   </div><div class="line">postgres <span class="number">31969</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">163032</span>  <span class="number">2064</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: autovacuum launcher <span class="built_in">process</span>           </div><div class="line">postgres <span class="number">31970</span>  <span class="number">0.0</span>  <span class="number">0.0</span>  <span class="number">18000</span>   <span class="number">948</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: stats collector <span class="built_in">process</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgre<span class="variable">s:</span> logger proces<span class="variable">s:</span>  在PostgreSQL中称为SysLogger(<span class="number">8.0</span>)，用于整个系统的日志输出；</div><div class="line">postgre<span class="variable">s:</span> checkpointer proces<span class="variable">s:</span>  在PostgreSQL中称为Checkpointer(<span class="number">9.2</span>），用于处理checkpoints；</div><div class="line">postgre<span class="variable">s:</span> writer proces<span class="variable">s:</span>  在PostgreSQL中称为BgWriter，用于将脏页刷出到磁盘；</div><div class="line">postgre<span class="variable">s:</span> wal writer proces<span class="variable">s:</span>  在PostgreSQL中称为WalWriter(<span class="number">8.3</span>)，处理预写日志输出；</div><div class="line">postgre<span class="variable">s:</span> autovacuum launcher proces<span class="variable">s:</span>   在PostgreSQL中称为AutoVacuum(<span class="number">8.1</span>)，用于系统的自动清理；</div><div class="line">postgre<span class="variable">s:</span> archiver proces<span class="variable">s:</span>  在PostgreSQL中称为PgArch，用于预写日志归档；</div><div class="line">postgre<span class="variable">s:</span> stats collector proces<span class="variable">s:</span>  在PostgreSQL中称为PgStat，用于统计数据收集。</div></pre></td></tr></table></figure>
-
-<p><img src="/img/postgres-process-arch.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/04/PostgreSQL-进程构架/" data-id="i0412d5x6mlgb7vk" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-PostgreSQL基础学习（一）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/03/PostgreSQL基础学习（一）/" class="article-date">
-  <time datetime="2014-12-03T15:14:47.000Z" itemprop="datePublished">12月 3 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/03/PostgreSQL基础学习（一）/">PostgreSQL基础学习（一）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="简介">简介</h2>
-<p><a href="http://www.postgresql.org/" target="_blank" rel="external">PostgreSQL官网</a></p>
-<blockquote>
-<p>PostgreSQL 官网号称：它是最世界最先进的开源数据库（顺便说一下，MySQL官网说它自己是最流行的开源数据库）。我觉得这一句话，也已经非常足够概括 PostgreSQL 了（MySQL 官网的那句话，也概括了它自己的特点，一个是最先进，一个是最流行）。也有号称是 Oracle 的开源版，因为PostgreSQL被经常拿来与Oracle这个重量级的商业数据库比较。的确，PostgreSQL 与 Oracle 兼容性非常强，Oracle 的 DBA 可以非常快地上手 PostgreSQL。在 PostgreSQL 技术群里的大牛大多都是从 Oracle 转到 PostgreSQL，使我印象非常深刻就是 <a href="http://blog.163.com/digoal@126/" target="_blank" rel="external">@德哥</a>，绝对是PostgreSQL的大神级别。我也是跟着德哥的视频一边看，一边学习的。</p>
-</blockquote>
-<h2 id="安装（以_Ubuntu_下源码安装_PostgreSQL_9-3-5_为例）">安装（以 Ubuntu 下源码安装 PostgreSQL 9.3.5 为例）</h2>
-<h4 id="下载">下载</h4>
-<p><a href="http://www.postgresql.org/ftp/source/" target="_blank" rel="external">PostgreSQL 源码下载地址</a></p>
-<h4 id="安装与使用">安装与使用</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line">#安装必要的编译环境</div><div class="line">sudo apt-get <span class="operator"><span class="keyword">install</span> build-essential libreadline-dev</span></div><div class="line"></div><div class="line">#解压</div><div class="line">tar -xvjf postgresql-<span class="number">9.3</span><span class="number">.5</span>.tar.bz2</div><div class="line"></div><div class="line">#创建一个目录，将PostgreSQL安装到这个目录</div><div class="line">sudo mkdir /usr/<span class="keyword">local</span>/pg</div><div class="line"></div><div class="line">#配置</div><div class="line">cd postgresql-<span class="number">9.3</span><span class="number">.5</span></div><div class="line">./configure <span class="comment">--prefix=/usr/local/pg</span></div><div class="line"></div><div class="line">#开始编译</div><div class="line">make -j</div><div class="line">-j：开启多核编译</div><div class="line">如果有：<span class="keyword">All</span> <span class="keyword">of</span> PostgreSQL successfully made. Ready <span class="keyword">to</span> <span class="keyword">install</span>. 表示编译成功</div><div class="line"></div><div class="line">#安装</div><div class="line">sudo make <span class="keyword">install</span></div><div class="line">如果出现：PostgreSQL installation complete. 表示安装成功</div><div class="line"></div><div class="line">#添加 PostgreSQL 用户</div><div class="line">sudo useradd -s /<span class="keyword">bin</span>/bash -d /home/postgres postgres</div><div class="line"></div><div class="line">#创建 PostgreSQL 的 <span class="keyword">data</span> 数据目录</div><div class="line">sudo mkdir /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> -p</div><div class="line"></div><div class="line">#修改拥有者身份</div><div class="line">sudo chown postgres:postgres /usr/<span class="keyword">local</span>/pg/ -R</div><div class="line"></div><div class="line">#初始化数据库</div><div class="line">su - postgres</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/initdb -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span></div><div class="line"></div><div class="line">#启动数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/postgres -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> &gt;<span class="keyword">logfile</span> <span class="number">2</span>&gt;&<span class="number">1</span> &</div><div class="line">或者</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/pg_ctl -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> -l <span class="keyword">logfile</span> <span class="keyword">start</span></div><div class="line"></div><div class="line">#创建数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/createdb test</div><div class="line"></div><div class="line">#连接数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/psql test</div></pre></td></tr></table></figure>
-
-<h4 id="配置环境变量">配置环境变量</h4>
-<blockquote>
-<p>为了避免每次使用绝对路径以及一些参数问题，可以使用一些环境变量来代替，PostgreSQL 在没有指定参数时，就会读取这些环境变量的值</p>
-</blockquote>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">vi /home/postgres/.bash_profile</div><div class="line"></div><div class="line"><span class="comment">#这个是默认的PostgreSQL端口</span></div><div class="line"><span class="keyword">export</span> PGPORT=<span class="number">5432</span></div><div class="line"></div><div class="line"><span class="comment">#这个是PostgreSQL数据目录</span></div><div class="line"><span class="keyword">export</span> PGDATA=/usr/local/pg/data</div><div class="line"></div><div class="line"><span class="comment">#所使用的语言</span></div><div class="line"><span class="keyword">export</span> LANG=en_US.utf8</div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL 安装目录</span></div><div class="line"><span class="keyword">export</span> PGHOME=/usr/local/pg</div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL 连接库文件</span></div><div class="line"><span class="keyword">export</span> LD_LIBRARY_PATH=<span class="variable">$PGHOME</span>/lib:/lib64:/usr/lib64:/usr/local/lib64:/lib:/usr/lib:/usr/local/lib:<span class="variable">$LD_LIBRARY_PATH</span></div><div class="line"><span class="keyword">export</span> DATE=`date +<span class="string">"%Y%m%d%H%M"</span>`</div><div class="line"></div><div class="line"><span class="comment">#将PostgreSQL的命令行工具添加到 PATH 环境变量 ，这样子就不用每次使用绝对路径了</span></div><div class="line"><span class="keyword">export</span> PATH=<span class="variable">$PGHOME</span>/bin:<span class="variable">$PATH</span></div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL的 man 手册</span></div><div class="line"><span class="keyword">export</span> MANPATH=<span class="variable">$PGHOME</span>/share/man:<span class="variable">$MANPATH</span></div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL的默认用户</span></div><div class="line"><span class="keyword">export</span> PGUSER=postgres</div><div class="line"></div><div class="line"><span class="comment">#这个是PostgreSQL默认主机地址</span></div><div class="line"><span class="keyword">export</span> PGHOST=<span class="number">127.0</span>.<span class="number">0.1</span></div><div class="line"></div><div class="line"><span class="comment">#连接数据库时默认的数据库名</span></div><div class="line"><span class="keyword">export</span> PGDATABASE=postgre</div></pre></td></tr></table></figure>
-
-<p><a href="http://www.postgresql.org/docs/9.3/static/libpq-envars.html" target="_blank" rel="external">PostgreSQL所有环境变量</a></p>
-<h4 id="PostgreSQL_的_bin_目录常用工具说明">PostgreSQL 的 bin 目录常用工具说明</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#clusterdb</span></div><div class="line"> </div><div class="line">     — 对一个PostgreSQL数据库进行建簇</div><div class="line"> </div><div class="line"><span class="preprocessor">#createdb</span></div><div class="line"> </div><div class="line">    — 创建一个新的 PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#createlang</span></div><div class="line"> </div><div class="line">    — 定义一种新的 PostgreSQL 过程语言</div><div class="line"> </div><div class="line"><span class="preprocessor">#createuser</span></div><div class="line"> </div><div class="line">     — 定义一个新的 PostgreSQL 用户帐户</div><div class="line"> </div><div class="line"><span class="preprocessor">#dropdb</span></div><div class="line"> </div><div class="line">     — 删除一个现有 PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#droplang</span></div><div class="line"> </div><div class="line">    — 删除一种 PostgreSQL 过程语言</div><div class="line"> </div><div class="line"><span class="preprocessor">#dropuser</span></div><div class="line"> </div><div class="line">    — 删除一个 PostgreSQL 用户帐户</div><div class="line"> </div><div class="line"><span class="preprocessor">#ecpg</span></div><div class="line"> </div><div class="line">    — 嵌入的<span class="constant"> SQL </span>C 预处理器</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_basebackup</span></div><div class="line"> </div><div class="line">    -- 做一个PostgreSQL集群的基础备份</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_config</span></div><div class="line"> </div><div class="line">    — 检索已安装版本的 PostgreSQL 的信息</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_dump</span></div><div class="line"> </div><div class="line">    — 将一个PostgreSQL数据库抽出到一个脚本文件或者其它归档文件中</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_dumpall</span></div><div class="line"> </div><div class="line">    — 抽出一个 PostgreSQL 数据库集群到脚本文件中</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_restore</span></div><div class="line"> </div><div class="line">    — 从一个由 pg_dump 创建的备份文件中恢复 PostgreSQL 数据库。</div><div class="line"> </div><div class="line"><span class="preprocessor">#psql</span></div><div class="line"> </div><div class="line">    — PostgreSQL 交互终端</div><div class="line"> </div><div class="line"><span class="preprocessor">#reindexdb</span></div><div class="line"> </div><div class="line">    -- 重新建立一个数据库索引</div><div class="line"> </div><div class="line"><span class="preprocessor">#vacuumdb</span></div><div class="line"> </div><div class="line">    — 收集垃圾并且分析一个PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_receivexlog</span></div><div class="line"> </div><div class="line">    从另一台运行PG的数据库里接收 wal 日志</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_resetxlog</span></div><div class="line"> </div><div class="line">    重置一个 PostgreSQL 数据库集群的预写日志以及其它控制内容</div></pre></td></tr></table></figure>
-
-<h4 id="PostgreSQL_的_data_目录说明">PostgreSQL 的 data 目录说明</h4>
-<p><img src="/img/postgresql-data-dir.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dreamer-yzy.github.com/2014/12/03/PostgreSQL基础学习（一）/" data-id="ohn4ijecaxtqtf22" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" data-title="[翻译]MySQL与PostgreSQL9.0的复制功能对比" data-url="https://dreamer-yzy.github.com/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   
