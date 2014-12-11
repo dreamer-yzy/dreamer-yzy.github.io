@@ -3,21 +3,68 @@
 <head>
   <meta charset="utf-8">
   
-  <title>PostgreSQL 进程构架 | PostgreSQL DBA</title>
+  <title>[翻译]CTE表达式和临时表的区别 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
+  <meta name="description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PostgreSQL 进程构架">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/">
+<meta property="og:title" content="[翻译]CTE表达式和临时表的区别">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
-<meta property="og:image" content="/img/postgres-process-arch.png">
+<meta property="og:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL 进程构架">
-<meta name="twitter:description" content="ps aux | grep postgres
-123456postgres 31964  0.0  0.3 162180 12436 pts/0    S    18:09   0:00 /usr/local/pg/bin/postgres -D /usr/local/pg/datapostgres 31966  0.0  0.0 162312  2192 ?        Ss   18:09">
+<meta name="twitter:title" content="[翻译]CTE表达式和临时表的区别">
+<meta name="twitter:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -84,14 +131,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-PostgreSQL-进程构架" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/04/PostgreSQL-进程构架/" class="article-date">
-  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4 2014</time>
+    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
+  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
   </div>
 
   </div>
@@ -102,7 +149,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      PostgreSQL 进程构架
+      [翻译]CTE表达式和临时表的区别
     </h1>
   
 
@@ -110,22 +157,37 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="ps_aux_|_grep_postgres">ps aux | grep <strong>postgres</strong></h1>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">postgres <span class="number">31964</span>  <span class="number">0.0</span>  <span class="number">0.3</span> <span class="number">162180</span> <span class="number">12436</span> pts/<span class="number">0</span>    S    <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> /usr/<span class="built_in">local</span>/pg/bin/postgres -D /usr/<span class="built_in">local</span>/pg/data</div><div class="line">postgres <span class="number">31966</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162312</span>  <span class="number">2192</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: checkpointer <span class="built_in">process</span>                  </div><div class="line">postgres <span class="number">31967</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>  <span class="number">1820</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: writer <span class="built_in">process</span>                       </div><div class="line">postgres <span class="number">31968</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>   <span class="number">960</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: wal writer <span class="built_in">process</span>                   </div><div class="line">postgres <span class="number">31969</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">163032</span>  <span class="number">2064</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: autovacuum launcher <span class="built_in">process</span>           </div><div class="line">postgres <span class="number">31970</span>  <span class="number">0.0</span>  <span class="number">0.0</span>  <span class="number">18000</span>   <span class="number">948</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: stats collector <span class="built_in">process</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgre<span class="variable">s:</span> logger proces<span class="variable">s:</span>  在PostgreSQL中称为SysLogger(<span class="number">8.0</span>)，用于整个系统的日志输出；</div><div class="line">postgre<span class="variable">s:</span> checkpointer proces<span class="variable">s:</span>  在PostgreSQL中称为Checkpointer(<span class="number">9.2</span>），用于处理checkpoints；</div><div class="line">postgre<span class="variable">s:</span> writer proces<span class="variable">s:</span>  在PostgreSQL中称为BgWriter，用于将脏页刷出到磁盘；</div><div class="line">postgre<span class="variable">s:</span> wal writer proces<span class="variable">s:</span>  在PostgreSQL中称为WalWriter(<span class="number">8.3</span>)，处理预写日志输出；</div><div class="line">postgre<span class="variable">s:</span> autovacuum launcher proces<span class="variable">s:</span>   在PostgreSQL中称为AutoVacuum(<span class="number">8.1</span>)，用于系统的自动清理；</div><div class="line">postgre<span class="variable">s:</span> archiver proces<span class="variable">s:</span>  在PostgreSQL中称为PgArch，用于预写日志归档；</div><div class="line">postgre<span class="variable">s:</span> stats collector proces<span class="variable">s:</span>  在PostgreSQL中称为PgStat，用于统计数据收集。</div></pre></td></tr></table></figure>
-
-<p><img src="/img/postgres-process-arch.png" alt=""></p>
+        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
+<hr>
+<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
+<h1 id="CTEs">CTEs</h1>
+<ul>
+<li>不可以建索引（但可以使用引用到的对象的索引）</li>
+<li>不能有约束</li>
+<li>本质上是一个一次性视图</li>
+<li>只在下一个执行查询时存在</li>
+<li>可以递归</li>
+<li>没有专门的统计状态数据（只依赖于底层对象）</li>
+</ul>
+<h1 id="临时表">临时表</h1>
+<ul>
+<li>是存在于临时数据库的真正物化的表</li>
+<li>可以建索引</li>
+<li>可以有约束</li>
+<li>在当前连接的会话中会一直存在</li>
+<li>可以被其他查询或子查询引用</li>
+<li>引擎可以有专门为它准备的统计数据</li>
+</ul>
+<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
+<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="czir4zw4z0uk9550" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="76wkjedixezea86d" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
 
     </footer>
   </div>
@@ -133,19 +195,10 @@ ga('send', 'pageview');
     
 <nav id="article-nav">
   
-    <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          PostgreSQL选择某组sum结果最小的所有数据
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/03/PostgreSQL基础学习（一）/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2014/12/12/CTE表达式和临时表的区别/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">PostgreSQL基础学习（一）</div>
+      <div class="article-nav-title"></div>
     </a>
   
 </nav>
@@ -156,7 +209,7 @@ ga('send', 'pageview');
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-PostgreSQL-进程构架" data-title="PostgreSQL 进程构架" data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/"></div>
+    <div class="ds-thread" data-thread-key="post--翻译-CTE表达式和临时表的区别" data-title="[翻译]CTE表达式和临时表的区别" data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
