@@ -82,6 +82,71 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/12/CTE表达式和临时表的区别/" class="article-date">
+  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/12/CTE表达式和临时表的区别/">CTE表达式和临时表的区别</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
+<hr>
+<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
+<h1 id="CTEs">CTEs</h1>
+<ul>
+<li>不可以建索引（但可以使用引用到的对象的索引）</li>
+<li>不能有约束</li>
+<li>本质上是一个一次性视图</li>
+<li>只在下一个执行查询时存在</li>
+<li>可以递归</li>
+<li>没有专门的统计状态数据（只依赖于底层对象）</li>
+</ul>
+<h1 id="临时表">临时表</h1>
+<ul>
+<li>是存在于临时数据库的真正物化的表</li>
+<li>可以建索引</li>
+<li>可以有约束</li>
+<li>在当前连接的会话中会一直存在</li>
+<li>可以被其他查询或子查询引用</li>
+<li>引擎可以有专门为它准备的统计数据</li>
+</ul>
+<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
+<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/" data-id="wy80onxgz8mqqoy0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" class="article-date">
@@ -258,7 +323,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="d47iqsuw9o6faxcn" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="t0bfa2a1tcq2e3ge" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -383,7 +448,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/08/PostgreSQL窗口函数/" data-id="80xqw826o59s5chb" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/08/PostgreSQL窗口函数/" data-id="2rttnbhbxro8erw4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -438,7 +503,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="zvyfzk4zerxbrdbz" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="z5jydq9fwf8xkavf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
@@ -488,7 +553,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="zdq87th9alpe6bsg" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="yazypwgkc9a925fk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -553,7 +618,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/PostgreSQL基础学习（一）/" data-id="7fah8y9eggxamujv" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/PostgreSQL基础学习（一）/" data-id="i97nt638y8ytov9j" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -684,7 +749,7 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="i2gd620i0arhi5rf" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="icr0j55zhcdu2by5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -1041,7 +1106,7 @@ sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="uiqqbwjok26p8sqc" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="ytmn3fh98g8wis9g" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -1122,7 +1187,7 @@ select <span class="command">count</span>(<span class="property">id</span>) <spa
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="99mj19tp60botvg4" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="jc215hbui350vurf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
@@ -1246,7 +1311,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="tem2m65sxs1gpmu4" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="l8o5vee9libvgtik" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -1258,85 +1323,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
 
 
   
-    <article id="post-create-blog-by-hexo" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/02/create-blog-by-hexo/" class="article-date">
-  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/日志/">日志</a>►<a class="article-category-link" href="/categories/日志/程序员/">程序员</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/create-blog-by-hexo/">使用 Hexo 生成博客</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="Hexo介绍">Hexo介绍</h1>
-<p>官方网站一句话就了然了：<code>A fast, simple &amp; powerful blog framework, powered by Node.js.</code>就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。</p>
-<h1 id="安装步骤">安装步骤</h1>
-<p>1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：<br><a href="http://nodejs.org/" target="_blank" rel="external">Nodejs官网</a></p>
-<p>2）安装好Nodejs后，因为 Hexo 是 Nodejs 的一个软件包来的。所以要用 npg 来安装 Hexo：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">npm <span class="operator"><span class="keyword">install</span> -g hexo</span></div><div class="line"></div><div class="line">安装完毕后，检查是否安装：打开命令行（Windows下是 CMD，Linux下是Bash）运行以下命令：</div><div class="line">hexo <span class="keyword">version</span></div></pre></td></tr></table></figure>
-
-<p>3）安装好之后，创建一个 Hexo 项目：打开终端，运行以下命令</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">C:<span class="command">\Users</span><span class="command">\Zhiyong</span> Yang<span class="command">\Desktop</span><span class="command">\blog</span>&gt;hexo init blog</div><div class="line"></div><div class="line">执行完毕之后，Node 会提示你运行 npm install 命令，如果没有执行这条命令，是运行不正常的。所以再执行：</div><div class="line">cd blog</div><div class="line">npm install</div></pre></td></tr></table></figure>
-
-<p>4）安装完之后，就可以启动 Hexo 的服务器了：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">server</span></div></pre></td></tr></table></figure>
-
-<p>这时，便可以打开 <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a> 来访问你的博客了。</p>
-<p>5）Hexo 各目录说明</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">scaffolds 脚手架，也就是一个工具模板</div><div class="line">scripts 写文件的js，扩展hexo的功能</div><div class="line"><span class="built_in">source</span> 存放博客正文内容</div><div class="line"><span class="built_in">source</span>/_drafts 草稿箱</div><div class="line"><span class="built_in">source</span>/_posts 文件箱，也就是正式显示在网站的文件</div><div class="line">themes 存放皮肤的目录</div><div class="line">themes/landscape 默认的皮肤</div><div class="line">_config.yml 全局的配置文件</div><div class="line">db.json 静态常量</div></pre></td></tr></table></figure>
-
-<h1 id="写博客">写博客</h1>
-<p>1）进入你的项目目录的 source 目录的 _posts 目录。</p>
-<p>2）使用命令来创建一个文件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">new</span> hello-world</div><div class="line">注意，hexo会自动在文件名后面添加上 .md 后缀的。所以，上面一条命令的结果就是生成一个 hello-world.md 的文件。</div></pre></td></tr></table></figure>
-
-<p>3）编辑文件。<br>首先文件的规范是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">#这个表示文章的标题</div><div class="line">title: 新的开始</div><div class="line"></div><div class="line">#这个表示文章的创建时间 </div><div class="line">date: 2014-05-07 18:44:12</div><div class="line"></div><div class="line">#这个表示文章的修改时间</div><div class="line">updated    : 2014-05-10 18:44:12</div><div class="line"></div><div class="line">#这个表示在浏览器的 URL 中的替代名字，默认是 title。即访问URL心为 http://host/yyyy/mm/dd/abc/</div><div class="line">permalink: abc</div><div class="line">tags: #下面的表示是该文章所属的标签</div><div class="line"><span class="bullet">- </span>标签1</div><div class="line"><span class="bullet">- </span>标签2</div><div class="line"><span class="bullet">- </span>标签3</div><div class="line">categories: #下面的表示文章所属的目录</div><div class="line"><span class="bullet">- </span>所属目录1</div><div class="line"><span class="bullet">- </span>所属目录2</div><div class="line"><span class="header"> </span></div><div class="line">---</div></pre></td></tr></table></figure>
-
-<h1 id="上传到_github_pages">上传到 github pages</h1>
-<p>1）修改 hexo 项目目录里的 _config.yml 文件为自己相应的信息。比较重要的有：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># Site</span></div><div class="line"><span class="label">title:</span> PostgreSQL DBA 这个是你网站的全局标题</div><div class="line"><span class="label">subtitle:</span> Zhiyong Yang 这个是显示你的子标题</div><div class="line"><span class="label">description:</span> 这是你网站的描述</div><div class="line"><span class="label">author:</span> Zhiyong yang 作者</div><div class="line"><span class="label">email:</span>    dreamers.yzy@gmail.com 邮箱</div><div class="line"><span class="label">language:</span> <span class="built_in">zh</span>-CN 语言</div><div class="line"> </div><div class="line"><span class="preprocessor"># URL</span></div><div class="line"><span class="preprocessor">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="label">url:</span> https://dreamer-yzy.github.com 这里改为你的github pages 地址</div></pre></td></tr></table></figure>
-
-<p>2）注册一个github，然后 创建一个名为：<code>你的用户名.github.io</code> 的仓库</p>
-<p>3）修改 hexo 项目目录里的 _config.yml 文件中的 deploy 配置为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line">  <span class="class"><span class="keyword">type</span>: <span class="title">github</span></span></div><div class="line">  repository: https:<span class="comment">//github.com/你的用户名/你的用户名.github.io.git</span></div></pre></td></tr></table></figure>
-
-<p>4）然后进入 你的 Hexo 项目根目录，执行以下命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">generate</span> </div><div class="line">hexo deploy</div></pre></td></tr></table></figure>
-
-<p>顺利执行完毕后，过几分钟，打开你的github pages地址就可以看到你写的博客了，比如我的：<br><a href="http://dreamer-yzy.github.io/" target="_blank" rel="external">PostgreSQL DBA</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="ng6ecng5wi3y7i12" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/archives/2014/12/page/2/">2</a><a class="extend next" rel="next" href="/archives/2014/12/page/2/">Next &raquo;</a>
+    </nav>
   
 </section>
         
@@ -1346,7 +1336,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -1355,7 +1345,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -1364,7 +1354,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 16.67px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 10.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 16.67px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 10.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
     </div>
   </div>
 
@@ -1373,7 +1363,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">10</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">11</span></li></ul>
     </div>
   </div>
 
@@ -1383,6 +1373,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/12/12/CTE表达式和临时表的区别/">CTE表达式和临时表的区别</a>
+          </li>
         
           <li>
             <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
@@ -1398,10 +1392,6 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
         
           <li>
             <a href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/03/PostgreSQL基础学习（一）/">PostgreSQL基础学习（一）</a>
           </li>
         
       </ul>

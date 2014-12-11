@@ -3,68 +3,68 @@
 <head>
   <meta charset="utf-8">
   
-  <title>《数据库查询优化器的艺术》第一章学习笔记 | PostgreSQL DBA</title>
+  <title>CTE表达式和临时表的区别 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="数据库管理系统
-数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-查询优化的目标
-使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，CPU，网络传输等）达到最小。
-查询优化技术（广义）
-查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-查询优化技术（狭义）
-查询重写规则
-查询算法优化
-代数优化（逻辑优化）">
+  <meta name="description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 <meta property="og:type" content="article">
-<meta property="og:title" content="《数据库查询优化器的艺术》第一章学习笔记">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/">
+<meta property="og:title" content="CTE表达式和临时表的区别">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="数据库管理系统
-数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-查询优化的目标
-使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，CPU，网络传输等）达到最小。
-查询优化技术（广义）
-查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-查询优化技术（狭义）
-查询重写规则
-查询算法优化
-代数优化（逻辑优化）">
+<meta property="og:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="《数据库查询优化器的艺术》第一章学习笔记">
-<meta name="twitter:description" content="数据库管理系统
-数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-查询优化的目标
-使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，CPU，网络传输等）达到最小。
-查询优化技术（广义）
-查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-查询优化技术（狭义）
-查询重写规则
-查询算法优化
-代数优化（逻辑优化）">
+<meta name="twitter:title" content="CTE表达式和临时表的区别">
+<meta name="twitter:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTEs
+
+不可以建索引（但可以使用引用到的对象的索引）
+不能有约束
+本质上是一个一次性视图
+只在下一个执行查询时存在
+可以递归
+没有专门的统计状态数据（只依赖于底层对象）
+
+临时表
+
+是存在于临时数据库的真正物化的表
+可以建索引
+可以有约束
+在当前连接">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -131,10 +131,10 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-《数据库查询优化器的艺术》第一章学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" class="article-date">
-  <time datetime="2014-12-02T11:05:02.000Z" itemprop="datePublished">12月 2 2014</time>
+    <a href="/2014/12/12/CTE表达式和临时表的区别/" class="article-date">
+  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
 </a>
     
   <div class="article-category">
@@ -149,7 +149,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      《数据库查询优化器的艺术》第一章学习笔记
+      CTE表达式和临时表的区别
     </h1>
   
 
@@ -157,96 +157,37 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="数据库管理系统">数据库管理系统</h1>
-<pre><code>数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-</code></pre><h1 id="查询优化的目标">查询优化的目标</h1>
-<pre><code>使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，<span class="built_in">CPU</span>，网络传输等）达到最小。
-</code></pre><h1 id="查询优化技术（广义）">查询优化技术（广义）</h1>
-<pre><code>查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-</code></pre><h1 id="查询优化技术（狭义）">查询优化技术（狭义）</h1>
-<pre><code>查询重写规则
-查询算法优化
-</code></pre><h1 id="代数优化（逻辑优化）">代数优化（逻辑优化）</h1>
-<pre><code>主要依据关系代数的等价变换做一些逻辑变换。查询重写规则属于逻辑优化。
-</code></pre><h1 id="非代数优化（物理优化）">非代数优化（物理优化）</h1>
-<pre><code>主要根据数据读取，表连接方式，表连接顺序，排序等技术对查询进行优化。查询算法优化，属于物理优化。运用了基于代价估算的多表连接算法求解最小花费的技术。
-</code></pre><h1 id="数据库调优">数据库调优</h1>
-<pre><code>目标是使数据库有更高的吞吐量以及更短的响应时间。它是全局的。而查询优化技术是SQL层面的，局部的优化。
-</code></pre><h1 id="查询重用">查询重用</h1>
-<pre><code>指尽可能利用先前的执行结果，以达到节约查询计算全过程的时间并减少资源消耗的目的。
-（1）查询结果的重用
-在缓冲区分配一块缓冲块，存放该SQL语句文本和最后的结果集，当遇到同样的SQL输入时，可直接把结果返回。它节约了查询计划生成时间和查询执行过程的时间，减少了查询执行全过程的资源消耗。
+        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
+<hr>
+<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
+<h1 id="CTEs">CTEs</h1>
+<ul>
+<li>不可以建索引（但可以使用引用到的对象的索引）</li>
+<li>不能有约束</li>
+<li>本质上是一个一次性视图</li>
+<li>只在下一个执行查询时存在</li>
+<li>可以递归</li>
+<li>没有专门的统计状态数据（只依赖于底层对象）</li>
+</ul>
+<h1 id="临时表">临时表</h1>
+<ul>
+<li>是存在于临时数据库的真正物化的表</li>
+<li>可以建索引</li>
+<li>可以有约束</li>
+<li>在当前连接的会话中会一直存在</li>
+<li>可以被其他查询或子查询引用</li>
+<li>引擎可以有专门为它准备的统计数据</li>
+</ul>
+<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
+<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
 
-（2）查询计划的重用
-缓存一条查询语句的执行计划及其相应语法树结构。查询计划的重用技术减少了查询计划生成的时间和资源消耗
-</code></pre><h1 id="查询重写规则">查询重写规则</h1>
-<pre><code>它是一种等价转换。即对于任何相关模式的任意状态都会产生相同的结果。目标：
-（<span class="number">1</span>）将查询转换为等价的，效率更高的形式。
-（<span class="number">2</span>）尽量将查询重写为等价，简单且不受表顺序限制的形式，为物理查询优化阶段提供更多的选择。如：视图的重写，子查询的合并转换等。
-重写的主要依据是关系代数。它是查询重写规则的理论支持。
-它有<span class="number">3</span>个角度，第<span class="number">4</span>个是物理优化。
-（<span class="number">1</span>）语法级
-（<span class="number">2</span>）代数级
-（<span class="number">3</span>）语义级
-（<span class="number">4</span>）物理级：即基于代价估算模型，比较得出代价最小的，是从连接路径中选择代价最小的路径的过程。
-
-主要思路：
-<span class="number">1</span>）将过程性查询转换为描述性的查询，如视图重写
-<span class="number">2</span>）将复杂的查询（嵌套子查询，外连接，嵌套连接）尽可能转换为多表连接查询
-<span class="number">3</span>）将效率低的谓词转换为等价的效率高的谓词（如等价谓词重写）
-<span class="number">4</span>）利用等式和不等式的性质，简化 <span class="keyword">WHERE</span>， HAVING 和 <span class="keyword">ON</span> 条件
-
-核心是：等价转换，只有等价才能转换。
-</code></pre><h1 id="查询算法优化">查询算法优化</h1>
-<pre><code>查询优化即求解给定查询语句的高效执行计划的过程。
-
-单表结点获取数据的方式有：
-（1）直接通过IO获取
-（2）通过索引获取数据
-（3）通过索引定位数据的位置再经IO到数据块中获取数据
-这是从物理存储到内存解析成逻辑字段的过程。
-
-查询计划的策略：
-（1）基于规则优化
-（2）基于代价优化。
-PG和MySQL采取了基于规则和代价估算的查询优化策略。
-</code></pre><h1 id="多表连接优化算法">多表连接优化算法</h1>
-<pre><code><span class="params">SYSTEM</span>-R算法
-启发式搜索算法 
-贪婪算法 
-动态规划算法
-遗传算法
-</code></pre><h1 id="并行查询优化">并行查询优化</h1>
-<pre><code>单机：找到查询的一个具有最小执行花费的执行计划
-并行：寻找具有最小响应时间的查询执行计划
-
-并行查询：
-（<span class="number">1</span>）操作内并行：将同一操作，如单表扫描操作，两表连接操作，排序操作等分解成多个独立的子操作，由不同的<span class="built_in">CPU</span>同时执行。
-（<span class="number">2</span>）操作间并行：一条SQL查询语句可以分解成多个子操作，由多个<span class="built_in">CPU</span>执行。
-</code></pre><h1 id="分布式查询优化">分布式查询优化</h1>
-<pre><code><span class="attribute">查询策略优化（主要是数据传输策略）和局部处理优化（传统的单结点数据库的查询优化技术）是查询优化的重点。
-
-主要目标：
-减少传输的次数和数据量
-
-分布式代价估算模型
-总代价 </span>=<span class="string"> IO代价 + CPU代价 + 通信代价</span>
-</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="l8o5vee9libvgtik" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/" data-id="wy80onxgz8mqqoy0" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
 
     </footer>
   </div>
@@ -254,19 +195,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
     
 <nav id="article-nav">
   
-    <a href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          自行测试的1亿条数据中PostgreSQL性能
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/02/create-blog-by-hexo/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">使用 Hexo 生成博客</div>
+      <div class="article-nav-title">[翻译]MySQL与PostgreSQL9.0的复制功能对比</div>
     </a>
   
 </nav>
@@ -277,7 +209,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-《数据库查询优化器的艺术》第一章学习笔记" data-title="《数据库查询优化器的艺术》第一章学习笔记" data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/"></div>
+    <div class="ds-thread" data-thread-key="post-CTE表达式和临时表的区别" data-title="CTE表达式和临时表的区别" data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
