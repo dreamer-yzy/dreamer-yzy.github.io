@@ -3,68 +3,65 @@
 <head>
   <meta charset="utf-8">
   
-  <title>CTE表达式和临时表的区别 | PostgreSQL DBA</title>
+  <title>PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+  <meta name="description" content="title: [翻译]CTE表达式和临时表的区别date: 2014-12-12 00:02:52tags:
 
-这个问题是相当广泛的，但尽我所能给你一个普通的回答。
-CTEs
-
-不可以建索引（但可以使用引用到的对象的索引）
-不能有约束
-本质上是一个一次性视图
-只在下一个执行查询时存在
-可以递归
-没有专门的统计状态数据（只依赖于底层对象）
-
+PostgreSQL
+PostgreSQL 翻译
+CTE表达式
 临时表
 
-是存在于临时数据库的真正物化的表
-可以建索引
-可以有约束
-在当前连接">
+categories: 
+
+数据库
+PostgreSQL
+
+
+翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTE">
 <meta property="og:type" content="article">
-<meta property="og:title" content="CTE表达式和临时表的区别">
+<meta property="og:title" content="PostgreSQL DBA">
 <meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+<meta property="og:description" content="title: [翻译]CTE表达式和临时表的区别date: 2014-12-12 00:02:52tags:
 
-这个问题是相当广泛的，但尽我所能给你一个普通的回答。
-CTEs
-
-不可以建索引（但可以使用引用到的对象的索引）
-不能有约束
-本质上是一个一次性视图
-只在下一个执行查询时存在
-可以递归
-没有专门的统计状态数据（只依赖于底层对象）
-
+PostgreSQL
+PostgreSQL 翻译
+CTE表达式
 临时表
 
-是存在于临时数据库的真正物化的表
-可以建索引
-可以有约束
-在当前连接">
+categories: 
+
+数据库
+PostgreSQL
+
+
+翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTE">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CTE表达式和临时表的区别">
-<meta name="twitter:description" content="翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+<meta name="twitter:title" content="PostgreSQL DBA">
+<meta name="twitter:description" content="title: [翻译]CTE表达式和临时表的区别date: 2014-12-12 00:02:52tags:
 
-这个问题是相当广泛的，但尽我所能给你一个普通的回答。
-CTEs
-
-不可以建索引（但可以使用引用到的对象的索引）
-不能有约束
-本质上是一个一次性视图
-只在下一个执行查询时存在
-可以递归
-没有专门的统计状态数据（只依赖于底层对象）
-
+PostgreSQL
+PostgreSQL 翻译
+CTE表达式
 临时表
 
-是存在于临时数据库的真正物化的表
-可以建索引
-可以有约束
-在当前连接">
+categories: 
+
+数据库
+PostgreSQL
+
+
+翻译于dba.stackexchange.com版权归原作者所有，本人只是业余爱好翻译。
+
+这个问题是相当广泛的，但尽我所能给你一个普通的回答。
+CTE">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -137,27 +134,26 @@ ga('send', 'pageview');
   <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
 </a>
     
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
   </div>
   <div class="article-inner">
     
     
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      CTE表达式和临时表的区别
-    </h1>
-  
-
-      </header>
-    
     <div class="article-entry" itemprop="articleBody">
       
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
+        <p>title: [翻译]CTE表达式和临时表的区别<br>date: 2014-12-12 00:02:52<br>tags:</p>
+<ul>
+<li>PostgreSQL</li>
+<li>PostgreSQL 翻译</li>
+<li>CTE表达式</li>
+<li>临时表</li>
+</ul>
+<p>categories: </p>
+<ul>
+<li>数据库</li>
+<li>PostgreSQL</li>
+</ul>
+<hr>
+<p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
 <hr>
 <p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
 <h1 id="CTEs">CTEs</h1>
@@ -187,8 +183,6 @@ ga('send', 'pageview');
       <a data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/" data-id="wy80onxgz8mqqoy0" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
-
     </footer>
   </div>
   
@@ -209,7 +203,7 @@ ga('send', 'pageview');
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-CTE表达式和临时表的区别" data-title="CTE表达式和临时表的区别" data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/"></div>
+    <div class="ds-thread" data-thread-key="post-CTE表达式和临时表的区别" data-title="" data-url="http://dreamer-yzy.github.io/2014/12/12/CTE表达式和临时表的区别/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
@@ -233,7 +227,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -242,7 +236,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -251,7 +245,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 16.67px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 10.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Hexo/" style="font-size: 12.50px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 12.50px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 17.50px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 12.50px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 12.50px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 15.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/博客/" style="font-size: 12.50px;">博客</a>
     </div>
   </div>
 
@@ -272,7 +266,7 @@ ga('send', 'pageview');
       <ul>
         
           <li>
-            <a href="/2014/12/12/CTE表达式和临时表的区别/">CTE表达式和临时表的区别</a>
+            <a href="/2014/12/12/CTE表达式和临时表的区别/">(no title)</a>
           </li>
         
           <li>
