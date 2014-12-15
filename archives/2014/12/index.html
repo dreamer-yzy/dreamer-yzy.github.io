@@ -82,6 +82,55 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-SQL语句各部分的执行顺序" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/15/SQL语句各部分的执行顺序/" class="article-date">
+  <time datetime="2014-12-15T12:54:45.000Z" itemprop="datePublished">12月 15 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>上星期请教了条SQL为什么没有使用到索引的问题，引起了我对SQL执行顺序的疑惑，查了不少资料，收集到比较认可的答案如下，引用资料也在后面标识了。有什么不同的见解，还请大牛指出。</p>
+<h2 id="各部分的执行顺序">各部分的执行顺序</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="bullet">1. </span>FROM</div><div class="line"><span class="bullet">2. </span>ON</div><div class="line"><span class="bullet">3. </span>OUTER</div><div class="line"><span class="bullet">4. </span>WHERE</div><div class="line"><span class="bullet">5. </span>GROUP BY</div><div class="line"><span class="bullet">6. </span>CUBE | ROLLUP</div><div class="line"><span class="bullet">7. </span>HAVING</div><div class="line"><span class="bullet">8. </span>SELECT</div><div class="line"><span class="bullet">9. </span>DISTINCT</div><div class="line"><span class="bullet">10. </span>ORDER BY</div><div class="line"><span class="bullet">11. </span>TOP(LIMIT)</div></pre></td></tr></table></figure>
+
+<p>来源资料：<br><a href="http://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement" target="_blank" rel="external">Stackoverflow whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement</a></p>
+<p><a href="http://stackoverflow.com/questions/4596467/order-of-execution-of-the-query" target="_blank" rel="external">Stackoverflow order-of-execution-of-the-query</a></p>
+<p><a href="https://social.msdn.microsoft.com/Forums/sqlserver/en-US/70efeffe-76b9-4b7e-b4a1-ba53f5d21916/order-of-execution-of-sql-queries" target="_blank" rel="external">MSDN order-of-execution-of-sql-queries</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="j93midrgb1slufj2" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
@@ -135,7 +184,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="ygzqctg8386ap0gh" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="yvo2rzt91kpg1e5m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
@@ -323,7 +372,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="3n6q4kbju1fmcb6n" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="2v96niysiij4pkj3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -448,7 +497,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/08/PostgreSQL窗口函数/" data-id="hsamxqh2rruhmj3d" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/08/PostgreSQL窗口函数/" data-id="6iqd2m1jnc7xfdi1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -503,7 +552,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="7lzdf6uj6n8sq5b0" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="wq4wmn0amsbagayu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
@@ -553,7 +602,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="fbu3eoadyglugs0y" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="p67lkg0fhpitmenp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -618,7 +667,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/PostgreSQL基础学习（一）/" data-id="twng9l5p4oikrd91" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/PostgreSQL基础学习（一）/" data-id="idwk3xe9hbfx53mf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -749,7 +798,7 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="gbjy48lonhaijnj2" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="8qyo36gaq3w2qrym" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -1106,7 +1155,7 @@ sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="gvuyccdgryiikxef" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="h0rom75ap8f8kmvs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -1187,134 +1236,10 @@ select <span class="command">count</span>(<span class="property">id</span>) <spa
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="6dwwr4ucqg5fiui3" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="qk3vkizicyrjdwkw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《数据库查询优化器的艺术》第一章学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" class="article-date">
-  <time datetime="2014-12-02T11:05:02.000Z" itemprop="datePublished">12月 2 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/">《数据库查询优化器的艺术》第一章学习笔记</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="数据库管理系统">数据库管理系统</h1>
-<pre><code>数据定义
-数据操纵
-数据库的运行管理
-数据库的建立和维护等
-</code></pre><h1 id="查询优化的目标">查询优化的目标</h1>
-<pre><code>使查询优化引擎生成一个执行策略的过程，尽量使查询的总开销（IO，<span class="built_in">CPU</span>，网络传输等）达到最小。
-</code></pre><h1 id="查询优化技术（广义）">查询优化技术（广义）</h1>
-<pre><code>查询重用技术
-查询重写规则
-查询算法优化技术
-并行查询优化技术
-分布式查询优化技术
-其他方面（如框架结构）的优化技术
-</code></pre><h1 id="查询优化技术（狭义）">查询优化技术（狭义）</h1>
-<pre><code>查询重写规则
-查询算法优化
-</code></pre><h1 id="代数优化（逻辑优化）">代数优化（逻辑优化）</h1>
-<pre><code>主要依据关系代数的等价变换做一些逻辑变换。查询重写规则属于逻辑优化。
-</code></pre><h1 id="非代数优化（物理优化）">非代数优化（物理优化）</h1>
-<pre><code>主要根据数据读取，表连接方式，表连接顺序，排序等技术对查询进行优化。查询算法优化，属于物理优化。运用了基于代价估算的多表连接算法求解最小花费的技术。
-</code></pre><h1 id="数据库调优">数据库调优</h1>
-<pre><code>目标是使数据库有更高的吞吐量以及更短的响应时间。它是全局的。而查询优化技术是SQL层面的，局部的优化。
-</code></pre><h1 id="查询重用">查询重用</h1>
-<pre><code>指尽可能利用先前的执行结果，以达到节约查询计算全过程的时间并减少资源消耗的目的。
-（1）查询结果的重用
-在缓冲区分配一块缓冲块，存放该SQL语句文本和最后的结果集，当遇到同样的SQL输入时，可直接把结果返回。它节约了查询计划生成时间和查询执行过程的时间，减少了查询执行全过程的资源消耗。
-
-（2）查询计划的重用
-缓存一条查询语句的执行计划及其相应语法树结构。查询计划的重用技术减少了查询计划生成的时间和资源消耗
-</code></pre><h1 id="查询重写规则">查询重写规则</h1>
-<pre><code>它是一种等价转换。即对于任何相关模式的任意状态都会产生相同的结果。目标：
-（<span class="number">1</span>）将查询转换为等价的，效率更高的形式。
-（<span class="number">2</span>）尽量将查询重写为等价，简单且不受表顺序限制的形式，为物理查询优化阶段提供更多的选择。如：视图的重写，子查询的合并转换等。
-重写的主要依据是关系代数。它是查询重写规则的理论支持。
-它有<span class="number">3</span>个角度，第<span class="number">4</span>个是物理优化。
-（<span class="number">1</span>）语法级
-（<span class="number">2</span>）代数级
-（<span class="number">3</span>）语义级
-（<span class="number">4</span>）物理级：即基于代价估算模型，比较得出代价最小的，是从连接路径中选择代价最小的路径的过程。
-
-主要思路：
-<span class="number">1</span>）将过程性查询转换为描述性的查询，如视图重写
-<span class="number">2</span>）将复杂的查询（嵌套子查询，外连接，嵌套连接）尽可能转换为多表连接查询
-<span class="number">3</span>）将效率低的谓词转换为等价的效率高的谓词（如等价谓词重写）
-<span class="number">4</span>）利用等式和不等式的性质，简化 <span class="keyword">WHERE</span>， HAVING 和 <span class="keyword">ON</span> 条件
-
-核心是：等价转换，只有等价才能转换。
-</code></pre><h1 id="查询算法优化">查询算法优化</h1>
-<pre><code>查询优化即求解给定查询语句的高效执行计划的过程。
-
-单表结点获取数据的方式有：
-（1）直接通过IO获取
-（2）通过索引获取数据
-（3）通过索引定位数据的位置再经IO到数据块中获取数据
-这是从物理存储到内存解析成逻辑字段的过程。
-
-查询计划的策略：
-（1）基于规则优化
-（2）基于代价优化。
-PG和MySQL采取了基于规则和代价估算的查询优化策略。
-</code></pre><h1 id="多表连接优化算法">多表连接优化算法</h1>
-<pre><code><span class="params">SYSTEM</span>-R算法
-启发式搜索算法 
-贪婪算法 
-动态规划算法
-遗传算法
-</code></pre><h1 id="并行查询优化">并行查询优化</h1>
-<pre><code>单机：找到查询的一个具有最小执行花费的执行计划
-并行：寻找具有最小响应时间的查询执行计划
-
-并行查询：
-（<span class="number">1</span>）操作内并行：将同一操作，如单表扫描操作，两表连接操作，排序操作等分解成多个独立的子操作，由不同的<span class="built_in">CPU</span>同时执行。
-（<span class="number">2</span>）操作间并行：一条SQL查询语句可以分解成多个子操作，由多个<span class="built_in">CPU</span>执行。
-</code></pre><h1 id="分布式查询优化">分布式查询优化</h1>
-<pre><code><span class="attribute">查询策略优化（主要是数据传输策略）和局部处理优化（传统的单结点数据库的查询优化技术）是查询优化的重点。
-
-主要目标：
-减少传输的次数和数据量
-
-分布式代价估算模型
-总代价 </span>=<span class="string"> IO代价 + CPU代价 + 通信代价</span>
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="fmsohc3a9h6b3fkr" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
 
     </footer>
   </div>
@@ -1336,7 +1261,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">10</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">11</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">11</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -1345,7 +1270,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -1363,7 +1288,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">11</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">12</span></li></ul>
     </div>
   </div>
 
@@ -1373,6 +1298,10 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
+          </li>
         
           <li>
             <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
@@ -1388,10 +1317,6 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
         
           <li>
             <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">PostgreSQL选择某组sum结果最小的所有数据</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
           </li>
         
       </ul>
