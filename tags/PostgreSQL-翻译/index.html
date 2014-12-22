@@ -82,6 +82,129 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post--翻译-PostgreSQL版本策略" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="article-date">
+  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://www.postgresql.org/support/versioning/" target="_blank" rel="external">原文</a></p>
+<h2 id="版本策略">版本策略</h2>
+<p>我们始终建议所有用户都运行最新可用的次版本号的发行版，无论你正在使用哪个主版本的PostgreSQL。</p>
+<p>PostgreSQL主版本包含新特性并且大概一年发行一次。主版本是通过增加第一个或第二个版本数字来标识的，例如：9.1 到 9.2 </p>
+<p>主版本通常改变内部系统表和数据文件的格式。这些改变通常是非常复杂的，所以，我们不保证所有存储数据会向后兼容。主版本一般使用 备份/恢复 数据库或者使用 <code>pg_upgrade</code>模块来升级。</p>
+<p>次版本是版本号的第三部分的数字。例如：9.2.3 到 9.2.4。PostgreSQL团队仅在修复bugs时才会增加次版本号。所有用户都尽可能应该升级到最新的次版本号。虽然升级总是会有风险，PostgreSQL次版本升级仅修复那些经常遇到、安全性以及数据崩溃的bugs，以减少升级的风险。社区认为，不升级比升级更危险。</p>
+<p>升级次版本，不要求备份和恢复数据；仅仅只需停止数据库服务器，安装更新的二进制文件，然后重新启动服务器即可。对于某些发行版本，可能需要手工升级，所以，在升级之前，请必须阅读发行版的提示。</p>
+<h2 id="PostgreSQL发行版支持策略">PostgreSQL发行版支持策略</h2>
+<p>PostgreSQL目的是对主版本号完整地支持5年。</p>
+<p>当一个发行版不再受支持时，我们可能（这取决于我们提交者的决定）会继续为源代码进行打上关键的补丁。但项目不会产生正式发行或者二进制包，但是更新后的源代码可以从我们的代码控制系统里获取。</p>
+<p>该策略会在尽最大努力的基础上实行。在极端情况下，它可能在计划的生命周期内就不再被支持了；例如，如果在给定的主版本上发现有一个严重的bug超出了代码稳定性或者要牺牲程序序兼容性来解决的。在这种情况下，该主要版本就要提前退休了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="i1cup1m9ew5qzmlx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post--翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" class="article-date">
+  <time datetime="2014-12-20T01:19:19.000Z" itemprop="datePublished">12月 20 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/">[翻译]在Ubuntu服务器上将PostgreSQL从9.1升级到9.3</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://dba.stackexchange.com/a/60541" target="_blank" rel="external">原文地址</a></p>
+<p>从不同的重大版本升级PostgreSQL（例如，从9.1升级到9.3），基本上有三种方法：</p>
+<h2 id="用_pg_dump_升级">用 pg_dump 升级</h2>
+<p>如果可以的话，首先推荐的方法是使用新版本（9.3）进行二进制备份一个老（9.1）版本数据，然后在新版本创建的集群中恢复数据。</p>
+<p>这种途径，通常，是比较慢的，但是也是最实用的。使它进行得更加快的方法之一是，使用并发。为了并行备份任务，你可以这样子做：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">$</span> <span class="comment">pg_dump</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">format=directory</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">jobs=4</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">no</span><span class="literal">-</span><span class="comment">synchronized</span><span class="literal">-</span><span class="comment">snapshots</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">file=/path/to/mydump</span> <span class="comment">mydatabase</span></div></pre></td></tr></table></figure>
+
+<p>你可以为每个数据库进行这样子的备份，并调整 <code>--jobs=4</code> 参数值到任何值（测试从2到CPU核心数，并看看哪个更快）。当然，在备份期间，没人应该连接到数据库，任何的修改将会导致备份中断（因为非安全选项 <code>--no-synchronized-snapshots</code>）</p>
+<p>之后，你可以使用<code>pg_restore</code>来恢复到新的实例中：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ createdb &lt;<span class="keyword">options</span>&gt; -T template0 mydatabase</div><div class="line">$ pg_restore --<span class="keyword">exit</span>-<span class="keyword">on</span>-error --jobs=<span class="number">4</span> --dbname=mydatabase /path/<span class="keyword">to</span>/mydump</div></pre></td></tr></table></figure>
+
+<p>之后, 建议在数据库上执行<code>ANALYZE</code>命令：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ vacuumdb --analyze-<span class="keyword">only</span> mydatabase</div></pre></td></tr></table></figure>
+
+<p>（如果你可以等待时间的话，仅仅运行 <code>--analyze</code> 来同时进行 VACUUM 数据库并更新可视数据字典）</p>
+<h2 id="使用_pg_upgrade_升级">使用 pg_upgrade 升级</h2>
+<p>另一种方法，是使用扩展包中的 <code>pg_upgrade</code>。它提供了一个非常快速的方法来升级PostgreSQL，就是使用 <code>--link</code> 方法。<br>使用之前，你必须备份整个数据目录，因为在 <code>--link</code> 模式下，如果出错，你可能丢失所有数据（包括新旧数据）。并且，请完整地阅读文档，特别是底部的提示（<code>pg_upgrade</code>有许多限制）</p>
+<h2 id="使用基于复制工具的触发器来升级">使用基于复制工具的触发器来升级</h2>
+<p>另一种升级版本的选项，是使用基于触发器的复制工具 。比如<code>Slony, Bucardo和Londiste</code>。</p>
+<p>这个选项可能用于最少停机时间，但是也是最难操作的。</p>
+<p>这样做的话，需要建立一个 <code>master-slave</code>，主库是你当前版本（9.1），从库是新版本（9.3）。之后，等待第一次同步（系统仍然在生产环境），之后你关闭所有连接到数据库（停机时间从这里开始），等待从库赶上，然后提升（从库）到主库，然后重定向所有客户/应用程序到新版本数据库。打完收工。</p>
+<p><code>Slony</code>文档提供了一步一步地教你使用<code>Slony</code>来升级PostgreSQL.</p>
+<h2 id="应该选择哪个？">应该选择哪个？</h2>
+<p>Well, as always depends, resuming:<br>好了，这要取决于什么，总结一下：</p>
+<p><code>dump+restore</code>是最可靠的，但通常也是最慢的一种（尽管，并行性可以带来更好的结果）</p>
+<p><code>pg_upgrade</code>是对于比较少的停机时间来说是最好的选择之一（如果你能使用的话，看看它的限制）。它通常只需要花数分钟的时间，甚至对于大的数据库也是这样。</p>
+<p><code>触发器复制</code>，毫无疑问是最少停机时间（几乎为0）的做法，但是它真的好难实行，并且我仅仅建议专家（PostgreSQL和复制工具二者都非常熟悉的专家）</p>
+<p>希望我可以帮到你。祝你好运。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="0eca1g1vm9j3x9w9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
@@ -135,7 +258,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="zqvu1ufpccm9gab9" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="m47jzxuckxo8nzdo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
@@ -323,7 +446,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="a1p5kyzg48e7j5r8" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="2p61idurnd6tzvv0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -344,7 +467,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">13</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">13</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">14</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">14</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">1</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -353,7 +476,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -362,7 +485,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.50px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 17.50px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 12.50px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 15.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 10.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 10.00px;">Java 基础学习</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 18.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a>
     </div>
   </div>
 
@@ -371,7 +494,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">14</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
@@ -383,23 +506,23 @@ ga('send', 'pageview');
       <ul>
         
           <li>
+            <a href="/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/">[翻译]为什么在Java里不能将Integer强制转换成String</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/">Cookie 的 HttpOnly 和 Secure 属性作用</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
+          </li>
+        
+          <li>
             <a href="/2014/12/20/PostgreSQL最可靠的升级方案-实践/">PostgreSQL最可靠的升级方案[实践]</a>
           </li>
         
           <li>
             <a href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/">[翻译]在Ubuntu服务器上将PostgreSQL从9.1升级到9.3</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
           </li>
         
       </ul>
