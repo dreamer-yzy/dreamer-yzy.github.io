@@ -82,853 +82,378 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
-    <article id="post-PostgreSQL执行计划和成本因子详解" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/23/PostgreSQL执行计划和成本因子详解/" class="article-date">
-  <time datetime="2014-12-23T13:09:07.000Z" itemprop="datePublished">12月 23 2014</time>
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2014" class="archive-year">2014</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/23/PostgreSQL执行计划和成本因子详解/" class="archive-article-date">
+  <time datetime="2014-12-23T13:09:07.000Z" itemprop="datePublished">12月 23</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/23/PostgreSQL执行计划和成本因子详解/">PostgreSQL执行计划和成本因子详解</a>
+      <a class="archive-article-title" href="/2014/12/23/PostgreSQL执行计划和成本因子详解/">PostgreSQL执行计划和成本因子详解</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="PG对各表的统计信息：pg_stats">PG对各表的统计信息：pg_stats</h2>
-<p>资源来源：PostgreSQL 9.3.1 中文文档 —— Chapter 47. 系统表 —— 47.68. pg_stats</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">名字</th>
-<th style="text-align:left">类型</th>
-<th style="text-align:left">引用</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">schemaname</td>
-<td style="text-align:left">name</td>
-<td style="text-align:left">pg_namespace.nspname</td>
-<td>包含此表的模式名字</td>
-</tr>
-<tr>
-<td style="text-align:left">tablename</td>
-<td style="text-align:left">name</td>
-<td style="text-align:left">pg_class.relname</td>
-<td>表的名字</td>
-</tr>
-<tr>
-<td style="text-align:left">attname</td>
-<td style="text-align:left">name</td>
-<td style="text-align:left">pg_attribute.attname</td>
-<td>这一行描述的字段的名字</td>
-</tr>
-<tr>
-<td style="text-align:left">inherited</td>
-<td style="text-align:left">bool</td>
-<td style="text-align:left"></td>
-<td>如果为真，那么这行包含继承的子字段，不只是指定表的值。</td>
-</tr>
-<tr>
-<td style="text-align:left">null_frac</td>
-<td style="text-align:left">real</td>
-<td style="text-align:left"></td>
-<td>记录中字段为空的百分比</td>
-</tr>
-<tr>
-<td style="text-align:left">avg_width</td>
-<td style="text-align:left">integer</td>
-<td style="text-align:left"></td>
-<td>字段记录以字节记的平均宽度</td>
-</tr>
-<tr>
-<td style="text-align:left">n_distinct</td>
-<td style="text-align:left">real</td>
-<td style="text-align:left"></td>
-<td>如果大于零，就是在字段中独立数值的估计数目。如果小于零， 就是独立数值的数目被行数除的负数。用负数形式是因为ANALYZE 认为独立数值的数目是随着表增长而增长； 正数的形式用于在字段看上去好像有固定的可能值数目的情况下。比如， -1 表示一个唯一字段，独立数值的个数和行数相同。</td>
-</tr>
-<tr>
-<td style="text-align:left">most_common_vals</td>
-<td style="text-align:left">anyarray</td>
-<td style="text-align:left"></td>
-<td>一个字段里最常用数值的列表。如果看上去没有啥数值比其它更常见，则为 null</td>
-</tr>
-<tr>
-<td style="text-align:left">most_common_freqs</td>
-<td style="text-align:left">real[]</td>
-<td style="text-align:left"></td>
-<td>一个最常用数值的频率的列表，也就是说，每个出现的次数除以行数。 如果most_common_vals是 null ，则为 null。</td>
-</tr>
-<tr>
-<td style="text-align:left">histogram_bounds</td>
-<td style="text-align:left">anyarray</td>
-<td style="text-align:left"></td>
-<td>一个数值的列表，它把字段的数值分成几组大致相同热门的组。 如果在most_common_vals里有数值，则在这个饼图的计算中省略。 如果字段数据类型没有&lt;操作符或者most_common_vals 列表代表了整个分布性，则这个字段为 null。</td>
-</tr>
-<tr>
-<td style="text-align:left">correlation</td>
-<td style="text-align:left">real</td>
-<td style="text-align:left"></td>
-<td>统计与字段值的物理行序和逻辑行序有关。它的范围从 -1 到 +1 。 在数值接近 -1 或者 +1 的时候，在字段上的索引扫描将被认为比它接近零的时候开销更少， 因为减少了对磁盘的随机访问。如果字段数据类型没有&lt;操作符，那么这个字段为null。</td>
-</tr>
-<tr>
-<td style="text-align:left">most_common_elems</td>
-<td style="text-align:left">anyarray</td>
-<td style="text-align:left"></td>
-<td>经常在字段值中出现的非空元素值的列表。（标量类型为空。）</td>
-</tr>
-<tr>
-<td style="text-align:left">most_common_elem_freqs</td>
-<td style="text-align:left">real[]</td>
-<td style="text-align:left"></td>
-<td>最常见元素值的频率列表，也就是，至少包含一个给定值的实例的行的分数。 每个元素频率跟着两到三个附加的值；它们是在每个元素频率之前的最小和最大值， 还有可选择的null元素的频率。（当most_common_elems 为null时，为null）</td>
-</tr>
-<tr>
-<td style="text-align:left">elem_count_histogram</td>
-<td style="text-align:left">real[]</td>
-<td style="text-align:left"></td>
-<td>该字段中值的不同非空元素值的统计直方图，跟着不同非空元素的平均值。（标量类型为空。）</td>
-</tr>
-</tbody>
-</table>
-<h2 id="成本因子">成本因子</h2>
-<p>因为PostgreSQL是基于代价模型来选择最优的执行计划的，而成本因子则是计算代价模型的最重要参数。（代价=CPU代价+IO代价+数据传输[如网络]代价）</p>
-<p>在PG9.4默认情况下的成本因子如下：（这些值可以在 postgresql.conf 文件里修改的）</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="preprocessor"># - Planner Cost Constants -</span></div><div class="line"><span class="preprocessor">#seq_page_cost = 1.0                    # measured on an arbitrary scale。扫描一个数据块（一页）的成本（IO成本）</span></div><div class="line"><span class="preprocessor">#random_page_cost = 4.0                 # same scale as above。随机获取一个数据块（一页）的成本（IO成本）</span></div><div class="line"><span class="preprocessor">#cpu_tuple_cost = 0.01                  # same scale as above。获取一行数据的CPU成本</span></div><div class="line"><span class="preprocessor">#cpu_index_tuple_cost = 0.005           # same scale as above。获取一个索引项的CPU成本</span></div><div class="line"><span class="preprocessor">#cpu_operator_cost = 0.0025             # same scale as above。每个操作符的CPU成本</span></div><div class="line"><span class="preprocessor">#effective_cache_size = 4GB             #评估操作系统缓存可能使用的内存大小。用于评估索引扫描的开销，大的值倾向使用索引，小的值倾向使用全表扫描。一般设置为“物理内存 - shared buffers - 内核和其他软件占用的内存”。</span></div></pre></td></tr></table></figure>
-
-<p>注意：SSD的随机读和顺序读差别不是太大，这时可以缩小 <code>seq_page_cost</code> 和 <code>random_page_cost</code> 之间的大小。使<code>random_page_cost</code>趋向于<code>seq_page_cost</code>。</p>
-<h4 id="关于_effective_cache_size_特别说明一下">关于 effective_cache_size 特别说明一下</h4>
-<p><a href="http://blogs.enterprisedb.com/2012/05/04/the-effectiveness-of-effective_cache_size/" target="_blank" rel="external">资料来源</a></p>
-<p><code>effective_cache_size</code>用于在Linux操作系统上报告内核缓存的大小，我想强调一下它在<code>postgresql.conf</code>配置里的重要性。<br><a href="http://www.postgresql.org/docs/9.1/static/runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS" target="_blank" rel="external">effective_cache_size</a></p>
-<p>不像其他内存那样是设置已经分配好的控制内存，<code>effective_cache_size</code>用于告诉优化器在内核里有多少cache（读缓存）。这对于决定代价高的索引扫描方式是非常重要的。优化器知道 <code>shared_buffers</code> 大小，但是不知道内核缓存大小，从而影响到代价非常高的磁盘访问。</p>
-<p>内核缓存大小改变比较频繁，所以，正常地运行一段时间的系统负载，然后使用该内存值去设置 <code>effective_cache_size</code>。这个值不必是非常完美的，仅仅只是粗略地估计还有多少内核内存，相当于是<code>shared buffers</code>的二级缓存。</p>
-<h2 id="explain_输出及详解">explain 输出及详解</h2>
-<p>explain 语法：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# \h <span class="operator"><span class="keyword">explain</span>;</span></div><div class="line">Command:     <span class="operator"><span class="keyword">EXPLAIN</span></span></div><div class="line">Description: <span class="keyword">show</span> the execution plan <span class="keyword">of</span> a statement</div><div class="line">Syntax:</div><div class="line"><span class="keyword">EXPLAIN</span> [ ( <span class="keyword">option</span> [, ...] ) ] statement</div><div class="line"><span class="keyword">EXPLAIN</span> [ <span class="keyword">ANALYZE</span> ] [ VERBOSE ] statement</div><div class="line"> </div><div class="line"><span class="keyword">where</span> <span class="keyword">option</span> can be one <span class="keyword">of</span>:</div><div class="line"> </div><div class="line">    <span class="keyword">ANALYZE</span> [ <span class="built_in">boolean</span> ] 是否真正执行</div><div class="line">    VERBOSE [ <span class="built_in">boolean</span> ] 显示详细信息</div><div class="line">    COSTS [ <span class="built_in">boolean</span> ] 显示代价信息</div><div class="line">    BUFFERS [ <span class="built_in">boolean</span> ] 显示缓存信息</div><div class="line">    TIMING [ <span class="built_in">boolean</span> ] 显示时间信息</div><div class="line">    <span class="keyword">FORMAT</span> { <span class="built_in">TEXT</span> | <span class="keyword">XML</span> | JSON | YAML } 输出格式，默认为 <span class="built_in">text</span></div></pre></td></tr></table></figure>
-
-<p>图解：<br><img src="/img/postgresql-explain-des.jpg" alt=""></p>
-<h4 id="注意">注意</h4>
-<p>看执行计划，是从最底层开始往后看的。即先从 节点1，再到节点2，最后到节点3。<br>而且，上一级节点的成本，是包含了下一级的成本的。比如：节点2的启动成本和结束成本是已经包含了节点1的启动成本和结束成本的，由此可以得出一个结论：就是上一级节点的启动成本和结束成本永远不会比下一级的小。</p>
-<p>再次强调一下，每个节点的估算的总启动或结束成本只是平均每次loops的平均成本，所以最后的总成本还要乘以loops次数。</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># explain(analyze, timing, verbose, buffers,costs) select max(sum) from ( select count(*) as sum from tgroup group by point) as t;</span></div><div class="line">                                                               QUERY PLAN                                                                </div><div class="line">-----------------------------------------------------------------------------------------------------------------------------------------</div><div class="line"> Aggregate  (<span class="variable">cost=</span><span class="number">235363.15</span>..<span class="number">235363.16</span> <span class="variable">rows=</span><span class="number">1</span> <span class="variable">width=</span><span class="number">8</span>) (actual <span class="variable">time=</span><span class="number">4898.900</span>..<span class="number">4898.900</span> <span class="variable">rows=</span><span class="number">1</span> <span class="variable">loops=</span><span class="number">1</span>)</div><div class="line">   Output: max((count(*)))</div><div class="line">   Buffers: shared <span class="variable">hit=</span><span class="number">12770</span> <span class="variable">read=</span><span class="number">49578</span></div><div class="line">   -&gt;  HashAggregate  (<span class="variable">cost=</span><span class="number">235363.04</span>..<span class="number">235363.09</span> <span class="variable">rows=</span><span class="number">5</span> <span class="variable">width=</span><span class="number">4</span>) (actual <span class="variable">time=</span><span class="number">4898.890</span>..<span class="number">4898.891</span> <span class="variable">rows=</span><span class="number">5</span> <span class="variable">loops=</span><span class="number">1</span>)</div><div class="line">         Output: count(*), tgroup.point</div><div class="line">         Group Key: tgroup.point</div><div class="line">         Buffers: shared <span class="variable">hit=</span><span class="number">12770</span> <span class="variable">read=</span><span class="number">49578</span></div><div class="line">         -&gt;  Seq Scan on public.tgroup  (<span class="variable">cost=</span><span class="number">0.00</span>..<span class="number">177691.36</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">4</span>) (actual <span class="variable">time=</span><span class="number">0.045</span>..<span class="number">1643.984</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">loops=</span><span class="number">1</span>)</div><div class="line">               Output: tgroup.id, tgroup.age, tgroup.point</div><div class="line">               Buffers: shared <span class="variable">hit=</span><span class="number">12770</span> <span class="variable">read=</span><span class="number">49578</span></div><div class="line"> Planning time: <span class="number">0.170</span> ms</div><div class="line"> Execution time: <span class="number">4898.982</span> ms</div><div class="line">(<span class="number">12</span> rows)</div><div class="line"></div><div class="line">Time: <span class="number">4899.758</span> ms</div><div class="line"><span class="variable">test=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
-
-<h2 id="估算成本的计算公式">估算成本的计算公式</h2>
-<h4 id="全表扫描时计算：">全表扫描时计算：</h4>
-<p>公式：<code>total cost = relpages * seq_page_cost + reltuples * cpu_tuple_cost。</code></p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> relpages, reltuples <span class="keyword">from</span> pg_class <span class="keyword">where</span> relname = <span class="string">'tgroup'</span>;</span></div><div class="line">-[ RECORD 1 ]<span class="comment">----------</span></div><div class="line">relpages  | 62348</div><div class="line">reltuples | 1.15343e+07</div><div class="line"></div><div class="line">Time: 0.751 ms</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">show</span> seq_page_cost ;</span></div><div class="line">-[ RECORD 1 ]-+<span class="comment">--</span></div><div class="line">seq_page_cost | 1</div><div class="line"></div><div class="line">Time: 28.848 ms</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">show</span> cpu_tuple_cost;</span></div><div class="line">-[ RECORD 1 ]<span class="comment">--+-----</span></div><div class="line">cpu_tuple_cost | 0.01</div><div class="line"></div><div class="line">Time: 0.460 ms</div></pre></td></tr></table></figure>
-
-<p>如上节点1执行计划，是全表扫描：<br><code>177691.36 = 62348 * 1 + 1.15343e+07 * 0.01</code></p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># select 62348 * 1 + 1.15343e+07 * 0.01;</span></div><div class="line">-[ RECORD <span class="number">1</span> ]-------</div><div class="line">?column? | <span class="number">177691.00</span></div><div class="line"></div><div class="line">Time: <span class="number">39.815</span> ms</div><div class="line"><span class="variable">test=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
-
-<p>这个与结果相符。</p>
-<h2 id="全表顺序扫描并过滤，代价公式为:">全表顺序扫描并过滤，代价公式为:</h2>
-<p><code>Cost = seq_scan_cost*relpages + cpu_tuple_cost*reltuples + cpu_operator_cost*reltuples</code></p>
-<h2 id="扫描的方式">扫描的方式</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">enable_bitmapscan = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_hashagg = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_hashjoin = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_indexscan = <span class="function_start"><span class="keyword">on</span></span> <span class="comment">#索引扫描</span></div><div class="line">enable_indexonlyscan = <span class="function_start"><span class="keyword">on</span></span> <span class="comment">#只读索引扫描</span></div><div class="line">enable_material = <span class="function_start"><span class="keyword">on</span></span> <span class="comment">#物化视图</span></div><div class="line">enable_mergejoin = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_nestloop = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_seqscan = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_sort = <span class="function_start"><span class="keyword">on</span></span></div><div class="line">enable_tidscan = <span class="function_start"><span class="keyword">on</span></span></div></pre></td></tr></table></figure>
-
-<p>虽然我们不能强制指定PostgreSQL按我们写的SQL来执行（无视优化器），但是可以通过改变某些的查询方式代价从而影响PostgreSQL的查询优化器的选择。<br>这时，我们可以从上面的扫描方式中将其修改为 <code>off</code>（其实不是强制不能以某种方式扫描，将其设置为 off时，只是将该项的扫描代价提高到非常大的值，从而让PostgreSQL尽可能避免使用该方式来进行扫描，但不是绝对的，如果其他的方式比off的代价更大，那PostgreSQL还是会选择代价最小的来执行的），这就为我们提供了非常好的控制我们SQL的扫描方式。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="fw8gtlbzb87a175l" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post-PostgreSQL上选择MAX（COUNT）的数据出来" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" class="article-date">
-  <time datetime="2014-12-23T12:54:59.000Z" itemprop="datePublished">12月 23 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" class="archive-article-date">
+  <time datetime="2014-12-23T12:54:59.000Z" itemprop="datePublished">12月 23</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/">PostgreSQL上选择MAX（COUNT）的数据出来</a>
+      <a class="archive-article-title" href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/">PostgreSQL上选择MAX（COUNT）的数据出来</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>昨天晚上，和同事讨论了一个SQL的问题，是如何选择根据某字段分组，然后取出MAX  COUNT(XX) 值的数据出来。例如数据是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">test=<span class="preprocessor"># select * from tgroup;</span></div><div class="line">id <span class="string">| age | point</span></div><div class="line">----+-----+-------</div><div class="line">  <span class="number">1</span> <span class="string">|   1 |    11</span></div><div class="line">  <span class="number">2</span> <span class="string">|   1 |    32</span></div><div class="line">  <span class="number">3</span> <span class="string">|   2 |    32</span></div><div class="line">  <span class="number">4</span> <span class="string">|   2 |    13</span></div><div class="line">  <span class="number">5</span> <span class="string">|   2 |    33</span></div><div class="line">  <span class="number">6</span> <span class="string">|   2 |    38</span></div><div class="line">  <span class="number">7</span> <span class="string">|   3 |    38</span></div><div class="line">  <span class="number">8</span> <span class="string">|   2 |    38</span></div><div class="line">  <span class="number">9</span> <span class="string">|   2 |    38</span></div><div class="line"> <span class="number">10</span> <span class="string">|   2 |    38</span></div><div class="line"> <span class="number">11</span> <span class="string">|   2 |    38</span></div><div class="line">(<span class="number">11</span> rows)</div><div class="line"> </div><div class="line">test=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
-
-<p>现在要选择出根据 POINT 分组里包含个数最大的值。大概意思是：MAX(COUNT(*)) FROM tgroup GROUP BY POINT;<br>所以，一开始，我们的SQL语句是（失败）：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">MAX</span>(<span class="keyword">COUNT</span>(*)) <span class="keyword">FROM</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point;</span></div></pre></td></tr></table></figure>
-
-<p>然而，我们得出的错误是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">aggregate <span class="summary">function calls cannot be nested</span></div></pre></td></tr></table></figure>
-
-<p>原来，聚集函数是不能嵌套调用的。</p>
-<p>然后又想到能不能使用子查询来完成。SQL如下（成功） ：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">sum</span>) <span class="keyword">from</span> ( <span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point) <span class="keyword">as</span> t;</span></div></pre></td></tr></table></figure>
-
-<p>再来一条，不使用子查询，而是使用ORDER BY 结合 LIMIT 来完成，SQL语句如下（成功):</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">sum</span> <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span></div></pre></td></tr></table></figure>
-
-<p>最后使用PG里的CTE表达式最容易理解（成功）：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div></pre></td></tr></table></figure>
-
-<p>那他们的性能是何呢？测试了一千一百五十多万的数据。每条SQL性能如何？</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> tgroup;</span></div><div class="line">  count  </div><div class="line"><span class="comment">----------</span></div><div class="line">11534336</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<h2 id="使用子查询的性能（POINT没有索引）">使用子查询的性能（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">sum</span>) <span class="keyword">from</span> ( <span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point) <span class="keyword">as</span> t;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 3055.716 ms</div></pre></td></tr></table></figure>
-
-<h2 id="ORDER_BY_结合_LIMIT（POINT没有索引）">ORDER BY 结合 LIMIT（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">sum</span> <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span></div><div class="line">   sum  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 3047.152 ms</div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<h2 id="使用CTE表达式（POINT没有索引）">使用CTE表达式（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=#  with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 25675.005 ms</div></pre></td></tr></table></figure>
-
-<p>后面为POINT添加索引，速度只有CTE表达式的加快了一倍（添加索引其实也不太科学，POINT的数据分布不均匀，重复的数据比较多，因为是通过 insert into select 的方式来生成大量数据的，只是想看一下添加索引后的效果）:</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=#  with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 11735.775 ms</div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<p>其他两种方式，并没有什么变化。看执行计划，其他两种依然是使用Seq Scan的方式，而添加了索引后，CTE的方式使用了 CTE Scan + IndexOnlyScan的方式。</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># explain  with cte as (select count(*) over (partition by point) from tgroup) select max(count) from cte;</span></div><div class="line">                                                QUERY PLAN                                               </div><div class="line">----------------------------------------------------------------------------------------------------------</div><div class="line"> Aggregate  (<span class="variable">cost=</span><span class="number">955503.54</span>..<span class="number">955503.55</span> <span class="variable">rows=</span><span class="number">1</span> <span class="variable">width=</span><span class="number">8</span>)</div><div class="line">   CTE cte</div><div class="line">     -&gt;  WindowAgg  (<span class="variable">cost=</span><span class="number">0.43</span>..<span class="number">695980.98</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">4</span>)</div><div class="line">           -&gt;  Index Only Scan using tgroup_point on tgroup  (<span class="variable">cost=</span><span class="number">0.43</span>..<span class="number">522965.94</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">4</span>)</div><div class="line">   -&gt;  CTE Scan on cte  (<span class="variable">cost=</span><span class="number">0.00</span>..<span class="number">230686.72</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">8</span>)</div><div class="line">(<span class="number">5</span> rows)</div><div class="line"> </div><div class="line">Time: <span class="number">0.909</span> ms</div></pre></td></tr></table></figure>
-
-<h1 id="总结">总结</h1>
-<p>看来没有 WHERE 或其他条件过滤数据而且数据量非常大的情况下，不适宜使用CTE表达式，因为它本质是一个一次性视图，生成一张这么大的视图，性能也快不到哪里去(可能使用物化视图会好点,不过没有测试过）。在大量数据情况下，还是使用普通的全表扫描比使用生成CTE再全表扫描来得快。这也应验了之前翻译篇文章的强调：CTE表达式的作用，真的不是为了加快查询速度，而仅仅是为了方便。冏 ~~。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="pfyj7b1bczys7rbf" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post--翻译-为什么在Java里不能将Integer强制转换成String" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" class="article-date">
-  <time datetime="2014-12-22T14:25:45.000Z" itemprop="datePublished">12月 22 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" class="archive-article-date">
+  <time datetime="2014-12-22T14:25:45.000Z" itemprop="datePublished">12月 22</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/">[翻译]为什么在Java里不能将Integer强制转换成String</a>
+      <a class="archive-article-title" href="/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/">[翻译]为什么在Java里不能将Integer强制转换成String</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="为何Integer不能转换为String">为何Integer不能转换为String</h2>
-<p><a href="http://stackoverflow.com/a/8973685/3815425" target="_blank" rel="external">原文</a></p>
-<p>因为 <code>String</code> 和 <code>Integer</code> 不是在同一个对象阶层。</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">      <span class="built_in">Object</span></div><div class="line">     /      \</div><div class="line">    /        \</div><div class="line"><span class="built_in">String</span>     <span class="built_in">Integer</span></div></pre></td></tr></table></figure>
-
-<p>当你尝试强制转换时，仅仅会在同一个对象阶层转换。比如：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">     <span class="built_in">Object</span></div><div class="line">     /</div><div class="line">    /</div><div class="line">   A</div><div class="line">  /</div><div class="line">/</div><div class="line">B</div></pre></td></tr></table></figure>
-
-<p>在这种情况，<code>(A)objB</code> 或者 <code>(Object)objB</code> 或者 <code>(Object)objA</code> 可以进行转换。</p>
-<p>正如其他人已经提到，将<code>integer</code>转换成<code>String</code>可以使用以下方法：</p>
-<p>基本类型的整型时使用：<code>String.valueOf(integer)</code>或者<code>Integer.toString(integer)</code> 来转换成<code>String</code>。<br><code>Integer</code>对象型时使用：<code>Integer.toString()</code>转换成<code>String</code></p>
-<hr>
-<p>写代码过程中，居然遇到这种错误（在使用Spring 来操作 Redis 经常出现，但百思不得其姐。和同事讨论时才发现，原来Redis在底层永远是保存String的，即使在写代码的时候是写成 set(String, Object)。这时，如果get这个缓存出来，而且想要的是整型时，就会报<code>java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String</code>错误。），出来工作差不多2年了，这种错误的本质原因，直到今天才明白。实在是太惭愧了。很可能是被所有对象可以以字符串的形式表示而导致的，以为所有的对象在使用 <code>(String)obj</code>时，会使用 <code>obj.toString()</code>，所以才造成这种认为理所当然的错觉。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="au3ppzvaqeodory8" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post-Cookie-的-HttpOnly-和-Secure-属性作用" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/" class="article-date">
-  <time datetime="2014-12-22T14:23:42.000Z" itemprop="datePublished">12月 22 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/" class="archive-article-date">
+  <time datetime="2014-12-22T14:23:42.000Z" itemprop="datePublished">12月 22</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/HTTP/">HTTP</a>►<a class="article-category-link" href="/categories/HTTP/Web/">Web</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/">Cookie 的 HttpOnly 和 Secure 属性作用</a>
+      <a class="archive-article-title" href="/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/">Cookie 的 HttpOnly 和 Secure 属性作用</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>今天和总监、同事又讨论起关于Session共享的解决方案问题，讨论到因为Tomcat自带的Session机制在集群时难以做到真正的集群。因为使用Tomcat自带的Session机制，难以做到在集群中节点共享，一般是通过Nginx反向代理使用Hash、固定IP等解决方案，并不能避免单节点崩溃时不能继续提供服务的问题。虽然这种可以解决压力的问题，但是当一直为某IP或通过Hash来分配服务的某台服务器挂了，则它负责服务的客户就都访问不了了（Session失效，只能重新调度分配到其他服务器，这时要重新生成会话）。讨论到的可用的解决方案是Cookie + Redis，然后又讨论了Cookie的安全性问题。然后同事问了下<code>HttpOnly</code>这个在浏览器里打勾的作用，然后自己按以前了解到的资料来回答了一下，大概是说：不能通过Javascript来修改带有HttpOnly属性的Cookie，只能通过服务器来修改。但是看到总监却可以通过JS来修改带有HttpOnly属性的Cookie，这让我产生了怀疑自己的正确性。</p>
-<p>不过还好，事后向总监确认了一下，原来他是通过删除旧的带有HttpOnly属性的Cookie，然后才用JS添加一个同名同值没有HttpOnly属性来测试。所以，我之前说的大概是对的，但是不够系统，所以再次查了下资料来系统整理一下，与君分享。</p>
-<p>下面两个属性都属于Cookie安全方面考虑的。这要视浏览器或服务端有没有支持。</p>
-<h2 id="Secure">Secure</h2>
-<p>Cookie的<code>Secure</code>属性，意味着保持Cookie通信只限于加密传输，指示浏览器仅仅在通过<code>安全/加密</code>连接才能使用该Cookie。如果一个Web服务器从一个非安全连接里设置了一个带有<code>secure</code>属性的Cookie，当Cookie被发送到客户端时，它仍然能通过<code>中间人攻击</code>来拦截。</p>
-<h2 id="HttpOnly">HttpOnly</h2>
-<p>Cookie的<code>HttpOnly</code>属性，指示浏览器不要在除HTTP（和 HTTPS)请求之外暴露Cookie。一个有<code>HttpOnly</code>属性的Cookie，不能通过非HTTP方式来访问，例如通过调用JavaScript(例如，引用 <code>document.cookie</code>），因此，不可能通过跨域脚本（一种非常普通的攻击技术）来偷走这种Cookie。尤其是Facebook 和 Google 正在广泛地使用<code>HttpOnly</code>属性。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/" data-id="tukv4c0lquf8fx3g" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cookie/">Cookie</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HTTP/">HTTP</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post--翻译-PostgreSQL版本策略" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="article-date">
-  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="archive-article-date">
+  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
+      <a class="archive-article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.postgresql.org/support/versioning/" target="_blank" rel="external">原文</a></p>
-<h2 id="版本策略">版本策略</h2>
-<p>我们始终建议所有用户都运行最新可用的次版本号的发行版，无论你正在使用哪个主版本的PostgreSQL。</p>
-<p>PostgreSQL主版本包含新特性并且大概一年发行一次。主版本是通过增加第一个或第二个版本数字来标识的，例如：9.1 到 9.2 </p>
-<p>主版本通常改变内部系统表和数据文件的格式。这些改变通常是非常复杂的，所以，我们不保证所有存储数据会向后兼容。主版本一般使用 备份/恢复 数据库或者使用 <code>pg_upgrade</code>模块来升级。</p>
-<p>次版本是版本号的第三部分的数字。例如：9.2.3 到 9.2.4。PostgreSQL团队仅在修复bugs时才会增加次版本号。所有用户都尽可能应该升级到最新的次版本号。虽然升级总是会有风险，PostgreSQL次版本升级仅修复那些经常遇到、安全性以及数据崩溃的bugs，以减少升级的风险。社区认为，不升级比升级更危险。</p>
-<p>升级次版本，不要求备份和恢复数据；仅仅只需停止数据库服务器，安装更新的二进制文件，然后重新启动服务器即可。对于某些发行版本，可能需要手工升级，所以，在升级之前，请必须阅读发行版的提示。</p>
-<h2 id="PostgreSQL发行版支持策略">PostgreSQL发行版支持策略</h2>
-<p>PostgreSQL目的是对主版本号完整地支持5年。</p>
-<p>当一个发行版不再受支持时，我们可能（这取决于我们提交者的决定）会继续为源代码进行打上关键的补丁。但项目不会产生正式发行或者二进制包，但是更新后的源代码可以从我们的代码控制系统里获取。</p>
-<p>该策略会在尽最大努力的基础上实行。在极端情况下，它可能在计划的生命周期内就不再被支持了；例如，如果在给定的主版本上发现有一个严重的bug超出了代码稳定性或者要牺牲程序序兼容性来解决的。在这种情况下，该主要版本就要提前退休了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="t1e1jxgri96wb7xp" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post-PostgreSQL最可靠的升级方案-实践" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/20/PostgreSQL最可靠的升级方案-实践/" class="article-date">
-  <time datetime="2014-12-20T01:21:38.000Z" itemprop="datePublished">12月 20 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/20/PostgreSQL最可靠的升级方案-实践/" class="archive-article-date">
+  <time datetime="2014-12-20T01:21:38.000Z" itemprop="datePublished">12月 20</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/20/PostgreSQL最可靠的升级方案-实践/">PostgreSQL最可靠的升级方案[实践]</a>
+      <a class="archive-article-title" href="/2014/12/20/PostgreSQL最可靠的升级方案-实践/">PostgreSQL最可靠的升级方案[实践]</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="注意事项">注意事项</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="bullet">1. </span>如果原先的数据库安装了第三方的扩展，请在升级的新版本服务器上也先安装好这些第三方扩展(contrib)</div><div class="line"><span class="bullet">2. </span>相应的表空间配置也要与原先的一致</div></pre></td></tr></table></figure>
-
-<h2 id="升级步骤">升级步骤</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">1</span>. 以PG管理员的身份运行以下命令来备份所有数据库信息（包括用户，角色，等）</div><div class="line">    pg_dumpall &gt; outfile</div><div class="line"></div><div class="line"><span class="number">2</span>. 源码安装PG，请参考安装步骤：</div><div class="line">http:<span class="regexp">//dreamer</span>-yzy.github.io/<span class="number">2014</span>/<span class="number">12</span>/<span class="number">03</span>/PostgreSQL<span class="variable">%E5</span><span class="variable">%9F</span><span class="variable">%BA</span><span class="variable">%E7</span><span class="variable">%A1</span><span class="variable">%80</span><span class="variable">%E5</span><span class="variable">%AD</span><span class="variable">%A6</span><span class="variable">%E4</span><span class="variable">%B9</span><span class="variable">%A0</span><span class="variable">%EF</span><span class="variable">%BC</span><span class="variable">%88</span><span class="variable">%E4</span><span class="variable">%B8</span><span class="variable">%80</span><span class="variable">%EF</span><span class="variable">%BC</span><span class="variable">%89</span>/</div><div class="line"></div><div class="line"><span class="number">3</span>. 恢复DB（记得将最新版本的DB服务器运行起来先），运行以下命令</div><div class="line">    psql -f outfile postgres</div></pre></td></tr></table></figure>
-
-<p>打完收工。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/PostgreSQL最可靠的升级方案-实践/" data-id="okt7mb18ovrsrhhh" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post--翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" class="article-date">
-  <time datetime="2014-12-20T01:19:19.000Z" itemprop="datePublished">12月 20 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" class="archive-article-date">
+  <time datetime="2014-12-20T01:19:19.000Z" itemprop="datePublished">12月 20</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/">[翻译]在Ubuntu服务器上将PostgreSQL从9.1升级到9.3</a>
+      <a class="archive-article-title" href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/">[翻译]在Ubuntu服务器上将PostgreSQL从9.1升级到9.3</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://dba.stackexchange.com/a/60541" target="_blank" rel="external">原文地址</a></p>
-<p>从不同的重大版本升级PostgreSQL（例如，从9.1升级到9.3），基本上有三种方法：</p>
-<h2 id="用_pg_dump_升级">用 pg_dump 升级</h2>
-<p>如果可以的话，首先推荐的方法是使用新版本（9.3）进行二进制备份一个老（9.1）版本数据，然后在新版本创建的集群中恢复数据。</p>
-<p>这种途径，通常，是比较慢的，但是也是最实用的。使它进行得更加快的方法之一是，使用并发。为了并行备份任务，你可以这样子做：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">$</span> <span class="comment">pg_dump</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">format=directory</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">jobs=4</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">no</span><span class="literal">-</span><span class="comment">synchronized</span><span class="literal">-</span><span class="comment">snapshots</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">file=/path/to/mydump</span> <span class="comment">mydatabase</span></div></pre></td></tr></table></figure>
-
-<p>你可以为每个数据库进行这样子的备份，并调整 <code>--jobs=4</code> 参数值到任何值（测试从2到CPU核心数，并看看哪个更快）。当然，在备份期间，没人应该连接到数据库，任何的修改将会导致备份中断（因为非安全选项 <code>--no-synchronized-snapshots</code>）</p>
-<p>之后，你可以使用<code>pg_restore</code>来恢复到新的实例中：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ createdb &lt;<span class="keyword">options</span>&gt; -T template0 mydatabase</div><div class="line">$ pg_restore --<span class="keyword">exit</span>-<span class="keyword">on</span>-error --jobs=<span class="number">4</span> --dbname=mydatabase /path/<span class="keyword">to</span>/mydump</div></pre></td></tr></table></figure>
-
-<p>之后, 建议在数据库上执行<code>ANALYZE</code>命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ vacuumdb --analyze-<span class="keyword">only</span> mydatabase</div></pre></td></tr></table></figure>
-
-<p>（如果你可以等待时间的话，仅仅运行 <code>--analyze</code> 来同时进行 VACUUM 数据库并更新可视数据字典）</p>
-<h2 id="使用_pg_upgrade_升级">使用 pg_upgrade 升级</h2>
-<p>另一种方法，是使用扩展包中的 <code>pg_upgrade</code>。它提供了一个非常快速的方法来升级PostgreSQL，就是使用 <code>--link</code> 方法。<br>使用之前，你必须备份整个数据目录，因为在 <code>--link</code> 模式下，如果出错，你可能丢失所有数据（包括新旧数据）。并且，请完整地阅读文档，特别是底部的提示（<code>pg_upgrade</code>有许多限制）</p>
-<h2 id="使用基于复制工具的触发器来升级">使用基于复制工具的触发器来升级</h2>
-<p>另一种升级版本的选项，是使用基于触发器的复制工具 。比如<code>Slony, Bucardo和Londiste</code>。</p>
-<p>这个选项可能用于最少停机时间，但是也是最难操作的。</p>
-<p>这样做的话，需要建立一个 <code>master-slave</code>，主库是你当前版本（9.1），从库是新版本（9.3）。之后，等待第一次同步（系统仍然在生产环境），之后你关闭所有连接到数据库（停机时间从这里开始），等待从库赶上，然后提升（从库）到主库，然后重定向所有客户/应用程序到新版本数据库。打完收工。</p>
-<p><code>Slony</code>文档提供了一步一步地教你使用<code>Slony</code>来升级PostgreSQL.</p>
-<h2 id="应该选择哪个？">应该选择哪个？</h2>
-<p>Well, as always depends, resuming:<br>好了，这要取决于什么，总结一下：</p>
-<p><code>dump+restore</code>是最可靠的，但通常也是最慢的一种（尽管，并行性可以带来更好的结果）</p>
-<p><code>pg_upgrade</code>是对于比较少的停机时间来说是最好的选择之一（如果你能使用的话，看看它的限制）。它通常只需要花数分钟的时间，甚至对于大的数据库也是这样。</p>
-<p><code>触发器复制</code>，毫无疑问是最少停机时间（几乎为0）的做法，但是它真的好难实行，并且我仅仅建议专家（PostgreSQL和复制工具二者都非常熟悉的专家）</p>
-<p>希望我可以帮到你。祝你好运。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="87rcxzai8gjgagba" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post-SQL语句各部分的执行顺序" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/15/SQL语句各部分的执行顺序/" class="article-date">
-  <time datetime="2014-12-15T12:54:45.000Z" itemprop="datePublished">12月 15 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/15/SQL语句各部分的执行顺序/" class="archive-article-date">
+  <time datetime="2014-12-15T12:54:45.000Z" itemprop="datePublished">12月 15</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
+      <a class="archive-article-title" href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>上星期请教了条SQL为什么没有使用到索引的问题，引起了我对SQL执行顺序的疑惑，查了不少资料，收集到比较认可的答案如下，引用资料也在后面标识了。有什么不同的见解，还请大牛指出。</p>
-<h2 id="各部分的执行顺序">各部分的执行顺序</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="bullet">1. </span>FROM</div><div class="line"><span class="bullet">2. </span>ON</div><div class="line"><span class="bullet">3. </span>OUTER</div><div class="line"><span class="bullet">4. </span>WHERE</div><div class="line"><span class="bullet">5. </span>GROUP BY</div><div class="line"><span class="bullet">6. </span>CUBE | ROLLUP</div><div class="line"><span class="bullet">7. </span>HAVING</div><div class="line"><span class="bullet">8. </span>SELECT</div><div class="line"><span class="bullet">9. </span>DISTINCT</div><div class="line"><span class="bullet">10. </span>ORDER BY</div><div class="line"><span class="bullet">11. </span>TOP(LIMIT)</div></pre></td></tr></table></figure>
-
-<p>来源资料：<br><a href="http://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement" target="_blank" rel="external">Stackoverflow whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement</a></p>
-<p><a href="http://stackoverflow.com/questions/4596467/order-of-execution-of-the-query" target="_blank" rel="external">Stackoverflow order-of-execution-of-the-query</a></p>
-<p><a href="https://social.msdn.microsoft.com/Forums/sqlserver/en-US/70efeffe-76b9-4b7e-b4a1-ba53f5d21916/order-of-execution-of-sql-queries" target="_blank" rel="external">MSDN order-of-execution-of-sql-queries</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="wy3s86j8kadgkote" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
-  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="archive-article-date">
+  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
+      <a class="archive-article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
-<hr>
-<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
-<h1 id="CTEs">CTEs</h1>
-<ul>
-<li>不可以建索引（但可以使用引用到的对象的索引）</li>
-<li>不能有约束</li>
-<li>本质上是一个一次性视图</li>
-<li>只在下一个执行查询时存在</li>
-<li>可以递归</li>
-<li>没有专门的统计状态数据（只依赖于底层对象）</li>
-</ul>
-<h1 id="临时表">临时表</h1>
-<ul>
-<li>是存在于临时数据库的真正物化的表</li>
-<li>可以建索引</li>
-<li>可以有约束</li>
-<li>在当前连接的会话中会一直存在</li>
-<li>可以被其他查询或子查询引用</li>
-<li>引擎可以有专门为它准备的统计数据</li>
-</ul>
-<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
-<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="5vs0w6j1gmhszgq0" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
-
-
   
-    <article id="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" class="article-date">
-  <time datetime="2014-12-09T14:03:42.000Z" itemprop="datePublished">12月 9 2014</time>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" class="archive-article-date">
+  <time datetime="2014-12-09T14:03:42.000Z" itemprop="datePublished">12月 9</time>
 </a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+      
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
+      <a class="archive-article-title" href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.theserverside.com/feature/Comparing-MySQL-and-Postgres-90-Replication" target="_blank" rel="external">源文地址</a></p>
-<p>作者:Robin Schumacher 和 Gary Carter,EnterpriseDB 公司</p>
-<p>原文:<br>Replication is one of the most popular features used in RDBMS’s today. Replication is used for disaster recovery purposes (i.e. backup or warm stand-by servers), reporting systems where query activity is offloaded onto another machine to conserve resources on the transactional server, and scale-out architectures that use sharding or other methods to increase overall query performance and data throughput.</p>
-<p>翻译:<br>今天，“复制”是关系数据库的最受欢迎的功能之一。复制的目的是用于灾难恢复（也就是备份或者叫“热”备用服务器），用于在事务服务器上报告系统，将查询活动转移到其他机器，以节约资源。并且这种分区或其他方法的横向扩展构架将会提升整体的查询性能以及数据的吞吐率。</p>
-<p>原文:<br>Replication is not restricted to only the major proprietary databases; open source databases such as MySQL and PostgreSQL also offer replication as a feature. While MySQL has offered built-in replication for a number of years, PostgreSQL replication used to be accomplished via community software that was an add-on to the core Postgres Server. That all changed with the release of version 9.0 of PostgreSQL, which now offers built-in streaming replication that is based on its proven write ahead log technology.</p>
-<p>翻译:<br>复制功能，并不仅仅限制在专利的商业数据库，一些开源的比如：MySQL 和 PostgreSQL 也提供复制的功能。当MySQL已经内建提供复制功能好几年时，PostgreSQL的复制功能还只是社区通过附加组件形式被添加到核心PostgreSQL服务器。但是，直到PostgreSQL9.0版本时，一切都发生改变了，PostgreSQL现在提供内建一种基于WAL(预写日志）技术的流复制功能。</p>
-<p>原文:<br>With the two most popular open source databases now providing built-in replication, questions are being asked about how they differ in their replication technologies. What follows is a brief overview of both MySQL and PostgreSQL replication, with a brief compare and contrast of the implementations being performed immediately afterwards.</p>
-<p>翻译:<br>现在，这两个最流行的开源数据库都已经提供了内建的复制功能，那么问题来了：他们两者之间的复制功能有什么区别？下面对MySQL和PostgreSQL作一些简要概述，作一个简单的比较和它们的实现区别之后来简单实践一下。</p>
-<p>原文：<br>An Overview of MySQL Replication</p>
-<p>Asynchronous replication was introduced into Oracle’s MySQL with version 3.23 and today it remains the primary feature employed by many MySQL users to create scale-out architectures, standby servers, read-only data marts, and more. The various supported MySQL replication topologies include:</p>
-<p>•        Single master to one slave</p>
-<p>•        Single master to multiple slaves</p>
-<p>•        Single master to one slave to one or more slaves</p>
-<p>•        Circular replication (A to B to C and back to A)</p>
-<p>•        Master to master</p>
-<p>The major replication topology not currently supported in Oracle’s MySQL today is multi-source replication: having one or more master servers feed a single slave.</p>
-<p>A graphical view of how MySQL replication functions can be represented as follows:</p>
-<p>翻译:<br>MySQL的复制功能概要</p>
-<p>异步复制在MySQL的3.23版本时就被引入了。今天，异步复制仍然是许多MySQL用户用于横向扩展、备库、只读数据等等的主要功能。MySQL支持的各种拓扑结构包括：</p>
-<p>•        单主，一从</p>
-<p>•        单主，多从</p>
-<p>•        单主一从到多从</p>
-<p>•        环形复制（A - B - C - A）</p>
-<p>•        主对主</p>
-<p>对于现在的MySQL主要不支持的拓扑结构是“多源复制”，也就是：拥有一个或多个主服务器，但只有一个从库。</p>
-<p>MySQL复制功能的图形化表示如下：</p>
-<p><img src="/img/postgresql-mysql-replication-mysql.png" alt=""></p>
-<p>原文：<br>Object, data, and security operations run on the master are copied to the master server’s binary log. A user has the option of replicating an entire server, one or more databases, or just selected tables (although filtering by table is only done on the slave). The slave server obtains information from the master’s binary log over the network , copies the commands and/or data, and first applies them to the slave’s relay binary log. That log is then read by another process – the SQL thread – that applies the replicated operations/data to the slave database and its binary log.</p>
-<p>翻译：<br>在主库上，对象、数据和安全的操作全部都会被复制到主库服务器的二进制日志。用户可以选择复制整个服务器、一个或多个数据库、或仅仅选择某些表来进行复制（尽管表过滤只是在从库完成）。从库通过网络传输从主库获取二进制日志信息，复制的命令或数据会首先应用到从库的 relay 二进制日志里。这个 relay 二进制日志，会被其他工具处理 —— SQL 线程，SQL线程会将replay二进制日志里复制的操作命令和数据应用到从库自己的二进制日志里。</p>
-<p>原文：<br>Prior to release 5.1, MySQL replication was statement-based, meaning that the actual SQL commands were replicated from the master to one or more slaves. However, certain use cases did not lend themselves to statement-based replication (e.g. non-deterministic function calls) so in MySQL 5.1 row-based replication was introduced. A user now has the option of setting a configuration parameter to use either statement or row-based replication.</p>
-<p>翻译：<br>在5.1版本之前，MySQL 复制是基于语句的，意味着实际的SQL命令是通过复制从主库到一个或多个备库中的。然而，某些使用情况不能让它们基于语句复制（例如，非确定函数调用）。所以，在MySQL 5.1版本提供了基于行复制功能。用户现在可以通过配置相应的参数来决定是使用基于语句还是基于行复制。</p>
-<p>原文：<br>The primary bottleneck for busy MySQL replication configurations is the single-threaded nature of its design: replication operations are not multi-threaded at the moment, although MySQL has declared it is coming in a future release. This limitation can cause some slave servers under heavy load to get far behind the master in regards to applying binary log information.</p>
-<p>翻译：<br>在繁忙时的MySQL复制配置里，主要的瓶颈是由于它自身的单线程设计性质：复制操作都不是多线程的，尽管MySQL已经声称将来会将这个多线程特性添加到未来的版本中。这个限制可能导致从库在高负载情况下应用执行二进制日志将会远远落后于主库的日志信息。</p>
-<p>原文：<br>Setting up MySQL replication is a fairly painless process. Although various setup procedures exist, in general, the following is a basic outline of how it is done:</p>
-<p>•      The master and slave servers are identified</p>
-<p>•      The master server is modified to include a replication security account</p>
-<p>•      The master server’s MySQL configuration file is modified to enable binary logging. A few other parameters are included as well (e.g. a unique server ID, type of replication such as statement or row-based, etc.)</p>
-<p>•      The slave server’s MySQL configuration file is modified to include a unique server ID</p>
-<p>•      The master server is restarted</p>
-<p>•      The master server’s log file position is recorded</p>
-<p>•      The master’s data is copied to the slave to initially seed the slave server. This can be done via a cold backup/restore, using the mysqldump utility, locking the master tables and doing a file copy, etc.</p>
-<p>•      The slave server is restarted</p>
-<p>•      The MySQL CHANGE MASTER command is executed on the slave server to set the master host name on the slave server as well as other parameters such as the master account username and password, the log file name, and beginning log file position</p>
-<p>翻译：<br>设置MySQL的复制功能是一个非常痛苦的过程。尽管有许多种设置规则存在，但通常，以下是一些通常的步骤：</p>
-<p>•      主库和从库都要标识</p>
-<p>•      主库添加一个用于安全复制的账号</p>
-<p>•      在主库中修改配置文件以开启二进制日志功能，还有一些其他的参数也要开启。 （比如：唯一的服务器ID， 复制的类型，等等）</p>
-<p>•      在从库中修改配置文件，添加一个唯一的服务器ID。</p>
-<p>•      重启主服务器</p>
-<p>•      主库的日志文件位置被记录。</p>
-<p>•      主库的数据将被初始化到从库中。这是通过冷备份/恢复完成的，例如使用：mysqldump 工具，锁住主库的表然后完成文件复制，等等。</p>
-<p>•      重启从库</p>
-<p>•      MySQL CHANGE MASTER 命令是在从库服务器上执行设置将主库的主机名以及其他的参数如：主库的用户名，密码，日志文件名以及日志文件起始位置设置到从库。</p>
-<p>原文：<br>Once set up, MySQL replication is quite reliable. Being asynchronous in nature, however, there are use cases that could result in data loss between a master and slave. To help combat these situations, MySQL 5.5 introduced semi-synchronous replication where a pending transaction is sent from a master to a slave, but not committed on the slave; it merely ‘lands’ safely on the slave to be run as soon as possible. Once the master is notified that the transaction is safely recorded on the slave, then the transaction is committed on the master.</p>
-<p>翻译：<br>一旦设置完毕，MySQL复制是相当可靠的。因为本质上是异步的，所以有一些使用情况下还是会导致在主库和从库之间丢失数据。为了帮助解决这个问题，MySQL 5.5 提供了“半同步”复制，它会将事务从主库发送到从库，但在从库并未提交（只是记录到relay二进制日志）。它仅仅是尽可能快速地被安全送到从库。一旦主库收到事务已经被安全地记录在从库上，然后主库才会正式提交事务。</p>
-<p>原文：<br>In terms of MySQL replication limitations and missing features, besides the already mentioned single threaded nature of the implementation and the inability to perform multi-source replication, other wish-list items include a full synchronous option, conflict detection and resolution, time-delayed replication, changing the binary log to a storage engine, better replication filtering on the master, global statement ID’s, and graphical tools to manage replication functions.</p>
-<p>翻译：<br>MySQL在复制功能方面有许多限制以及不足，除了之前已经提过的单线程性质，还有不能进行多源进制，其他的希望加入的特性包括：完全同步选项，冲突检测及解决办法，延时复制，更改二进制日志的存储引擎，在主库上更好的复制过滤功能，全局语句的ID标识以及管理复制函数的图形化工具。</p>
-<p>原文：<br>There are third-party providers of MySQL replication solutions that overcome some of the current shortcomings in what is provided out-of-the-box with MySQL. One example is Continuent’s Tungsten product.</p>
-<p>For more information about Oracle’s MySQL replication, see: <a href="http://dev.mysql.com/doc/refman/5.5/en/replication.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication.html</a>.</p>
-<p>翻译：<br>有许多第三方提供即开即用的MySQL复制解决方案来克服当前MySQL内建复制功能的缺点。一个例子是：Continuent’s Tungsten 的数据库产品。<br>更多关于MySQL复制功能，请看：<a href="http://dev.mysql.com/doc/refman/5.5/en/replication.html." target="_blank" rel="external">MySQL5.5复制</a></p>
-<p>原文：<br>An Overview of PostgreSQL Replication</p>
-<p>PostgreSQL replication is based on a mature and long used technology called write ahead log (WAL) archiving.  WAL technology has been in use since version 7.1 and has been used in features such as backup and restore and warm standby servers (i.e. slave servers offline kept in synch with the master to step in during crash recovery) for high availability.</p>
-<p>PostgreSQL 9.0 introduced significant enhancements producing extremely fast WAL processing that results in near real-time replication and hot standby capabilities for slave servers.  The supported PostgreSQL replication topologies include:</p>
-<p>•        Single master to one slave</p>
-<p>•        Single master to multiple slaves</p>
-<p>A graphical view of how PostgreSQL replication functions can be represented as follows:</p>
-<p>翻译：<br>PostgreSQL的复制功能概要</p>
-<p>PostgreSQL 复制功能是基于一个成熟并且被长时间使用的技术，叫WAL（预写日志）归档。WAL技术已经在PostgreSQL 7.0版本被使用，并且是用在备份/恢复和热备用服务器的高可用中。（比如，从库离线【注，这里我认为是作者写错了，应该是online在线，而不是offline离线】保持与主库同步，并且在主库崩溃时介入以进行恢复）。</p>
-<p>PostgreSQL9.0 版本显著地改进以产生极快的WAL日志处理，结果就是一个几乎是近实时复制并且是双机（主从）热备功能的从库。PostgreSQL支持的复制拓扑结构包括：</p>
-<p>•        单主单从</p>
-<p>•        单主多从</p>
-<p>A graphical view of how PostgreSQL replication functions can be represented as follows:</p>
-<p>PostgreSQL复制功能的图形化表示如下：</p>
-<p><img src="/img/postgresql-mysql-replication-postgresql.png" alt=""></p>
-<p>原文：</p>
-<p>All objects and data (including schema) and security operation executed on the master are written to the WAL log directly on the slave machine for safety (avoiding complete data loss in the event of a catastrophic master failure).  WAL also ensures that no transaction is committed on the master until a successful write of the WAL log has occurred.  No filtering is currently possible (although replication with filtering is possible with the xDB Replication Server from EnterpriseDB) so a complete copy of the master is replicated on the slave.</p>
-<p>翻译：<br>所有的对象和数据（包括模式）和在主库安全的操作都被写到WAL日志会立即安全地同步地从库(完全避免了在主库发生灾难时导致的数据丢失)。WAL也会确保在主库上不会有事务被提交，直到该事务已经成功地写到入WAL日志。当前版本并没有选择性复制功能（尽管选择性复制功能可能在 EnterpriseDB 的 xDB复制服务器提供了），所以主库会完整地被复制到从库。</p>
-<p>原文：<br>The slave then applies the WAL log by directly rewriting the raw table data on disk, which is much faster than statement based replication.  It is also safer since statements such as:</p>
-<p>INSERT INTO table (column) VALUES (SELECT function());</p>
-<p>may have unexpected and inconsistent results if the function returns different values on different servers - perhaps because it involves a generated timestamp or uuid.</p>
-<p>翻译：<br>从库然后直接应用磁盘上的WAL日志来重写元数据，这点比基于语句复制更加快速。并且，遇到以下这种SQL时都是安全的：</p>
-<p>INSERT INTO table (column) VALUES (SELECT function());</p>
-<p>如果这个function函数在主从两个不同的服务器之间产生不同的值，这可能有意想不到和不一致的结果。比如可能它调用一个产生UUID或Timestamp的函数。</p>
-<p>原文：<br>The primary limitations of PostgreSQL replication are topology based.  It cannot currently do cascading replication or filter tables by rows for replication.  Again, these are capabilities available in a separate replication solution from EnterpriseDB called xDB Replication Server.</p>
-<p>翻译：<br>PostgreSQL复制的主要限制是它的拓扑结构。它目前不能进行联级复制，也不能通过行来过滤表进行复制。同样，这些功能可以通过 EnterpriseDB 里单独提供一种叫 xDB 复制服务器来解决。</p>
-<p>原文：<br>Setting up PostgreSQL replication is very straightforward.  WAL logging is always enabled with minimal configuration needed by the user to utilize replication. The basic process to get replication going is:</p>
-<p>•      The master and slave servers are identified</p>
-<p>•      The postgresql.conf file on the master is edited to turn on streaming replication</p>
-<p>•      The pg_hba.conf file on the master is edited in order to let the slave connect</p>
-<p>•      The recovery.conf and postgresql.conf files on the slave are edited to start up replication and hot standby</p>
-<p>•      The master is shutdown and the data files are copied to the slave</p>
-<p>•      The slave is started first</p>
-<p>•      The master is started</p>
-<p>翻译：<br>设置PostgreSQL复制是非常简单的。开启WAL日志是用户使用复制的最小化配置。使用复制的基本流程如下：</p>
-<p>•      主库和从库都要标识</p>
-<p>•      编辑在主库的postgresql.conf 配置文件里，以开启流复制</p>
-<p>•      编辑在主库的pg_hba.conf 配置文件，以让从库连接到主库</p>
-<p>•      编辑在从库的 recovery.conf 配置文件和postgresql.conf 配置文件，以开始复制和热备用</p>
-<p>•      关闭主库，并且复制data目录所有文件到从库</p>
-<p>•      先启动从库</p>
-<p>•      再启动从库</p>
-<p>原文：<br>The secret sauce to PostgreSQL 9.0’s extremely reliable WAL based replication is a set of enhancements to efficiently stream very small WAL segments compared to earlier versions.  Like MySQL there are cases where data loss could occur – however, depending on how you configure the system, your hardware architecture, and load, its possible the data loss could be as small as a single transaction.</p>
-<p>PostgreSQL does not currently have native synchronous replication. However, there are multiple replication options available from other community and third-party software providers.  PostgreSQL offers multiple solutions for multi-master replication, including solutions based on two phase commit. Offerings include Bucardo, rubyrep, PgPool and PgPool-II and Tungsten Replicator as well as some proprietary solutions. Another promising approach, implementing eager (synchronous) replication is Postgres-R, however it is still in development. Yet another project implementing synchronous replication is Postgres-XC, which is a shared-nothing, transactional scale-out solution that is still under development.</p>
-<p>For more information on PostgreSQL replication see:</p>
-<p>PostgreSQL Documentation: <a href="http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html</a></p>
-<p>Bucardo: <a href="http://bucardo.org/wiki/Bucardo" target="_blank" rel="external">http://bucardo.org/wiki/Bucardo</a></p>
-<p>PgPool-II: <a href="http://pgpool.projects.postgresql.org/" target="_blank" rel="external">http://pgpool.projects.postgresql.org/</a></p>
-<p>Tungsten Replication: <a href="http://www.continuent.com/community/tungsten-replicator" target="_blank" rel="external">http://www.continuent.com/community/tungsten-replicator</a></p>
-<p>翻译：<br>PostgreSQL9.0非常可靠的秘密武器在于基于WAL日志复制，它是一套增强的高效流，利用非常小的一段WAL来进行早期版本的比较。像MySQL在有些情况下可能会导致数据丢失，然而，这取决于你的系统、你的硬件构架以及负载如何，它丢失的数据可能非常小，如：一个事务的数据。</p>
-<p>PostgreSQL目前还没有本地同步复制。然而，有许多种通过社区和第三方软件提供商提供的可用复制方案。PostgreSQL 提供许多“多主复制”的解决方案，包括基于两阶段提交的解决方案。包括：Bucardo, rubyrep, PgPool and PgPool-II and Tungsten Replicator 以及其他一些专有的解决方案。另一种非常有前景的解决办法，实现 饥饿（同步）复制的Postgres-R产品，然而，它目前还在开发中。还有另一个项目实现同步复制的是Postgres-XC，它是一个无共享、事务横向扩展的解决方案，目前也是处于开发中。</p>
-<p>更多关于PostgreSQL复制，请看：<br>PostgreSQL 文档: <a href="http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html</a></p>
-<p>Bucardo: <a href="http://bucardo.org/wiki/Bucardo" target="_blank" rel="external">http://bucardo.org/wiki/Bucardo</a></p>
-<p>PgPool-II: <a href="http://pgpool.projects.postgresql.org/" target="_blank" rel="external">http://pgpool.projects.postgresql.org/</a></p>
-<p>Tungsten Replication: <a href="http://www.continuent.com/community/tungsten-replicator" target="_blank" rel="external">http://www.continuent.com/community/tungsten-replicator</a></p>
-<p>原文：<br>A Brief Compare and Contrast of MySQL and PostgreSQL Replication</p>
-<p>Those wanting to use an open source database for a particular application project that requires replication have two good choices in MySQL and PostgreSQL. But, the question naturally arises, which should be used? Is one just as good as the other?</p>
-<p>As demonstrated above, there are both feature and functional differences between how MySQL and PostgreSQL implement replication. However, for many general application use cases, either MySQL or PostgreSQL replication will serve just fine; technically speaking, from a functional and performance perspective, it won’t matter which solution is chosen. That said, there still are some considerations to keep in mind in deciding between the different offerings. Some of these include the following:</p>
-<p>•      Oracle’s MySQL offers both statement and row-based replication, whereas PostgreSQL only uses the latter based on write ahead log information. There are pro’s and con’s to using statement-based replication, which MySQL has documented here: <a href="http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html</a>. It is generally acknowledged that row or WAL-based replication is the safest and most reliable form of replication. It does, however, result in larger log files for MySQL than the statement-based option does.</p>
-<p>•      MySQL currently supports more replication topologies than PostgreSQL (e.g. ring, etc.). However PostgreSQL does have a number of community supported replication offerings that help close this gap (e.g. Bucardo’s master-to-master solution).</p>
-<p>•      In regard to data loss, MySQL 5.5 offers the semi-synchronous option, which helps minimize the risk of master-slave synchronization problems due to a master server going down. For PostgreSQL, a full synchronous replication option is in development and scheduled for release sometime in 2011.</p>
-<p>•      As to replication filtering, MySQL provides filtering on the slave server, whereas with PostgreSQL, no filtering is available; in other worlds, the entire database from the master is replicated to the slave. With MySQL, all the information is sent, but then options exist to selectively apply the replicated events on the slave. However, as the MySQL binary log is not used for crash recovery purposes in the same way as PostgreSQL’s WAL is, a user can configure a MySQL master so only certain databases are logged and, in that sense, a filter for the master server is available.</p>
-<p>•      Both MySQL and PostgreSQL replication are single-threaded at the current time.</p>
-<p>•      With respect to monitoring replication, MySQL provides a number of SHOW commands to understand the state of replication between a master and slave. To date, PostgreSQL offers functions to compute the differences in log positions between the master and slave servers, but that is all that is currently provided in 9.0.</p>
-<p>•      For failover and load balancing, the PostgreSQL community provides pgPool, which is middleware that provides connection pooling, load balancing, failover, and more between replicated servers. MySQL 5.5 supports connection pooling in the Enterprise edition, but failover and load balancing must be handled via a third-party product or custom development.</p>
-<p>翻译：<br>简单对比一下MySQL和PostgreSQL复制</p>
-<p>那些想为一个需要复制功能的特定应用的项目使用开源数据库的人，MySQL和PostgreSQL是两个很好的选择。但是，问题自然而然产生了，我们应该使用哪个？还是说这两个一样好？</p>
-<p>综上所述，MySQL和PostgreSQL都有复制功能，但是有不同的实现。然而，对于一般的应用来说，无论是MySQL还是PostgreSQL复制功能会工作得挺好；从技术上说，以及从功能和性能来看，它不会不管要选哪个数据库。这意味着，在不同产品之间还有一些值得注意的事项，其中包括以下内容：</p>
-<p>•  MySQL提供基于语句和基于行的复制，而PostgreSQL只有基于WAL日志信息。有赞成也有反对使用基于语句复制的，MySQL有文档介绍：<a href="http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html</a> 。一般认为，基于行或基于WAL 复制是最安全和最可靠的复制形式。的确如此，然而，这会导致比基于语句复制的形式产生更大的日志文件。</p>
-<p>•  MySQL目前比PostgreSQL支持更加多的复制拓扑结构（比如：环形等）。然而，PostgreSQL有许多种社区支持的复制选项，这就缩小了这个因拓扑结构种类而导致的距离（比如 Bucardo 的 主-主解决方案）</p>
-<p>•  考虑到数据丢失，MySQL 5.5 提供了半同步选项，这有助于减小因主库崩溃而导致主从同步问题的风险。对于PostgreSQL，完全同步复制特性正在开发，并且计划于2011年正式可用。</p>
-<p>•  对于过滤复制，MySQL 提供了在从库过滤，而在PostgreSQL，并不能使用过滤，换句话说，就是完整地将数据库从主库复制到从库。对于MySQL，所有信息都会被发送到从库，但如果开启过滤复制，从库会有选择地将事件应用到从库。然而，对于MySQL二进制日志并不是用于灾难恢复的，但PostgreSQL的WAL是可以用于灾难恢复的，用户可以配置MySQL主库指定哪些数据库会被记录到日志，在这种意义上，过滤器对于主库是可用的。</p>
-<p>•  目前，MySQL和PostgreSQL复制都是单线程的</p>
-<p>•  对于复制的监控，MySQL提供了许多 SHOW 命令去了解主从复制的状态。至今，PostgreSQL提供一些函数去计算主从日志位置的区别，但是当前只是在PostgreSQL9.0版本才提供的。</p>
-<p>• 对于故障切换和负载均衡，PostgreSQL社区提供pgPool的中间件，pgPool提供连接池，负载均衡，故障切换和更多种复制形式。MySQL 5.5 在企业版里提供连接池，但是对于故障切换和负载均衡必须通过第三方产品或定制开发。</p>
-<p>原文：<br>Conclusions</p>
-<p>As was previously stated, for many application use cases, both Oracle’s MySQL and PostgreSQL replication will be an equally good choice. The best way to determine which is right for you is to download both and put each through a comprehensive evaluation.</p>
-<p>You can download Oracle’s MySQL at <a href="http://www.mysql.com/downloads/" target="_blank" rel="external">http://www.mysql.com/downloads/</a>, while both community and EnterpriseDB’s offerings of PostgreSQL can be found at: <a href="http://www.enterprisedb.com/products/download.do" target="_blank" rel="external">http://www.enterprisedb.com/products/download.do</a>.</p>
-<p>By Robin Schumacher and Gary Carter, www.enterprisedb.com</p>
-<p>18 Nov 2010</p>
-<p>翻译：<br>结论</p>
-<p>正如前面所指出一样，对于许多应用程序的用例，MySQL和PostgreSQL都是非常好的选择。要决定哪一个最适合你，最好的办法就是同时下载它们两个，然后使用进行综合评估。</p>
-<p>你可以在 <a href="http://www.mysql.com/downloads/" target="_blank" rel="external">http://www.mysql.com/downloads/</a> 下载MySQL，PostgreSQL的社区版和EnterpriseDB提供的PostgreSQL版本都可以在这个地址里找到：<a href="http://www.enterprisedb.com/products/download.do" target="_blank" rel="external">http://www.enterprisedb.com/products/download.do</a> </p>
-<p>作者：Robin Schumacher and Gary Carter, www.enterprisedb.com<br>18 Nov 2010</p>
-<hr>
-<p>注：版权是原作者所有，我只是出于业余爱好进行翻译。</p>
-<p>这也是我的处女版翻译文章，有许多不足或表达不清晰的地方，恳请各位指出，我会加以修改，一起为开源、为PostgreSQL作出一份力量。<br>于2014年12月9号星期二晚，广州</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="pkzthh8kr3alt6es" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
 </article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/08/PostgreSQL窗口函数/" class="archive-article-date">
+  <time datetime="2014-12-08T13:05:48.000Z" itemprop="datePublished">12月 8</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/08/PostgreSQL窗口函数/">PostgreSQL窗口函数</a>
+    </h1>
+  
 
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" class="archive-article-date">
+  <time datetime="2014-12-05T13:46:10.000Z" itemprop="datePublished">12月 5</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">PostgreSQL选择某组sum结果最小的所有数据</a>
+    </h1>
+  
 
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/04/PostgreSQL-进程构架/" class="archive-article-date">
+  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/03/PostgreSQL基础学习（一）/" class="archive-article-date">
+  <time datetime="2014-12-03T15:14:47.000Z" itemprop="datePublished">12月 3</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/03/PostgreSQL基础学习（一）/">PostgreSQL基础学习（一）</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" class="archive-article-date">
+  <time datetime="2014-12-03T14:09:15.000Z" itemprop="datePublished">12月 3</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/">《数据库查询优化器的艺术》第三章物理查询优化学习笔记</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" class="archive-article-date">
+  <time datetime="2014-12-03T14:05:59.000Z" itemprop="datePublished">12月 3</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/">《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" class="archive-article-date">
+  <time datetime="2014-12-02T11:16:31.000Z" itemprop="datePublished">12月 2</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/">自行测试的1亿条数据中PostgreSQL性能</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" class="archive-article-date">
+  <time datetime="2014-12-02T11:05:02.000Z" itemprop="datePublished">12月 2</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/">《数据库查询优化器的艺术》第一章学习笔记</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
+  
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2014/12/02/create-blog-by-hexo/" class="archive-article-date">
+  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2014/12/02/create-blog-by-hexo/">使用 Hexo 生成博客</a>
+    </h1>
+  
+
+    </header>
+  </div>
+</article>
   
   
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/2014/page/2/">2</a><a class="extend next" rel="next" href="/archives/2014/page/2/">Next &raquo;</a>
-    </nav>
+    </div></section>
   
 </section>
         
