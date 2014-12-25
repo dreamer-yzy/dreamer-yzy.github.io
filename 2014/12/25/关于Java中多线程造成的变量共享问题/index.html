@@ -3,17 +3,23 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Category: 程序员 | PostgreSQL DBA</title>
+  <title>关于Java中多线程造成的变量共享问题 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="http://dreamer-yzy.github.io/categories/日志/程序员/">
+  <meta name="description" content="起因
+在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
+123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于Java中多线程造成的变量共享问题">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="起因
+在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
+123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="关于Java中多线程造成的变量共享问题">
+<meta name="twitter:description" content="起因
+在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
+123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,16 +86,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-create-blog-by-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-关于Java中多线程造成的变量共享问题" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/02/create-blog-by-hexo/" class="article-date">
-  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2 2014</time>
+    <a href="/2014/12/25/关于Java中多线程造成的变量共享问题/" class="article-date">
+  <time datetime="2014-12-25T14:16:12.000Z" itemprop="datePublished">12月 25 2014</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/日志/">日志</a>►<a class="article-category-link" href="/categories/日志/程序员/">程序员</a>
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
   </div>
 
   </div>
@@ -99,8 +103,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/create-blog-by-hexo/">使用 Hexo 生成博客</a>
+    <h1 class="article-title" itemprop="name">
+      关于Java中多线程造成的变量共享问题
     </h1>
   
 
@@ -108,61 +112,59 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Hexo介绍">Hexo介绍</h1>
-<p>官方网站一句话就了然了：<code>A fast, simple &amp; powerful blog framework, powered by Node.js.</code>就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。</p>
-<h1 id="安装步骤">安装步骤</h1>
-<p>1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：<br><a href="http://nodejs.org/" target="_blank" rel="external">Nodejs官网</a></p>
-<p>2）安装好Nodejs后，因为 Hexo 是 Nodejs 的一个软件包来的。所以要用 npg 来安装 Hexo：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">npm <span class="operator"><span class="keyword">install</span> -g hexo</span></div><div class="line"></div><div class="line">安装完毕后，检查是否安装：打开命令行（Windows下是 CMD，Linux下是Bash）运行以下命令：</div><div class="line">hexo <span class="keyword">version</span></div></pre></td></tr></table></figure>
+        <h2 id="起因">起因</h2>
+<p>在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="built_in">boolean</span> isOK(<span class="built_in">String</span> invitationCode, <span class="built_in">boolean</span> isSub) {</div><div class="line">       ValueOperations&lt;<span class="built_in">String</span>, <span class="built_in">Object</span>&gt; vo = redisTemplate.opsForValue();</div><div class="line">       <span class="built_in">Object</span> count = vo.get(key + invitationCode);</div><div class="line">       <span class="keyword">if</span> (count != <span class="literal">null</span> && Integer.parseInt(count.toString()) &gt;= <span class="number">1</span>) {</div><div class="line">           <span class="keyword">if</span> (isSub) {</div><div class="line">               vo.increment(key + invitationCode, -<span class="number">1</span>);</div><div class="line">           }</div><div class="line">           <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">       } <span class="keyword">else</span> {</div><div class="line">           <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">       }</div><div class="line">   }</div></pre></td></tr></table></figure>
 
-<p>3）安装好之后，创建一个 Hexo 项目：打开终端，运行以下命令</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">C:<span class="command">\Users</span><span class="command">\Zhiyong</span> Yang<span class="command">\Desktop</span><span class="command">\blog</span>&gt;hexo init blog</div><div class="line"></div><div class="line">执行完毕之后，Node 会提示你运行 npm install 命令，如果没有执行这条命令，是运行不正常的。所以再执行：</div><div class="line">cd blog</div><div class="line">npm install</div></pre></td></tr></table></figure>
-
-<p>4）安装完之后，就可以启动 Hexo 的服务器了：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">server</span></div></pre></td></tr></table></figure>
-
-<p>这时，便可以打开 <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a> 来访问你的博客了。</p>
-<p>5）Hexo 各目录说明</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">scaffolds 脚手架，也就是一个工具模板</div><div class="line">scripts 写文件的js，扩展hexo的功能</div><div class="line"><span class="built_in">source</span> 存放博客正文内容</div><div class="line"><span class="built_in">source</span>/_drafts 草稿箱</div><div class="line"><span class="built_in">source</span>/_posts 文件箱，也就是正式显示在网站的文件</div><div class="line">themes 存放皮肤的目录</div><div class="line">themes/landscape 默认的皮肤</div><div class="line">_config.yml 全局的配置文件</div><div class="line">db.json 静态常量</div></pre></td></tr></table></figure>
-
-<h1 id="写博客">写博客</h1>
-<p>1）进入你的项目目录的 source 目录的 _posts 目录。</p>
-<p>2）使用命令来创建一个文件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">new</span> hello-world</div><div class="line">注意，hexo会自动在文件名后面添加上 .md 后缀的。所以，上面一条命令的结果就是生成一个 hello-world.md 的文件。</div></pre></td></tr></table></figure>
-
-<p>3）编辑文件。<br>首先文件的规范是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">#这个表示文章的标题</div><div class="line">title: 新的开始</div><div class="line"></div><div class="line">#这个表示文章的创建时间 </div><div class="line">date: 2014-05-07 18:44:12</div><div class="line"></div><div class="line">#这个表示文章的修改时间</div><div class="line">updated    : 2014-05-10 18:44:12</div><div class="line"></div><div class="line">#这个表示在浏览器的 URL 中的替代名字，默认是 title。即访问URL心为 http://host/yyyy/mm/dd/abc/</div><div class="line">permalink: abc</div><div class="line">tags: #下面的表示是该文章所属的标签</div><div class="line"><span class="bullet">- </span>标签1</div><div class="line"><span class="bullet">- </span>标签2</div><div class="line"><span class="bullet">- </span>标签3</div><div class="line">categories: #下面的表示文章所属的目录</div><div class="line"><span class="bullet">- </span>所属目录1</div><div class="line"><span class="bullet">- </span>所属目录2</div><div class="line"><span class="header"> </span></div><div class="line">---</div></pre></td></tr></table></figure>
-
-<h1 id="上传到_github_pages">上传到 github pages</h1>
-<p>1）修改 hexo 项目目录里的 _config.yml 文件为自己相应的信息。比较重要的有：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># Site</span></div><div class="line"><span class="label">title:</span> PostgreSQL DBA 这个是你网站的全局标题</div><div class="line"><span class="label">subtitle:</span> Zhiyong Yang 这个是显示你的子标题</div><div class="line"><span class="label">description:</span> 这是你网站的描述</div><div class="line"><span class="label">author:</span> Zhiyong yang 作者</div><div class="line"><span class="label">email:</span>    dreamers.yzy@gmail.com 邮箱</div><div class="line"><span class="label">language:</span> <span class="built_in">zh</span>-CN 语言</div><div class="line"> </div><div class="line"><span class="preprocessor"># URL</span></div><div class="line"><span class="preprocessor">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="label">url:</span> https://dreamer-yzy.github.com 这里改为你的github pages 地址</div></pre></td></tr></table></figure>
-
-<p>2）注册一个github，然后 创建一个名为：<code>你的用户名.github.io</code> 的仓库</p>
-<p>3）修改 hexo 项目目录里的 _config.yml 文件中的 deploy 配置为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line">  <span class="class"><span class="keyword">type</span>: <span class="title">github</span></span></div><div class="line">  repository: https:<span class="comment">//github.com/你的用户名/你的用户名.github.io.git</span></div></pre></td></tr></table></figure>
-
-<p>4）然后进入 你的 Hexo 项目根目录，执行以下命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">generate</span> </div><div class="line">hexo deploy</div></pre></td></tr></table></figure>
-
-<p>顺利执行完毕后，过几分钟，打开你的github pages地址就可以看到你写的博客了，比如我的：<br><a href="http://dreamer-yzy.github.io/" target="_blank" rel="external">PostgreSQL DBA</a></p>
+<h2 id="分析">分析</h2>
+<p>在提交代码的时候，总监复查代码时，提出这段代码可能在并发的时候出现问题：比如有两条线程，都进入到了if(sub){xxx}这段代码，这个时候，就造成了重复多次自减的问题。比如，如果该value是5，那应该减到0就不会再减了，但是这段代码在高并发情况下，可能会出现减到-1的情况。这虽然对于现有的业务影响不大，但是，如果是对于其他的一些比较敏感并且需要精确的数据时，就需要特别注意了。</p>
+<p>关键是之前一直没有怎么意识到这段代码可能会造成的问题。之前一直认为，对于局部变量是不会出现多线程问题的，这倒是没有错，但关键是如果是从其他地方传过来而且在多处地方允许被使用的情况下，就需要注意多线程问题。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="i2651dr136mhostk" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="7u9l21s95xgym56o" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-线程/">Java 线程</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/12/24/《麦兜，我和我妈妈》电影有感/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《麦兜，我和我妈妈》电影有感</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post-关于Java中多线程造成的变量共享问题" data-title="关于Java中多线程造成的变量共享问题" data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   
