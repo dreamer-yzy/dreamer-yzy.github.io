@@ -3,17 +3,41 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: Hexo | PostgreSQL DBA</title>
+  <title>PostgreSQL中 copy 和 \copy 的区别 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="http://dreamer-yzy.github.io/tags/Hexo/">
+  <meta name="description" content="权限
+123copy 必须要以超级用户来运行\copy 则不必
+
+文件位置
+12345copy 的文件必须是在服务器端的位置\copy 的则是在客户端的位置。所以，文件的权限方面，copy是以服务器的为准，\copy 是以客户端的为准
+
+例子
+DB服务器：10.0.0.10
+1234567postgres=# \du yang;           List of roles Role name">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PostgreSQL中 copy 和 \copy 的区别">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="权限
+123copy 必须要以超级用户来运行\copy 则不必
+
+文件位置
+12345copy 的文件必须是在服务器端的位置\copy 的则是在客户端的位置。所以，文件的权限方面，copy是以服务器的为准，\copy 是以客户端的为准
+
+例子
+DB服务器：10.0.0.10
+1234567postgres=# \du yang;           List of roles Role name">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="PostgreSQL中 copy 和 \copy 的区别">
+<meta name="twitter:description" content="权限
+123copy 必须要以超级用户来运行\copy 则不必
+
+文件位置
+12345copy 的文件必须是在服务器端的位置\copy 的则是在客户端的位置。所以，文件的权限方面，copy是以服务器的为准，\copy 是以客户端的为准
+
+例子
+DB服务器：10.0.0.10
+1234567postgres=# \du yang;           List of roles Role name">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,16 +104,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-create-blog-by-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-PostgreSQL中-copy-和-copy-的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/02/create-blog-by-hexo/" class="article-date">
-  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2 2014</time>
+    <a href="/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" class="article-date">
+  <time datetime="2014-12-26T12:28:53.000Z" itemprop="datePublished">12月 26 2014</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/日志/">日志</a>►<a class="article-category-link" href="/categories/日志/程序员/">程序员</a>
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
   </div>
 
   </div>
@@ -99,8 +121,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/create-blog-by-hexo/">使用 Hexo 生成博客</a>
+    <h1 class="article-title" itemprop="name">
+      PostgreSQL中 copy 和 \copy 的区别
     </h1>
   
 
@@ -108,61 +130,91 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Hexo介绍">Hexo介绍</h1>
-<p>官方网站一句话就了然了：<code>A fast, simple &amp; powerful blog framework, powered by Node.js.</code>就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。</p>
-<h1 id="安装步骤">安装步骤</h1>
-<p>1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：<br><a href="http://nodejs.org/" target="_blank" rel="external">Nodejs官网</a></p>
-<p>2）安装好Nodejs后，因为 Hexo 是 Nodejs 的一个软件包来的。所以要用 npg 来安装 Hexo：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">npm <span class="operator"><span class="keyword">install</span> -g hexo</span></div><div class="line"></div><div class="line">安装完毕后，检查是否安装：打开命令行（Windows下是 CMD，Linux下是Bash）运行以下命令：</div><div class="line">hexo <span class="keyword">version</span></div></pre></td></tr></table></figure>
+        <h2 id="权限">权限</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">copy</span> 必须要以超级用户来运行</div><div class="line"></div><div class="line">\<span class="built_in">copy</span> 则不必</div></pre></td></tr></table></figure>
 
-<p>3）安装好之后，创建一个 Hexo 项目：打开终端，运行以下命令</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">C:<span class="command">\Users</span><span class="command">\Zhiyong</span> Yang<span class="command">\Desktop</span><span class="command">\blog</span>&gt;hexo init blog</div><div class="line"></div><div class="line">执行完毕之后，Node 会提示你运行 npm install 命令，如果没有执行这条命令，是运行不正常的。所以再执行：</div><div class="line">cd blog</div><div class="line">npm install</div></pre></td></tr></table></figure>
+<h2 id="文件位置">文件位置</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">copy</span> 的文件必须是在服务器端的位置</div><div class="line"></div><div class="line">\<span class="built_in">copy</span> 的则是在客户端的位置。</div><div class="line"></div><div class="line">所以，文件的权限方面，<span class="built_in">copy</span>是以服务器的为准，\<span class="built_in">copy</span> 是以客户端的为准</div></pre></td></tr></table></figure>
 
-<p>4）安装完之后，就可以启动 Hexo 的服务器了：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">server</span></div></pre></td></tr></table></figure>
+<h2 id="例子">例子</h2>
+<p>DB服务器：10.0.0.10</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgres=# \du yang;</div><div class="line"><span class="code">           List of roles</span></div><div class="line"><span class="header"> Role name | Attributes | Member of </span></div><div class="line">-----------+------------+-----------</div><div class="line"><span class="code"> yang      |            | {}</span></div><div class="line"></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
 
-<p>这时，便可以打开 <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a> 来访问你的博客了。</p>
-<p>5）Hexo 各目录说明</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">scaffolds 脚手架，也就是一个工具模板</div><div class="line">scripts 写文件的js，扩展hexo的功能</div><div class="line"><span class="built_in">source</span> 存放博客正文内容</div><div class="line"><span class="built_in">source</span>/_drafts 草稿箱</div><div class="line"><span class="built_in">source</span>/_posts 文件箱，也就是正式显示在网站的文件</div><div class="line">themes 存放皮肤的目录</div><div class="line">themes/landscape 默认的皮肤</div><div class="line">_config.yml 全局的配置文件</div><div class="line">db.json 静态常量</div></pre></td></tr></table></figure>
+<p>客户端（10.0.0.11）连接到DB服务器（10.0.0.10）<br>客户端运行copy命令（11）：</p>
+<p><code>/tmp/tcopy.txt</code>该文件是在客户端（10.0.0.11)的，DB服务器（10.0.0.10）并不存在该文件。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">test=&gt; <span class="keyword">copy</span> tcopy <span class="keyword">from</span> <span class="string">'/tmp/tcopy.txt'</span>;</div><div class="line">ERROR:  must be superuser <span class="keyword">to</span> <span class="keyword">COPY</span> <span class="keyword">to</span> <span class="keyword">or</span> <span class="keyword">from</span> a file</div><div class="line">HINT:  Anyone can <span class="keyword">COPY</span> <span class="keyword">to</span> stdout <span class="keyword">or</span> <span class="keyword">from</span> stdin. psql<span class="string">'s \copy command also works for anyone.</span></div><div class="line">test=&gt;</div></pre></td></tr></table></figure>
 
-<h1 id="写博客">写博客</h1>
-<p>1）进入你的项目目录的 source 目录的 _posts 目录。</p>
-<p>2）使用命令来创建一个文件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">new</span> hello-world</div><div class="line">注意，hexo会自动在文件名后面添加上 .md 后缀的。所以，上面一条命令的结果就是生成一个 hello-world.md 的文件。</div></pre></td></tr></table></figure>
+<p>它会报告必须要以数据库的超级用户身份才能运行copy命令。</p>
+<p>客户端运行<code>\copy</code>命令（11）：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=&gt; \<span class="keyword">copy</span> tcopy <span class="keyword">from</span> <span class="string">'/tmp/tcopy.txt'</span>;</div><div class="line"><span class="keyword">COPY</span> <span class="number">3</span></div><div class="line">test=&gt;</div></pre></td></tr></table></figure>
 
-<p>3）编辑文件。<br>首先文件的规范是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">#这个表示文章的标题</div><div class="line">title: 新的开始</div><div class="line"></div><div class="line">#这个表示文章的创建时间 </div><div class="line">date: 2014-05-07 18:44:12</div><div class="line"></div><div class="line">#这个表示文章的修改时间</div><div class="line">updated    : 2014-05-10 18:44:12</div><div class="line"></div><div class="line">#这个表示在浏览器的 URL 中的替代名字，默认是 title。即访问URL心为 http://host/yyyy/mm/dd/abc/</div><div class="line">permalink: abc</div><div class="line">tags: #下面的表示是该文章所属的标签</div><div class="line"><span class="bullet">- </span>标签1</div><div class="line"><span class="bullet">- </span>标签2</div><div class="line"><span class="bullet">- </span>标签3</div><div class="line">categories: #下面的表示文章所属的目录</div><div class="line"><span class="bullet">- </span>所属目录1</div><div class="line"><span class="bullet">- </span>所属目录2</div><div class="line"><span class="header"> </span></div><div class="line">---</div></pre></td></tr></table></figure>
+<p>它没有报告必须要以数据库的超级用户来运行，而且也没有报告文件或目录不存在的问题。</p>
+<p>在DB（10.0.0.10）服务器端修改用户<code>yang</code>为超级用户:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="variable">postgres=</span><span class="comment"># alter role yang superuser ;</span></div><div class="line">ALTER ROLE</div><div class="line"><span class="variable">postgres=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
 
-<h1 id="上传到_github_pages">上传到 github pages</h1>
-<p>1）修改 hexo 项目目录里的 _config.yml 文件为自己相应的信息。比较重要的有：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># Site</span></div><div class="line"><span class="label">title:</span> PostgreSQL DBA 这个是你网站的全局标题</div><div class="line"><span class="label">subtitle:</span> Zhiyong Yang 这个是显示你的子标题</div><div class="line"><span class="label">description:</span> 这是你网站的描述</div><div class="line"><span class="label">author:</span> Zhiyong yang 作者</div><div class="line"><span class="label">email:</span>    dreamers.yzy@gmail.com 邮箱</div><div class="line"><span class="label">language:</span> <span class="built_in">zh</span>-CN 语言</div><div class="line"> </div><div class="line"><span class="preprocessor"># URL</span></div><div class="line"><span class="preprocessor">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="label">url:</span> https://dreamer-yzy.github.com 这里改为你的github pages 地址</div></pre></td></tr></table></figure>
+<p>然后在客户端再执行看看：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=&gt; <span class="keyword">copy</span> tcopy <span class="keyword">from</span> '/tmp/tcopy.txt';</div><div class="line">ERROR:  could <span class="keyword">not</span> open <span class="type">file</span> <span class="string">"/tmp/tcopy.txt"</span> <span class="keyword">for</span> reading: No such <span class="type">file</span> <span class="keyword">or</span> directory</div><div class="line">test=&gt;</div></pre></td></tr></table></figure>
 
-<p>2）注册一个github，然后 创建一个名为：<code>你的用户名.github.io</code> 的仓库</p>
-<p>3）修改 hexo 项目目录里的 _config.yml 文件中的 deploy 配置为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line">  <span class="class"><span class="keyword">type</span>: <span class="title">github</span></span></div><div class="line">  repository: https:<span class="comment">//github.com/你的用户名/你的用户名.github.io.git</span></div></pre></td></tr></table></figure>
+<p>它现在不报权限了，而是报告文件或目录不存在。这是因为该文件是在客户端的，而copy只会在服务器端定位。</p>
+<p>在客户端换成<code>\copy</code>命令看看：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=&gt; \<span class="keyword">copy</span> tcopy <span class="keyword">from</span> <span class="string">'/tmp/tcopy.txt'</span>;</div><div class="line"><span class="keyword">COPY</span> <span class="number">3</span></div><div class="line">test=&gt;</div></pre></td></tr></table></figure>
 
-<p>4）然后进入 你的 Hexo 项目根目录，执行以下命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">generate</span> </div><div class="line">hexo deploy</div></pre></td></tr></table></figure>
-
-<p>顺利执行完毕后，过几分钟，打开你的github pages地址就可以看到你写的博客了，比如我的：<br><a href="http://dreamer-yzy.github.io/" target="_blank" rel="external">PostgreSQL DBA</a></p>
+<p>可以发现COPY成功了。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="lqvxvvpmr6pu8aue" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="7umwa29gm8un112y" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+    <a href="/2014/12/26/PostgreSQL删除表空间/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          PostgreSQL删除表空间
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/12/25/关于Java中多线程造成的变量共享问题/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于Java中多线程造成的变量共享问题</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post-PostgreSQL中-copy-和-copy-的区别" data-title="PostgreSQL中 copy 和 \copy 的区别" data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   

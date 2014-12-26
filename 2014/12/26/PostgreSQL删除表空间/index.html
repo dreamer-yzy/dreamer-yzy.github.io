@@ -3,17 +3,38 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: Hexo | PostgreSQL DBA</title>
+  <title>PostgreSQL删除表空间 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="http://dreamer-yzy.github.io/tags/Hexo/">
+  <meta name="description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
+123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
+
+原因
+想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
+找出有哪些对象使用到了表空间
+SQL语句：
+1234567891">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PostgreSQL删除表空间">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
+123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
+
+原因
+想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
+找出有哪些对象使用到了表空间
+SQL语句：
+1234567891">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="PostgreSQL删除表空间">
+<meta name="twitter:description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
+123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
+
+原因
+想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
+找出有哪些对象使用到了表空间
+SQL语句：
+1234567891">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,16 +101,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-create-blog-by-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-PostgreSQL删除表空间" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/02/create-blog-by-hexo/" class="article-date">
-  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2 2014</time>
+    <a href="/2014/12/26/PostgreSQL删除表空间/" class="article-date">
+  <time datetime="2014-12-26T12:30:19.000Z" itemprop="datePublished">12月 26 2014</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/日志/">日志</a>►<a class="article-category-link" href="/categories/日志/程序员/">程序员</a>
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
   </div>
 
   </div>
@@ -99,8 +118,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/02/create-blog-by-hexo/">使用 Hexo 生成博客</a>
+    <h1 class="article-title" itemprop="name">
+      PostgreSQL删除表空间
     </h1>
   
 
@@ -108,61 +127,81 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Hexo介绍">Hexo介绍</h1>
-<p>官方网站一句话就了然了：<code>A fast, simple &amp; powerful blog framework, powered by Node.js.</code>就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。</p>
-<h1 id="安装步骤">安装步骤</h1>
-<p>1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：<br><a href="http://nodejs.org/" target="_blank" rel="external">Nodejs官网</a></p>
-<p>2）安装好Nodejs后，因为 Hexo 是 Nodejs 的一个软件包来的。所以要用 npg 来安装 Hexo：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">npm <span class="operator"><span class="keyword">install</span> -g hexo</span></div><div class="line"></div><div class="line">安装完毕后，检查是否安装：打开命令行（Windows下是 CMD，Linux下是Bash）运行以下命令：</div><div class="line">hexo <span class="keyword">version</span></div></pre></td></tr></table></figure>
+        <p>昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=<span class="preprocessor"># drop tablespace mytmp;</span></div><div class="line"><span class="keyword">ERROR</span>:  tablespace <span class="string">"mytmp"</span> <span class="keyword">is</span> <span class="keyword">not</span> empty</div><div class="line">postgres=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
 
-<p>3）安装好之后，创建一个 Hexo 项目：打开终端，运行以下命令</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">C:<span class="command">\Users</span><span class="command">\Zhiyong</span> Yang<span class="command">\Desktop</span><span class="command">\blog</span>&gt;hexo init blog</div><div class="line"></div><div class="line">执行完毕之后，Node 会提示你运行 npm install 命令，如果没有执行这条命令，是运行不正常的。所以再执行：</div><div class="line">cd blog</div><div class="line">npm install</div></pre></td></tr></table></figure>
+<h2 id="原因">原因</h2>
+<p>想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。</p>
+<h2 id="找出有哪些对象使用到了表空间">找出有哪些对象使用到了表空间</h2>
+<p>SQL语句：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">postgres=# SELECT                </div><div class="line"><span class="code">  c.relname,</span></div><div class="line"><span class="code">  t.spcname</span></div><div class="line">FROM</div><div class="line"><span class="code">  pg_class c</span></div><div class="line"><span class="code">    JOIN pg_tablespace t ON c.reltablespace = t.oid</span></div><div class="line">WHERE</div><div class="line"><span class="code">  t.spcname = 'mytmp';</span></div><div class="line"><span class="header">relname | spcname</span></div><div class="line">---------+---------</div><div class="line"><span class="code"> tsp     | mytmp</span></div><div class="line">(1 row)</div><div class="line"><span class="code"> </span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
 
-<p>4）安装完之后，就可以启动 Hexo 的服务器了：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">server</span></div></pre></td></tr></table></figure>
+<h2 id="删除">删除</h2>
+<p>找到表空间的使用对象时，这时如果确实要删除表空间，那就要将该表空间下的表对象都删除了最后才能删除表空间。</p>
+<h4 id="删除该表空间下的表">删除该表空间下的表</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">drop</span> <span class="keyword">table</span> tsp;</span></div><div class="line"><span class="operator"><span class="keyword">DROP</span> <span class="keyword">TABLE</span></span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
 
-<p>这时，便可以打开 <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a> 来访问你的博客了。</p>
-<p>5）Hexo 各目录说明</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">scaffolds 脚手架，也就是一个工具模板</div><div class="line">scripts 写文件的js，扩展hexo的功能</div><div class="line"><span class="built_in">source</span> 存放博客正文内容</div><div class="line"><span class="built_in">source</span>/_drafts 草稿箱</div><div class="line"><span class="built_in">source</span>/_posts 文件箱，也就是正式显示在网站的文件</div><div class="line">themes 存放皮肤的目录</div><div class="line">themes/landscape 默认的皮肤</div><div class="line">_config.yml 全局的配置文件</div><div class="line">db.json 静态常量</div></pre></td></tr></table></figure>
+<h4 id="删除该表空间">删除该表空间</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">drop</span> <span class="keyword">tablespace</span> mytmp;</span></div><div class="line"><span class="operator"><span class="keyword">DROP</span> <span class="keyword">TABLESPACE</span></span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
 
-<h1 id="写博客">写博客</h1>
-<p>1）进入你的项目目录的 source 目录的 _posts 目录。</p>
-<p>2）使用命令来创建一个文件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">new</span> hello-world</div><div class="line">注意，hexo会自动在文件名后面添加上 .md 后缀的。所以，上面一条命令的结果就是生成一个 hello-world.md 的文件。</div></pre></td></tr></table></figure>
+<h4 id="再检查一次看看">再检查一次看看</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="variable">postgres=</span><span class="comment"># select * from pg_tablespace where spcname = 'mytmp';</span></div><div class="line">spcname | spcowner | spcacl | spcoptions</div><div class="line">---------+----------+--------+------------</div><div class="line">(<span class="number">0</span> rows)</div><div class="line"> </div><div class="line"><span class="variable">postgres=</span><span class="comment"># </span></div><div class="line"></div><div class="line"><span class="variable">postgres=</span><span class="comment"># SELECT               </span></div><div class="line">postgres-<span class="comment">#   c.relname,</span></div><div class="line">postgres-<span class="comment">#   t.spcname</span></div><div class="line">postgres-<span class="comment"># FROM</span></div><div class="line">postgres-<span class="comment">#   pg_class c</span></div><div class="line">postgres-<span class="comment">#     JOIN pg_tablespace t ON c.reltablespace = t.oid</span></div><div class="line">postgres-<span class="comment"># WHERE</span></div><div class="line">postgres-<span class="comment">#   t.spcname = 'mytmp';</span></div><div class="line">relname | spcname</div><div class="line">---------+---------</div><div class="line">(<span class="number">0</span> rows)</div><div class="line"> </div><div class="line"><span class="variable">postgres=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
 
-<p>3）编辑文件。<br>首先文件的规范是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">#这个表示文章的标题</div><div class="line">title: 新的开始</div><div class="line"></div><div class="line">#这个表示文章的创建时间 </div><div class="line">date: 2014-05-07 18:44:12</div><div class="line"></div><div class="line">#这个表示文章的修改时间</div><div class="line">updated    : 2014-05-10 18:44:12</div><div class="line"></div><div class="line">#这个表示在浏览器的 URL 中的替代名字，默认是 title。即访问URL心为 http://host/yyyy/mm/dd/abc/</div><div class="line">permalink: abc</div><div class="line">tags: #下面的表示是该文章所属的标签</div><div class="line"><span class="bullet">- </span>标签1</div><div class="line"><span class="bullet">- </span>标签2</div><div class="line"><span class="bullet">- </span>标签3</div><div class="line">categories: #下面的表示文章所属的目录</div><div class="line"><span class="bullet">- </span>所属目录1</div><div class="line"><span class="bullet">- </span>所属目录2</div><div class="line"><span class="header"> </span></div><div class="line">---</div></pre></td></tr></table></figure>
-
-<h1 id="上传到_github_pages">上传到 github pages</h1>
-<p>1）修改 hexo 项目目录里的 _config.yml 文件为自己相应的信息。比较重要的有：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># Site</span></div><div class="line"><span class="label">title:</span> PostgreSQL DBA 这个是你网站的全局标题</div><div class="line"><span class="label">subtitle:</span> Zhiyong Yang 这个是显示你的子标题</div><div class="line"><span class="label">description:</span> 这是你网站的描述</div><div class="line"><span class="label">author:</span> Zhiyong yang 作者</div><div class="line"><span class="label">email:</span>    dreamers.yzy@gmail.com 邮箱</div><div class="line"><span class="label">language:</span> <span class="built_in">zh</span>-CN 语言</div><div class="line"> </div><div class="line"><span class="preprocessor"># URL</span></div><div class="line"><span class="preprocessor">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="label">url:</span> https://dreamer-yzy.github.com 这里改为你的github pages 地址</div></pre></td></tr></table></figure>
-
-<p>2）注册一个github，然后 创建一个名为：<code>你的用户名.github.io</code> 的仓库</p>
-<p>3）修改 hexo 项目目录里的 _config.yml 文件中的 deploy 配置为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line">  <span class="class"><span class="keyword">type</span>: <span class="title">github</span></span></div><div class="line">  repository: https:<span class="comment">//github.com/你的用户名/你的用户名.github.io.git</span></div></pre></td></tr></table></figure>
-
-<p>4）然后进入 你的 Hexo 项目根目录，执行以下命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">generate</span> </div><div class="line">hexo deploy</div></pre></td></tr></table></figure>
-
-<p>顺利执行完毕后，过几分钟，打开你的github pages地址就可以看到你写的博客了，比如我的：<br><a href="http://dreamer-yzy.github.io/" target="_blank" rel="external">PostgreSQL DBA</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="lqvxvvpmr6pu8aue" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="ejfzqv7a423byhuj" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+    <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          PostgreSQL查看及设置参数、单位、描述等信息
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">PostgreSQL中 copy 和 \copy 的区别</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post-PostgreSQL删除表空间" data-title="PostgreSQL删除表空间" data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   
