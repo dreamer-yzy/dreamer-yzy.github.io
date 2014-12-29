@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: CTE表达式 | PostgreSQL DBA</title>
+  <title>Java乱码解决方案 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="http://dreamer-yzy.github.io/tags/CTE表达式/">
+  <meta name="description" content="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051521.Tomcat配置：     &lt;Connector port='8080' protocol='HTTP/1.1'               connectionTimeout='20000'">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java乱码解决方案">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051521.Tomcat配置：     &lt;Connector port='8080' protocol='HTTP/1.1'               connectionTimeout='20000'">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="Java乱码解决方案">
+<meta name="twitter:description" content="123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051521.Tomcat配置：     &lt;Connector port='8080' protocol='HTTP/1.1'               connectionTimeout='20000'">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,16 +80,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-Java乱码解决方案" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
-  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
+    <a href="/2014/12/29/Java乱码解决方案/" class="article-date">
+  <time datetime="2014-12-29T12:55:46.000Z" itemprop="datePublished">12月 29 2014</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
   </div>
 
   </div>
@@ -99,8 +97,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
+    <h1 class="article-title" itemprop="name">
+      Java乱码解决方案
     </h1>
   
 
@@ -108,47 +106,60 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
-<hr>
-<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
-<h1 id="CTEs">CTEs</h1>
-<ul>
-<li>不可以建索引（但可以使用引用到的对象的索引）</li>
-<li>不能有约束</li>
-<li>本质上是一个一次性视图</li>
-<li>只在下一个执行查询时存在</li>
-<li>可以递归</li>
-<li>没有专门的统计状态数据（只依赖于底层对象）</li>
-</ul>
-<h1 id="临时表">临时表</h1>
-<ul>
-<li>是存在于临时数据库的真正物化的表</li>
-<li>可以建索引</li>
-<li>可以有约束</li>
-<li>在当前连接的会话中会一直存在</li>
-<li>可以被其他查询或子查询引用</li>
-<li>引擎可以有专门为它准备的统计数据</li>
-</ul>
-<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
-<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
+        <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div></pre></td><td class="code"><pre><div class="line">1.Tomcat配置：</div><div class="line">     <span class="tag">&lt;<span class="title">Connector</span> <span class="attribute">port</span>=<span class="value">"8080"</span> <span class="attribute">protocol</span>=<span class="value">"HTTP/1.1"</span></span></div><div class="line">               <span class="attribute">connectionTimeout</span>=<span class="value">"20000"</span></div><div class="line">               <span class="attribute">redirectPort</span>=<span class="value">"8443"</span>  <span class="attribute">URIEncoding</span>=<span class="value">"UTF-8"</span>  <span class="attribute">useBodyEncodingForURI</span>=<span class="value">"true"</span>/&gt;</div><div class="line"></div><div class="line">2.文件：必须设置统一编码</div><div class="line">     JSP：<span class="vbscript">&lt;%@ page language=<span class="string">"java"</span> pageEncoding=<span class="string">"UTF-8"</span>%&gt;</span></div><div class="line"></div><div class="line">     HTML：<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">http-equiv</span>=<span class="value">"Content-Type"</span> <span class="attribute">content</span>=<span class="value">"text/html;charset=utf-8"</span>&gt;</span></div><div class="line"></div><div class="line">     ServletRequest:</div><div class="line">     request.setCharacterEncoding("UTF-8")是把提交内容的字符集设为UTF－8</div><div class="line"></div><div class="line">     ServletResponse:</div><div class="line">     response.setCharacterEncoding("UTF-8")</div><div class="line"></div><div class="line">3. MySQL</div><div class="line">     default-character-set=utf-8</div><div class="line"></div><div class="line">     mysql里数据库和表也都设为utf8_unicode_ci</div><div class="line"></div><div class="line">     jdbc:mysql://localhost/mydb?useUnicode=true&characterEncoding=utf-8</div><div class="line"></div><div class="line">4. PostgreSQL</div><div class="line">     postgresql.conf文件中的client_encoding改成UTF-8,</div><div class="line"></div><div class="line">5. 注意：使用 FileInputStream 读取文件时，使用的是系统默认的字符编码。如果用在UTF-8系统中，很容易出现问题。</div><div class="line">     这时，可以使用：</div><div class="line">     FileInputStream  in  =  new  FileInputStream("g:\\yufa.txt");</div><div class="line">     InputStreamReader reader = new InputStreamReader (in,"GBK"); // 用这个方法读取，并指定编码</div><div class="line">     </div><div class="line">6. Java中的 properties 文件，如果是使用 utf-8 文件格式的，这个格式是无 BOM 格式的UTF-8的。切记</div><div class="line"></div><div class="line">7. Spring</div><div class="line"> </div><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>utf-8<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">init-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">init-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="response-setCharacterEncoding()，response-setContentType()区别">response.setCharacterEncoding()，response.setContentType()区别</h1>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">response</span>.setContentType指定 HTTP 响应的编码,同时指定了浏览器显示的编码.</div><div class="line"></div><div class="line"><span class="built_in">response</span>.setCharacterEncoding设置HTTP 响应的编码,如果之前使用<span class="built_in">response</span>.setContentType设置了编码格式,则使用<span class="built_in">response</span>.setCharacterEncoding指定的编码格式覆盖之前的设置.与<span class="built_in">response</span>.setContentType相同的是,调用此方法,必须在getWriter执行之前或者<span class="built_in">response</span>被提交之前.</div></pre></td></tr></table></figure>
+
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="ymoa73mc77gttgdj" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="7syfpaj5ao2kltkx" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">PostgreSQL查看及设置参数、单位、描述等信息</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post-Java乱码解决方案" data-title="Java乱码解决方案" data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   

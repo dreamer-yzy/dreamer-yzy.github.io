@@ -82,6 +82,56 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-Java乱码解决方案" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/29/Java乱码解决方案/" class="article-date">
+  <time datetime="2014-12-29T12:55:46.000Z" itemprop="datePublished">12月 29 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/29/Java乱码解决方案/">Java乱码解决方案</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div></pre></td><td class="code"><pre><div class="line">1.Tomcat配置：</div><div class="line">     <span class="tag">&lt;<span class="title">Connector</span> <span class="attribute">port</span>=<span class="value">"8080"</span> <span class="attribute">protocol</span>=<span class="value">"HTTP/1.1"</span></span></div><div class="line">               <span class="attribute">connectionTimeout</span>=<span class="value">"20000"</span></div><div class="line">               <span class="attribute">redirectPort</span>=<span class="value">"8443"</span>  <span class="attribute">URIEncoding</span>=<span class="value">"UTF-8"</span>  <span class="attribute">useBodyEncodingForURI</span>=<span class="value">"true"</span>/&gt;</div><div class="line"></div><div class="line">2.文件：必须设置统一编码</div><div class="line">     JSP：<span class="vbscript">&lt;%@ page language=<span class="string">"java"</span> pageEncoding=<span class="string">"UTF-8"</span>%&gt;</span></div><div class="line"></div><div class="line">     HTML：<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">http-equiv</span>=<span class="value">"Content-Type"</span> <span class="attribute">content</span>=<span class="value">"text/html;charset=utf-8"</span>&gt;</span></div><div class="line"></div><div class="line">     ServletRequest:</div><div class="line">     request.setCharacterEncoding("UTF-8")是把提交内容的字符集设为UTF－8</div><div class="line"></div><div class="line">     ServletResponse:</div><div class="line">     response.setCharacterEncoding("UTF-8")</div><div class="line"></div><div class="line">3. MySQL</div><div class="line">     default-character-set=utf-8</div><div class="line"></div><div class="line">     mysql里数据库和表也都设为utf8_unicode_ci</div><div class="line"></div><div class="line">     jdbc:mysql://localhost/mydb?useUnicode=true&characterEncoding=utf-8</div><div class="line"></div><div class="line">4. PostgreSQL</div><div class="line">     postgresql.conf文件中的client_encoding改成UTF-8,</div><div class="line"></div><div class="line">5. 注意：使用 FileInputStream 读取文件时，使用的是系统默认的字符编码。如果用在UTF-8系统中，很容易出现问题。</div><div class="line">     这时，可以使用：</div><div class="line">     FileInputStream  in  =  new  FileInputStream("g:\\yufa.txt");</div><div class="line">     InputStreamReader reader = new InputStreamReader (in,"GBK"); // 用这个方法读取，并指定编码</div><div class="line">     </div><div class="line">6. Java中的 properties 文件，如果是使用 utf-8 文件格式的，这个格式是无 BOM 格式的UTF-8的。切记</div><div class="line"></div><div class="line">7. Spring</div><div class="line"> </div><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>org.springframework.web.filter.CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>encoding<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>utf-8<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">init-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">init-param</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>forceEncoding<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">init-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>CharacterEncodingFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="response-setCharacterEncoding()，response-setContentType()区别">response.setCharacterEncoding()，response.setContentType()区别</h1>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">response</span>.setContentType指定 HTTP 响应的编码,同时指定了浏览器显示的编码.</div><div class="line"></div><div class="line"><span class="built_in">response</span>.setCharacterEncoding设置HTTP 响应的编码,如果之前使用<span class="built_in">response</span>.setContentType设置了编码格式,则使用<span class="built_in">response</span>.setCharacterEncoding指定的编码格式覆盖之前的设置.与<span class="built_in">response</span>.setContentType相同的是,调用此方法,必须在getWriter执行之前或者<span class="built_in">response</span>被提交之前.</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="7syfpaj5ao2kltkx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL查看及设置参数、单位、描述等信息" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" class="article-date">
@@ -131,7 +181,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="xns7a4v8hpxigyf6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="ap6dex9mgulyxjwa" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -193,7 +243,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="ejfzqv7a423byhuj" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="rjoemzrylnrae2kt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -265,7 +315,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="7umwa29gm8un112y" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="g9adrbt67rclk2dg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -314,7 +364,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="krkkni54c0juc1j6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="y5m64hv4oh0o882a" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-线程/">Java 线程</a></li></ul>
@@ -359,7 +409,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/24/《麦兜，我和我妈妈》电影有感/" data-id="y7lyj1kdktl8bhq1" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/24/《麦兜，我和我妈妈》电影有感/" data-id="s621k8ildofdqtj9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/动画/">动画</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/电影/">电影</a></li></ul>
@@ -543,7 +593,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="rhyrypnnyh6ibc9s" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="ht58bxngdxh517rj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -624,7 +674,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="na20ihsdwd2ndhbu" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="nikcl1w5dfi5zyj9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -679,7 +729,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="4v8rdf0usfb185wi" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="6nwb768alyk6nj0l" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
@@ -728,63 +778,10 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/" data-id="6igbp9ulwejtpkop" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/Cookie-的-HttpOnly-和-Secure-属性作用/" data-id="7dnr57hlw3771osn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cookie/">Cookie</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HTTP/">HTTP</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-PostgreSQL版本策略" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="article-date">
-  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.postgresql.org/support/versioning/" target="_blank" rel="external">原文</a></p>
-<h2 id="版本策略">版本策略</h2>
-<p>我们始终建议所有用户都运行最新可用的次版本号的发行版，无论你正在使用哪个主版本的PostgreSQL。</p>
-<p>PostgreSQL主版本包含新特性并且大概一年发行一次。主版本是通过增加第一个或第二个版本数字来标识的，例如：9.1 到 9.2 </p>
-<p>主版本通常改变内部系统表和数据文件的格式。这些改变通常是非常复杂的，所以，我们不保证所有存储数据会向后兼容。主版本一般使用 备份/恢复 数据库或者使用 <code>pg_upgrade</code>模块来升级。</p>
-<p>次版本是版本号的第三部分的数字。例如：9.2.3 到 9.2.4。PostgreSQL团队仅在修复bugs时才会增加次版本号。所有用户都尽可能应该升级到最新的次版本号。虽然升级总是会有风险，PostgreSQL次版本升级仅修复那些经常遇到、安全性以及数据崩溃的bugs，以减少升级的风险。社区认为，不升级比升级更危险。</p>
-<p>升级次版本，不要求备份和恢复数据；仅仅只需停止数据库服务器，安装更新的二进制文件，然后重新启动服务器即可。对于某些发行版本，可能需要手工升级，所以，在升级之前，请必须阅读发行版的提示。</p>
-<h2 id="PostgreSQL发行版支持策略">PostgreSQL发行版支持策略</h2>
-<p>PostgreSQL目的是对主版本号完整地支持5年。</p>
-<p>当一个发行版不再受支持时，我们可能（这取决于我们提交者的决定）会继续为源代码进行打上关键的补丁。但项目不会产生正式发行或者二进制包，但是更新后的源代码可以从我们的代码控制系统里获取。</p>
-<p>该策略会在尽最大努力的基础上实行。在极端情况下，它可能在计划的生命周期内就不再被支持了；例如，如果在给定的主版本上发现有一个严重的bug超出了代码稳定性或者要牺牲程序序兼容性来解决的。在这种情况下，该主要版本就要提前退休了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="poln2wuttxef6036" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
@@ -806,7 +803,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">2</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">2</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -815,7 +812,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -824,7 +821,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 10.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 12.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a>
     </div>
   </div>
 
@@ -833,7 +830,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">24</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -843,6 +840,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/12/29/Java乱码解决方案/">Java乱码解决方案</a>
+          </li>
         
           <li>
             <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/">PostgreSQL查看及设置参数、单位、描述等信息</a>
@@ -858,10 +859,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2014/12/25/关于Java中多线程造成的变量共享问题/">关于Java中多线程造成的变量共享问题</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/24/《麦兜，我和我妈妈》电影有感/">《麦兜，我和我妈妈》电影有感</a>
           </li>
         
       </ul>
