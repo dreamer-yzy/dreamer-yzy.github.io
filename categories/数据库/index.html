@@ -82,6 +82,136 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" class="article-date">
+  <time datetime="2015-01-01T04:38:40.000Z" itemprop="datePublished">1月 1 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/">PostgreSQL窗口函数中 ROWS 和 RANGE 模式的区别</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="示例表数据如下：">示例表数据如下：</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=<span class="preprocessor"># select * from tcost ;</span></div><div class="line"> path <span class="string">| cost </span></div><div class="line">------+-------</div><div class="line">  <span class="number">111</span> <span class="string">|  23.3</span></div><div class="line">  <span class="number">111</span> <span class="string">|  33.4</span></div><div class="line">  <span class="number">111</span> <span class="string">|   3.4</span></div><div class="line">  <span class="number">222</span> <span class="string">|   3.4</span></div><div class="line">  <span class="number">222</span> <span class="string">|  33.4</span></div><div class="line">  <span class="number">222</span> <span class="string">| 333.4</span></div><div class="line">   <span class="number">32</span> <span class="string">|   3.4</span></div><div class="line">   <span class="number">32</span> <span class="string">|   0.4</span></div><div class="line">   <span class="number">32</span> <span class="string">|  0.04</span></div><div class="line">(<span class="number">9</span> rows)</div><div class="line"> </div><div class="line">test=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
+
+<h2 id="ROWS">ROWS</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> <span class="keyword">rows</span> <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span> <span class="number">2</span> following ) <span class="keyword">as</span> <span class="keyword">row</span> <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost |  row </div><div class="line"><span class="comment">------+-------+----------+-------</span></div><div class="line">  222 | 333.4 |    333.4 | 400.2</div><div class="line">  111 |  33.4 |    400.2 |  90.1</div><div class="line">  222 |  33.4 |    400.2 |  60.1</div><div class="line">  111 |  23.3 |    423.5 |  30.1</div><div class="line">  111 |   3.4 |    433.7 |  10.2</div><div class="line">   32 |   3.4 |    433.7 |   7.2</div><div class="line">  222 |   3.4 |    433.7 |  3.84</div><div class="line">   32 |   0.4 |    434.1 |  0.44</div><div class="line">   32 |  0.04 |   434.14 |  0.04</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<p>可以看到 max2 的值都是由 current row （当前行） and 2 following(紧接着2行）的sum()结果出来的。<br>即<br>400.2 = 333.4 + 33.4 + 33.4 得出的。<br>90.1 = 33.4 + 33.4 + 23.3 得出的。</p>
+<p>注意，上面那条SQL没有写 partition by ，那默认情况下就是以整个表来表示窗口化的，即只有一个窗口。现在试着，添加上partition by 语句的结果看看：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path <span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> <span class="keyword">rows</span> <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span> <span class="number">2</span> following ) <span class="keyword">as</span> <span class="keyword">row</span> <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost |  row </div><div class="line"><span class="comment">------+-------+----------+-------</span></div><div class="line">   32 |   3.4 |    433.7 |  3.84</div><div class="line">   32 |   0.4 |    434.1 |  0.44</div><div class="line">   32 |  0.04 |   434.14 |  0.04</div><div class="line">  111 |  33.4 |    400.2 |  60.1</div><div class="line">  111 |  23.3 |    423.5 |  26.7</div><div class="line">  111 |   3.4 |    433.7 |   3.4</div><div class="line">  222 | 333.4 |    333.4 | 370.2</div><div class="line">  222 |  33.4 |    400.2 |  36.8</div><div class="line">  222 |   3.4 |    433.7 |   3.4</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<p>当 partition by path时，可以看到，这些ROWS 模式，都是在当前所在的窗口来进行的，并不会跨窗口来进行。<br>所以，在这里强调一下，ROWS表示的是物理行。</p>
+<h2 id="RANGE">RANGE</h2>
+<p>看看，当是RANGE时的结果</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> range  <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span>  UNBOUNDED  following ) <span class="keyword">as</span> range <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost | range </div><div class="line"><span class="comment">------+-------+----------+--------</span></div><div class="line">  222 | 333.4 |    333.4 | 434.14</div><div class="line">  111 |  33.4 |    400.2 | 100.74</div><div class="line">  222 |  33.4 |    400.2 | 100.74</div><div class="line">  111 |  23.3 |    423.5 |  33.94</div><div class="line">  111 |   3.4 |    433.7 |  10.64</div><div class="line">   32 |   3.4 |    433.7 |  10.64</div><div class="line">  222 |   3.4 |    433.7 |  10.64</div><div class="line">   32 |   0.4 |    434.1 |   0.44</div><div class="line">   32 |  0.04 |   434.14 |   0.04</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<p>可以看到，RANGE时，相同数据的会被合并到一起再来进行计算，也表明，列中具有相同值的range的值也是相同的，并且结果是它们合并后进行计算后的结果。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> range  <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span>  UNBOUNDED  following ) <span class="keyword">as</span> range,<span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> <span class="keyword">rows</span> <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span> UNBOUNDED  following ) <span class="keyword">as</span> <span class="keyword">row</span> <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost | range  |  row  </div><div class="line"><span class="comment">------+-------+----------+--------+--------</span></div><div class="line">  222 | 333.4 |    333.4 | 434.14 | 434.14</div><div class="line">  111 |  33.4 |    400.2 | 100.74 | 100.74</div><div class="line">  222 |  33.4 |    400.2 | 100.74 |  67.34</div><div class="line">  111 |  23.3 |    423.5 |  33.94 |  33.94</div><div class="line">  111 |   3.4 |    433.7 |  10.64 |  10.64</div><div class="line">   32 |   3.4 |    433.7 |  10.64 |   7.24</div><div class="line">  222 |   3.4 |    433.7 |  10.64 |   3.84</div><div class="line">   32 |   0.4 |    434.1 |   0.44 |   0.44</div><div class="line">   32 |  0.04 |   434.14 |   0.04 |   0.04</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<p>这里可以非常明显看到RANGE和ROWS的区别。<br>ROWS：是按物理行来进行区分的<br>RANGE：是按数值进行逻辑区分的</p>
+<h2 id="RANGE_和_ROWS_在PostgreSQL中的语法">RANGE 和 ROWS 在PostgreSQL中的语法</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[ <span class="keyword">RANGE</span> | ROWS ] frame_start</div><div class="line">[ <span class="keyword">RANGE</span> | ROWS ] BETWEEN frame_start <span class="keyword">AND</span> frame_end</div></pre></td></tr></table></figure>
+
+<p>frame_start 和 frame_end可以是：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">UNBOUNDED PRECEDING</div><div class="line"><span class="keyword">value</span> PRECEDING</div><div class="line">CURRENT ROW</div><div class="line"><span class="keyword">value</span> FOLLOWING</div><div class="line">UNBOUNDED FOLLOWING</div></pre></td></tr></table></figure>
+
+<p>特别注意：value PRECEDING和value FOLLOWING 当前只允许ROWS模式。<br>RANGE模式后面只能接 UNBOUNDED FOLLOWING。</p>
+<p>默认的框架选项是RANGE UNBOUNDED PRECEDING，该选项与 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW相同。有ORDER BY， 它设置框架从分区的开始一直到与当前行相同的最后一行。没有ORDER BY， 那么就是当前分区的所有行都包含在框架中，因为所有行都会成为当前行的相同行。</p>
+<h2 id="RANGE时，请注意有没有_order_by_的区别">RANGE时，请注意有没有 order by 的区别</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (range  <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span>  UNBOUNDED  following ) <span class="keyword">as</span> no_order_by_range,<span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> range <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span> UNBOUNDED  following ) <span class="keyword">as</span> has_order_by_range <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost | no_order_by_range | has_order_by_range</div><div class="line"><span class="comment">------+-------+----------+-------------------+--------------------</span></div><div class="line">  222 | 333.4 |    333.4 |            434.14 |             434.14</div><div class="line">  111 |  33.4 |    400.2 |            434.14 |             100.74</div><div class="line">  222 |  33.4 |    400.2 |            434.14 |             100.74</div><div class="line">  111 |  23.3 |    423.5 |            434.14 |              33.94</div><div class="line">  111 |   3.4 |    433.7 |            434.14 |              10.64</div><div class="line">   32 |   3.4 |    433.7 |            434.14 |              10.64</div><div class="line">  222 |   3.4 |    433.7 |            434.14 |              10.64</div><div class="line">   32 |   0.4 |    434.1 |            434.14 |               0.44</div><div class="line">   32 |  0.04 |   434.14 |            434.14 |               0.04</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h5 id="没有ORDER_BY，_那么就是当前分区的所有行都包含在框架中，因为所有行都会成为当前行的相同行。">没有ORDER BY， 那么就是当前分区的所有行都包含在框架中，因为所有行都会成为当前行的相同行。</h5>
+<h2 id="ROWS时，请注意有没有_order_by_的区别">ROWS时，请注意有没有 order by 的区别</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span>) <span class="keyword">as</span> sum_cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">rows</span>  <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span>  UNBOUNDED  following ) <span class="keyword">as</span> no_order_by_rows,<span class="keyword">sum</span>(cost) over (<span class="keyword">order</span> <span class="keyword">by</span> cost <span class="keyword">desc</span> <span class="keyword">rows</span> <span class="keyword">between</span> <span class="keyword">current</span> <span class="keyword">row</span> <span class="keyword">and</span> UNBOUNDED  following ) <span class="keyword">as</span> has_order_by_rows <span class="keyword">from</span> tcost;</span></div><div class="line"> path | cost  | sum_cost | no_order_by_rows | has_order_by_rows</div><div class="line"><span class="comment">------+-------+----------+------------------+-------------------</span></div><div class="line">  222 | 333.4 |    333.4 |           434.14 |            434.14</div><div class="line">  111 |  33.4 |    400.2 |           100.74 |            100.74</div><div class="line">  222 |  33.4 |    400.2 |            67.34 |             67.34</div><div class="line">  111 |  23.3 |    423.5 |            33.94 |             33.94</div><div class="line">  111 |   3.4 |    433.7 |            10.64 |             10.64</div><div class="line">   32 |   3.4 |    433.7 |             7.24 |              7.24</div><div class="line">  222 |   3.4 |    433.7 |             3.84 |              3.84</div><div class="line">   32 |   0.4 |    434.1 |             0.44 |              0.44</div><div class="line">   32 |  0.04 |   434.14 |             0.04 |              0.04</div><div class="line">(9 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h4 id="有没有ORDER_BY，都是一样的，因为ROWS是按物理分行的，而不是按逻辑分行的。">有没有ORDER BY，都是一样的，因为ROWS是按物理分行的，而不是按逻辑分行的。</h4>
+<h2 id="总结">总结</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ROWS</span>：是按物理行来进行窗口级别里再次进行范围选择的。</div><div class="line">RANGE：是按逻辑行来进行窗口级别里再次进行范围选择的。RANGE时，相同行会被合并成同一条数据再进行计算，相同行窗口计算时的结果也是相同的。</div><div class="line">是否是相同行，是根据<span class="keyword">ORDER</span> <span class="keyword">BY</span>排序时的结果决定的。</div><div class="line">有<span class="keyword">ORDER</span> <span class="keyword">BY</span>时：同行是说在<span class="keyword">ORDER</span> <span class="keyword">BY</span>排序时不唯一的行。【即具有相同数值的行】</div><div class="line">             不同行是说<span class="keyword">ORDER</span> <span class="keyword">BY</span>排序时具有不同的数值的行。</div><div class="line"></div><div class="line">没有<span class="keyword">ORDER</span> <span class="keyword">BY</span>：那么就是当前分区的所有行都包含在框架中，因为所有行都会成为当前行的相同行。【特别要注意最后一句的意思】</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="it4ip5tdkjisff7r" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post--翻译-为什么PostgreSQL的logo是一个大象？" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" class="article-date">
+  <time datetime="2015-01-01T04:35:36.000Z" itemprop="datePublished">1月 1 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/">[翻译]为什么PostgreSQL的logo是一个大象？</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://qr.ae/zJLuV" target="_blank" rel="external">原文地址</a></p>
+<p>我也不知道，也不敢肯定为什么PostgreSQL的logo是一头大象 … 我正试着找出这个答案。 </p>
+<p>到现在为至，我最好的猜测是因为以下这个事实：在许多文化里，大象是众所周知的，具有非常好的记忆力的，或者至少是一个非常好记忆力的象征…因此，我们可以说：大象是可以非常棒地保存（数据库！）记忆（数据！）…或者换句话说：“大象是永不忘记的”…</p>
+<p>这仅仅是我自己认为和大胆猜测的。</p>
+<p>不过，我已经找到几个关于PostgreSQL logo原型的有趣的和确定的事情：</p>
+<p>PostgreSQL的logo的大象名字叫”Slonik”</p>
+<p>“Slonik”意思是”小象”并且名字来自”slony”(复数）或”slon”(单数）其中之一，分别来自俄罗斯单词“слоны”意思是“大象”（复数）或者“大象”（单数）</p>
+<p>是不是很有趣？无论PostgreSQL的logo历史是如何的，它是一个非常棒的开源数据库。如果我发现更多关于”Slonik”的资料，我会再来更新的。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="op0yautiwkpmhgpf" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL查看及设置参数、单位、描述等信息" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" class="article-date">
@@ -131,7 +261,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="ap6dex9mgulyxjwa" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="o7azbzrnms4plmty" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -193,7 +323,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="rjoemzrylnrae2kt" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="vmunajpbbgrl5nty" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -265,7 +395,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="g9adrbt67rclk2dg" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="t22vzgiot571n8e2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -449,7 +579,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="ht58bxngdxh517rj" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="nmwaymhtb94oyyr4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -530,7 +660,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="nikcl1w5dfi5zyj9" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="608ki3ucnx9wtpbm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -583,7 +713,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="d1uqqefq6nj5s2jv" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="q740o43xk7xhr3mu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -632,7 +762,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/PostgreSQL最可靠的升级方案-实践/" data-id="ohqoedkqj2itr9q6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/20/PostgreSQL最可靠的升级方案-实践/" data-id="1b21anzs1u0o2ehw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -702,7 +832,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="dqjswz5kxe2zu0ni" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="stdw93x74xfs8dzo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -714,123 +844,9 @@ ga('send', 'pageview');
 
 
   
-    <article id="post-SQL语句各部分的执行顺序" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/15/SQL语句各部分的执行顺序/" class="article-date">
-  <time datetime="2014-12-15T12:54:45.000Z" itemprop="datePublished">12月 15 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/15/SQL语句各部分的执行顺序/">SQL语句各部分的执行顺序</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>上星期请教了条SQL为什么没有使用到索引的问题，引起了我对SQL执行顺序的疑惑，查了不少资料，收集到比较认可的答案如下，引用资料也在后面标识了。有什么不同的见解，还请大牛指出。</p>
-<h2 id="各部分的执行顺序">各部分的执行顺序</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="bullet">1. </span>FROM</div><div class="line"><span class="bullet">2. </span>ON</div><div class="line"><span class="bullet">3. </span>OUTER</div><div class="line"><span class="bullet">4. </span>WHERE</div><div class="line"><span class="bullet">5. </span>GROUP BY</div><div class="line"><span class="bullet">6. </span>CUBE | ROLLUP</div><div class="line"><span class="bullet">7. </span>HAVING</div><div class="line"><span class="bullet">8. </span>SELECT</div><div class="line"><span class="bullet">9. </span>DISTINCT</div><div class="line"><span class="bullet">10. </span>ORDER BY</div><div class="line"><span class="bullet">11. </span>TOP(LIMIT)</div></pre></td></tr></table></figure>
-
-<p>来源资料：<br><a href="http://stackoverflow.com/questions/2617661/whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement" target="_blank" rel="external">Stackoverflow whats-the-execute-order-of-the-different-parts-of-a-sql-select-statement</a></p>
-<p><a href="http://stackoverflow.com/questions/4596467/order-of-execution-of-the-query" target="_blank" rel="external">Stackoverflow order-of-execution-of-the-query</a></p>
-<p><a href="https://social.msdn.microsoft.com/Forums/sqlserver/en-US/70efeffe-76b9-4b7e-b4a1-ba53f5d21916/order-of-execution-of-sql-queries" target="_blank" rel="external">MSDN order-of-execution-of-sql-queries</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="mrh2r8wvxded25z0" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
-  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
-<hr>
-<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
-<h1 id="CTEs">CTEs</h1>
-<ul>
-<li>不可以建索引（但可以使用引用到的对象的索引）</li>
-<li>不能有约束</li>
-<li>本质上是一个一次性视图</li>
-<li>只在下一个执行查询时存在</li>
-<li>可以递归</li>
-<li>没有专门的统计状态数据（只依赖于底层对象）</li>
-</ul>
-<h1 id="临时表">临时表</h1>
-<ul>
-<li>是存在于临时数据库的真正物化的表</li>
-<li>可以建索引</li>
-<li>可以有约束</li>
-<li>在当前连接的会话中会一直存在</li>
-<li>可以被其他查询或子查询引用</li>
-<li>引擎可以有专门为它准备的统计数据</li>
-</ul>
-<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
-<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="ymoa73mc77gttgdj" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/categories/数据库/page/2/">2</a><a class="extend next" rel="next" href="/categories/数据库/page/2/">Next &raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/categories/数据库/page/2/">2</a><a class="page-number" href="/categories/数据库/page/3/">3</a><a class="extend next" rel="next" href="/categories/数据库/page/2/">Next &raquo;</a>
     </nav>
   
 </section>
@@ -841,7 +857,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">21</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">21</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -850,7 +866,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -859,7 +875,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 10.00px;">PostgreSQL 高级</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a>
     </div>
   </div>
 
@@ -868,7 +884,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -880,6 +896,14 @@ ga('send', 'pageview');
       <ul>
         
           <li>
+            <a href="/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/">PostgreSQL窗口函数中 ROWS 和 RANGE 模式的区别</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/">[翻译]为什么PostgreSQL的logo是一个大象？</a>
+          </li>
+        
+          <li>
             <a href="/2014/12/29/Java乱码解决方案/">Java乱码解决方案</a>
           </li>
         
@@ -889,14 +913,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2014/12/26/PostgreSQL删除表空间/">PostgreSQL删除表空间</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/26/PostgreSQL中-copy-和-copy-的区别/">PostgreSQL中 copy 和 \copy 的区别</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/25/关于Java中多线程造成的变量共享问题/">关于Java中多线程造成的变量共享问题</a>
           </li>
         
       </ul>
@@ -911,7 +927,7 @@ ga('send', 'pageview');
   
   <div class="outer">
     <div id="footer-info" class="inner">
-      &copy; 2014 Zhiyong yang<br>
+      &copy; 2015 Zhiyong yang<br>
       Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
