@@ -82,6 +82,117 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post--翻译-使用部分索引来加速PostgreSQL" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" class="article-date">
+  <time datetime="2015-01-04T12:25:28.000Z" itemprop="datePublished">1月 4 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/">[翻译]使用部分索引来加速PostgreSQL</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://blog.heapanalytics.com/speeding-up-postgresql-queries-with-partial-indexes/" target="_blank" rel="external">原文</a></p>
+<p>本文经过原作者<code>Dan Robinson</code>同意翻译。（我在twitter发送推文和他互动）</p>
+<hr>
+<p>你知道PostgreSQL支持表的部分索引吗？这使得读取部分索引是非常快速的，几乎没有什么索引开销。如果你想重复地分析那些匹配给定的 WHERE 子句的行数据，那部分索引是最好的索引数据的方式。这使得PostgreSQL非常适合于那种涉及预聚集额外的特别分析的工作流。在这一点上，我将通过一个非常适合使用部分索引的查询优化示例来实践下。</p>
+<p>思考一下，具有以下模式的事件表：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">event</span> (</span></div><div class="line">  user_id <span class="built_in">BIGINT</span>,</div><div class="line">  event_id <span class="built_in">BIGINT</span>,</div><div class="line">  <span class="keyword">time</span> <span class="built_in">BIGINT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  <span class="keyword">data</span> JSON <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span> (user_id, event_id)</div><div class="line">)</div></pre></td></tr></table></figure>
+
+<p>每一个事件都与用户关联，并且有一个ID，一个<code>time</code>，以及一个 JSON 表示事件。<br>JSON包括页面路径，事件类型（例如：点击，查看页面，提交表单），以及其他任何描述事件的属性。</p>
+<p>我们可以使用这张表来保存许多不同的事件，为了我们以后可以分析数据，让我们假设有许多自动跟踪并记录每次点击，查看页面以及表单提交的事件。我们可能想要一个内部的表盘可以显示一些高值指标，例如每周的注册数或者我们的每天收益数。与表盘相关的事件只是这个表的一个小的组成部分——在你的网站上最终购买的点击数占非常小的百分比。但它们被混合在表的其余部分，所以我们的“信噪比”比较低。</p>
+<p>我们可能喜欢索引我们的数据来加快表盘的查询[1]。让我们从注册事件开始，我们定义一个表单提交到我们的 <code>/signup</code> 页面。获取9月份第一周的注册数可以这样子写：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*)</span></div><div class="line"><span class="keyword">FROM</span> <span class="keyword">event</span></div><div class="line"><span class="keyword">WHERE</span></div><div class="line">  (<span class="keyword">data</span>-&gt;&gt;<span class="string">'type'</span>) = <span class="string">'submit'</span> <span class="keyword">AND</span></div><div class="line">  (<span class="keyword">data</span>-&gt;&gt;<span class="string">'path'</span>) = <span class="string">'/signup/'</span> <span class="keyword">AND</span></div><div class="line">  <span class="keyword">time</span> <span class="keyword">BETWEEN</span> <span class="number">1409554800000</span> <span class="keyword">AND</span> <span class="number">1410159600000</span></div></pre></td></tr></table></figure>
+
+<p>在一个1000万个事件数据集里，有3000个是注册事件，并且没有任何索引，这条查询耗时45秒。</p>
+<h2 id="在每个单列里建立索引：混合">在每个单列里建立索引：混合</h2>
+<p>一个天真地认为提高这个性能的方法是：为每个相关事件的特性：<code>(data-&gt;&gt;&#39;type&#39;), (data-&gt;&gt;&#39;path&#39;), and time</code> 都创建一个单列索引。</p>
+<p>我们使用这三个索引的位图索引扫描得出结果，如果该查询是有选择性的并且相关的索引部分都在内存的这可能会比较快速。的确，这些索引在适当的位置时，该查询在初始化时耗时200ms，随后再耗时20ms在执行合并数据集上——这显著改善了耗时45秒的顺序扫描。</p>
+<p>但是这种索引策略有一些非常大的缺点:</p>
+<ul>
+<li><p>写开销. 我们需要在每个 插入/更新/删除 操作该表数据时都要写这三个索引的数据[2]。 对于在该例子里需要频繁写数据来说，这可能代价太高了。</p>
+</li>
+<li><p>限制查询结果集。这种策略约束了我们定义高值事件类型的能力。如果我们需要一些比在JSON里其中之一的字段的范围更复杂的查询就无法工作了。 假如我们想要匹配一个正则，或者查看所有以<code>/signup/</code>开头，后面可以接任何字符的页面路径？</p>
+</li>
+<li><p>磁盘使用。在我们测试的数据集合里，该表的大小高达 6660 MB，并且这三个索引一总占用1026MB，为了支持该表，我们需要大幅增加硬盘空间。[3]</p>
+</li>
+</ul>
+<h2 id="进入部分索引">进入部分索引</h2>
+<p>我们只是仅仅分析 0.03% 的组成注册事件的表数据，但是上面这种索引策略索引了所有行。我们希望能够高效地执行查询表的一小部分数据。类似像这种情况，最好的结果是使用部分索引。</p>
+<p>如果我们索引一个不相关的列并且限制我们的索引是匹配注册定义事件的，PostgreSQL可以非常容易地确定注册事件的数据行在哪里，并且比在相关字段里建立完整的索引更高效地查询这些数据。特别注意，考虑索引<code>time</code>字段，但仅仅是匹配那些过滤好的注册事件的行。这是：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> event_signups <span class="keyword">ON</span> <span class="keyword">event</span> (<span class="keyword">time</span>)</span></div><div class="line"><span class="keyword">WHERE</span> (<span class="keyword">data</span>-&gt;&gt;<span class="string">'type'</span>) = <span class="string">'submit'</span> <span class="keyword">AND</span> (<span class="keyword">data</span>-&gt;&gt;<span class="string">'path'</span>) = <span class="string">'/signup/'</span></div></pre></td></tr></table></figure>
+
+<p>使用这个索引，我们的执行测试查询初始化耗时200ms，并且紧接耗费2ms来执行，因此，如果我们经常执行这种查询，这会提高性能。更重要的是，部分索引解决了上面提到的三个组合的索引的三个缺点。</p>
+<ul>
+<li><p>它仅仅占用 96KB 空间， 这比完整索引所有这三个字段占用1026MB空间提升了10000 倍。</p>
+</li>
+<li><p>当新行匹配我们过滤好的注册事件时，我们才需要写部分索引。由于这里有 0.03% 的注册事件，这种数据分布显著提高了写性能：实际上这是由于部分索引而免费得到的。</p>
+</li>
+<li><p>PostgreSQL只是允许那些完全表达式过滤的部分加入。我们定义索引的 WHERE 子句可以使用我们可能在一条查询里使用的任何行过滤表达式。我们使用这方式来匹配更多复杂事件的定义，比如正则表达式，函数结果，或者上面提到的前缀匹配的例子。</p>
+</li>
+</ul>
+<h2 id="避免索引那些谓词结果为布尔值的数据">避免索引那些谓词结果为布尔值的数据</h2>
+<p>我见过的另一种方式是试图索引布尔表达式：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(<span class="built_in">data</span><span class="subst">-&gt;</span><span class="subst">&gt;</span><span class="string">'type'</span>) <span class="subst">=</span> <span class="string">'submit'</span> <span class="literal">AND</span> (<span class="built_in">data</span><span class="subst">-&gt;</span><span class="subst">&gt;</span><span class="string">'path'</span>) <span class="subst">=</span> <span class="string">'/signup/'</span></div></pre></td></tr></table></figure>
+
+<p>直接地，将<code>time</code>放在第二个字段，像这样：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> event_signup_time <span class="keyword">ON</span> <span class="keyword">event</span></span></div><div class="line">(((<span class="keyword">data</span>-&gt;&gt;<span class="string">'type'</span>) = <span class="string">'submit'</span> <span class="keyword">AND</span> (<span class="keyword">data</span>-&gt;&gt;<span class="string">'path'</span>) = <span class="string">'/signup/'</span>), <span class="keyword">time</span>)</div></pre></td></tr></table></figure>
+
+<p>这比以上两种方式更加糟糕，它产生的结果是PostgreSQL的查询计划不会理解我们的查询例子来约束那些在索引里第一个字段为true的行。这是因为，查询计划不知道 WHERE 子句：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">WHERE</span> (<span class="built_in">data</span><span class="subst">-&gt;</span><span class="subst">&gt;</span><span class="string">'type'</span>) <span class="subst">=</span> <span class="string">'submit'</span> <span class="literal">AND</span> (<span class="built_in">data</span><span class="subst">-&gt;</span><span class="subst">&gt;</span><span class="string">'path'</span>) <span class="subst">=</span> <span class="string">'/signup/'</span></div></pre></td></tr></table></figure>
+
+<p>是与下面我们索引的这个字段为必须为true的是相等的。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="list">(<span class="list">(<span class="title">data-&gt;&gt;</span><span class="quoted">'type</span>')</span> = <span class="quoted">'submit</span>' AND <span class="list">(<span class="title">data-&gt;&gt;</span><span class="quoted">'path</span>')</span> = <span class="quoted">'/signup/</span>')</span></div></pre></td></tr></table></figure>
+
+<p>因此， 在我们的扫描里，使用该索引来限制事件的时间范围，但是它无论这个正则表达式是true还是false都会读取所有事件(译者注：这里指的是通过时间范围查出来的所有事件)，加载完毕后才对每一行进行检查条件。[4]</p>
+<p>因此，我们就会从磁盘里读取比实际需要的更加多的行，并且还要对每一个结果行执行重要的检查条件。在我们的数据集里，该查询开始执行时耗时25秒，之后再连续执行8秒。事实的真相是，这比仅索引<code>time</code>字段差一点，在执行上是等同的。</p>
+<p>部分索引对于预先计算那些通过谓词来匹配表的子集来说是一个非常强大的方式。通过流量判断 #postgresql IRC 并没有被充分利用。相比完全索引，它们允许一个更好的谓词范围。它们明显地更加轻量级，需要更少地写操作以及更少的磁盘空间，特别是那些高选择性的过滤。如果你重复地查询一个表的一小部分行，那么部分索引应该是你的默认策略。</p>
+<p>爱上PostgreSQL了吗？还有人可能知道更多关于部分索引的知识？发推给我 <a href="https://www.twitter.com/danlovesproofs" target="_blank" rel="external">@danlovesproofs</a></p>
+<p>对构建使强大的技术变得易用的系统感兴趣？向我们投递留言到 jobs@heapanalytics.com.</p>
+<ul>
+<li><p>[1] 我们可能使用分表来解决这种情况，将高值事件和低值事件分到不同的子表，但是如果有许多不同的高值事件时这种方式就比较笨拙了，并且我们想要添加一个新类型的高值事件时，每次都需要重新分表。</p>
+</li>
+<li><p>[2] 我们可能得到一些通过优化只在堆元组上的免更新，但是，至少在每次的插入和删除时将需要写这三个索引。</p>
+</li>
+<li><p>[3]  我们可以索引这三个字段为一个组合索引，例如在：((data-&gt;&gt;’type’), (data-&gt;&gt;’path’), time)。这占用 755MB 空间，节约了 26% ，但这仍然是非常大的，其他的缺点也一样有。更重要的是，在这些数据上，索引会更少地应用到其他的查询，因此，如果我们正支持一些不同的同值事件，这可能不会节约我们的任何空间。</p>
+</li>
+<li><p>[4]  相应的查询计划：</p>
+</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">                                                  QUERY PLAN                                                  </div><div class="line"><span class="subst">---------------------------------------------------------------------------------------------------------------</span></div><div class="line"> Aggregate  (cost<span class="subst">=</span><span class="number">820866.05</span><span class="built_in">..</span><span class="number">820866.06</span> <span class="keyword">rows</span><span class="subst">=</span><span class="number">1</span> width<span class="subst">=</span><span class="number">0</span>)</div><div class="line">   <span class="subst">-&gt;  </span>Index Scan using event_signup_time <span class="keyword">on</span> event  (cost<span class="subst">=</span><span class="number">0.43</span><span class="built_in">..</span><span class="number">820865.99</span> <span class="keyword">rows</span><span class="subst">=</span><span class="number">27</span> width<span class="subst">=</span><span class="number">0</span>)</div><div class="line">         Index Cond: ((<span class="string">"time"</span> <span class="subst">&gt;=</span> <span class="number">1409554800000</span><span class="tag">::bigint</span>) <span class="literal">AND</span> (<span class="string">"time"</span> <span class="subst">&lt;=</span> <span class="number">1410159600000</span><span class="tag">::bigint</span>))</div><div class="line">         Filter: (((<span class="built_in">data</span> <span class="subst">-&gt;</span><span class="subst">&gt;</span> <span class="string">'type'</span><span class="tag">::text</span>) <span class="subst">=</span> <span class="string">'submit'</span><span class="tag">::text</span>) <span class="literal">AND</span> ((<span class="built_in">data</span> <span class="subst">-&gt;</span><span class="subst">&gt;</span> <span class="string">'path'</span><span class="tag">::text</span>) <span class="subst">=</span> <span class="string">'/signup/'</span><span class="tag">::text</span>))</div><div class="line">(<span class="number">4</span> <span class="keyword">rows</span>)</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" data-id="7hfhnx34ba3ihgxq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-为什么PostgreSQL的logo是一个大象？" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" class="article-date">
@@ -120,7 +231,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="qwm91e5j8qsk27k1" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="6b2lr5x1o705byoz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -173,7 +284,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="yie1omji1k1qgt5p" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="fkd0h20vusw99nmc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -243,7 +354,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="ilka1vn26mr9jikh" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="mputdwn1mkzh9qpp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -308,7 +419,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="tc7e5rao293nqy7o" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="65suk0gqo12sl0g4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
@@ -496,7 +607,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="smhwf6xg0eus17rq" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="vq627hl9x6rib7x9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -517,7 +628,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">22</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">21</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">23</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">22</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -526,7 +637,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -544,7 +655,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -554,6 +665,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/">[翻译]使用部分索引来加速PostgreSQL</a>
+          </li>
         
           <li>
             <a href="/2015/01/02/SQL注意事项/">SQL注意事项</a>
@@ -569,10 +684,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2014/12/29/Java乱码解决方案/">Java乱码解决方案</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/">PostgreSQL查看及设置参数、单位、描述等信息</a>
           </li>
         
       </ul>
