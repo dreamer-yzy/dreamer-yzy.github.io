@@ -82,6 +82,131 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-使用PostgreSQL无限递归-SELECT-评论系统" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/" class="article-date">
+  <time datetime="2015-01-05T12:34:45.000Z" itemprop="datePublished">1月 5 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/">使用PostgreSQL无限递归 SELECT 评论系统</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>假设有个评论系统，要求支持无限层级的回复，就像一棵树那样</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">       文章</div><div class="line">     /      <span class="command">\</span></div><div class="line">    /        <span class="command">\</span></div><div class="line">评论1     评论2</div><div class="line">....</div></pre></td></tr></table></figure>
+
+<p>注意可以有任意个子树以及做任意个叶子</p>
+<h2 id="大意的表结构">大意的表结构</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">table</span> comments (</span></div><div class="line">    comment_id <span class="built_in">serial</span> <span class="keyword">primary</span> <span class="keyword">key</span>,</div><div class="line">    parent_id <span class="built_in">bigint</span>,</div><div class="line">    bug_id <span class="built_in">bigint</span> <span class="keyword">not</span> <span class="literal">null</span>,</div><div class="line">    author <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">not</span> <span class="literal">null</span>,</div><div class="line">    comment <span class="built_in">text</span> <span class="keyword">not</span> <span class="literal">null</span>,</div><div class="line">    <span class="keyword">foreign</span> <span class="keyword">key</span> (parent_id) <span class="keyword">references</span> comments(comment_id)</div><div class="line">);</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">test=# select * from comments;</div><div class="line"><span class="header"> comment_id | parent_id | bug_id | author |       comment      </span></div><div class="line">------------+-----------+--------+--------+---------------------</div><div class="line"><span class="code">          1 |           |      1 | Fran   | 这个bug的成因是什么</span></div><div class="line"><span class="code">          2 |         1 |      1 | Ollie  | 我觉得是一个空指针</span></div><div class="line"><span class="code">          3 |         2 |      1 | Fran   | 不，我查过了</span></div><div class="line"><span class="code">          4 |         1 |      1 | Kukla  | 我们需要查无效输入</span></div><div class="line"><span class="code">          5 |         4 |      1 | Ollie  | 是的，那是个问题</span></div><div class="line"><span class="code">          6 |         4 |      1 | Fran   | 好，查一下吧</span></div><div class="line"><span class="code">          7 |         6 |      1 | Kukla  | 解决了</span></div><div class="line">(7 rows)</div></pre></td></tr></table></figure>
+
+
+<h2 id="SQL语句">SQL语句</h2>
+<p>利用递归查询，可以查某篇文章评论组成的树结构。其中 depth是树的深度，显示的时候，按已经排序好的层次及相应的父结点显示出来就可以了。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">test=# with RECURSIVE  commenttree (comment_id, bug_id, parent_id, author, comment, depth) as (<span class="operator"><span class="keyword">select</span> comment_id, bug_id, parent_id, author, comment , <span class="number">0</span> <span class="keyword">as</span> depth <span class="keyword">from</span> comments <span class="keyword">where</span> parent_id <span class="keyword">is</span> <span class="literal">null</span> <span class="keyword">union</span> <span class="keyword">all</span> <span class="keyword">select</span> c.comment_id, c.bug_id, c.parent_id, c.author, c.comment, ct.depth+<span class="number">1</span> <span class="keyword">as</span> depth <span class="keyword">from</span> commenttree <span class="keyword">as</span> ct <span class="keyword">join</span> comments <span class="keyword">as</span> c <span class="keyword">on</span> (ct.comment_id = c.parent_id)) <span class="keyword">select</span> * <span class="keyword">from</span> commenttree <span class="keyword">where</span> bug_id = <span class="number">1</span>;</span>;</div><div class="line"> comment_id | bug_id | parent_id | author |       comment       | depth</div><div class="line"><span class="comment">------------+--------+-----------+--------+---------------------+-------</span></div><div class="line">          1 |      1 |           | Fran   | 这个bug的成因是什么 |     0</div><div class="line">          2 |      1 |         1 | Ollie  | 我觉得是一个空指针  |     1</div><div class="line">          4 |      1 |         1 | Kukla  | 我们需要查无效输入  |     1</div><div class="line">          3 |      1 |         2 | Fran   | 不，我查过了        |     2</div><div class="line">          5 |      1 |         4 | Ollie  | 是的，那是个问题    |     2</div><div class="line">          6 |      1 |         4 | Fran   | 好，查一下吧        |     2</div><div class="line">          7 |      1 |         6 | Kukla  | 解决了              |     3</div><div class="line">(7 rows)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<p>注意PostgreSQL里，必须加 RECURSIVE 才能支持递归。</p>
+<p>内容来源资料：<br>[1]《SQL反模式》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/" data-id="kc8x4uap898z9kfv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-PostgreSQL使用-postgres-fdw-进行跨库操作" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/" class="article-date">
+  <time datetime="2015-01-05T12:20:49.000Z" itemprop="datePublished">1月 5 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/">PostgreSQL使用 postgres_fdw 进行跨库操作</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="说明">说明</h2>
+<p>该 <code>postgres_fdw</code> 模块提供了 远程-数据 包装器 <code>postgres_fdw</code>，它能够用于访问一些保存在外部 PostgreSQL 服务器的数据。</p>
+<p>该模块提供的功能很大程度上与以前的<code>dblink</code>模块重叠。但是<code>postgres_fdw</code> 提供了更加透明和符合标准的语法来访问远程表，并且能够在某些情况下有更好的性能。</p>
+<h2 id="安装extension">安装extension</h2>
+<p>cd contrib/postgres_fdw<br>make install</p>
+<h2 id="安装到数据库">安装到数据库</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># CREATE EXTENSION postgres_fdw;</span></div><div class="line">CREATE EXTENSION</div><div class="line"><span class="variable">test=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
+
+<h2 id="检查是否安装成功">检查是否安装成功</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=<span class="preprocessor"># \dx postgres_fdw;</span></div><div class="line">                             List of installed extensions</div><div class="line">     Name     | Version | Schema |                    Description                    </div><div class="line">--------------+---------+--------+----------------------------------------------------</div><div class="line"> postgres_fdw | <span class="number">1.0</span>     | <span class="keyword">public</span> | foreign-data wrapper <span class="keyword">for</span> remote PostgreSQL <span class="title">servers</span></div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
+
+<h2 id="创建并查看一个远程服务器">创建并查看一个远程服务器</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">test=# \dx postgres_fdw;</div><div class="line">                             List of installed extensions</div><div class="line">     Name     | Version | Schema |                    Description                    </div><div class="line"><span class="comment">--------------+---------+--------+----------------------------------------------------</span></div><div class="line"> postgres_fdw | 1.0     | public | foreign-data wrapper for remote PostgreSQL servers</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=# <span class="operator"><span class="keyword">CREATE</span> <span class="keyword">SERVER</span> postgres_server <span class="keyword">FOREIGN</span> <span class="keyword">DATA</span> WRAPPER postgres_fdw OPTIONS (host <span class="string">'10.0.0.10'</span>, port <span class="string">'5432'</span>, dbname <span class="string">'test'</span>);</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">SERVER</span></span></div><div class="line">test=# \des;</div><div class="line">              List of foreign servers</div><div class="line">      Name       |  Owner   | Foreign-data wrapper</div><div class="line"><span class="comment">-----------------+----------+----------------------</span></div><div class="line">postgres_server | postgres | postgres_fdw</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h2 id="创建一个远程映射用户">创建一个远程映射用户</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">USER</span> MAPPING <span class="keyword">FOR</span> <span class="keyword">PUBLIC</span> <span class="keyword">SERVER</span> postgres_server OPTIONS (<span class="keyword">user</span> <span class="string">'postgres'</span>, <span class="keyword">password</span> <span class="string">'yang'</span>);</span></div></pre></td></tr></table></figure>
+
+<p>user,password 是远程数据库上的用户名和密码</p>
+<h2 id="创建一个远程映射表">创建一个远程映射表</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FOREIGN</span> <span class="keyword">TABLE</span> tcost_foreign (path <span class="built_in">integer</span>, cost <span class="built_in">numeric</span>) <span class="keyword">SERVER</span> postgres_server OPTIONS (schema_name <span class="string">'public'</span>, table_name <span class="string">'tcost'</span>);</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FOREIGN</span> <span class="keyword">TABLE</span></span></div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h2 id="操作">操作</h2>
+<p>像它在本地表一样操作就可以了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/" data-id="ewwjw3yayqob8l5x" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" class="article-date">
@@ -150,7 +275,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="istyg8xiy5jnzq4f" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="jxd2jdkz16lgpoka" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
@@ -171,7 +296,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">23</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">22</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">26</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">24</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">3</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -180,7 +305,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -189,7 +314,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 10.00px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 10.00px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 10.00px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 14.00px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 12.00px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 12.00px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
     </div>
   </div>
 
@@ -198,7 +323,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -210,23 +335,23 @@ ga('send', 'pageview');
       <ul>
         
           <li>
+            <a href="/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/">使用PostgreSQL无限递归 SELECT 评论系统</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/">PostgreSQL使用 postgres_fdw 进行跨库操作</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/05/-转载-你知道数据库索引的工作原理吗？/">[转载]你知道数据库索引的工作原理吗？</a>
+          </li>
+        
+          <li>
             <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/">[翻译]使用部分索引来加速PostgreSQL</a>
           </li>
         
           <li>
             <a href="/2015/01/02/SQL注意事项/">SQL注意事项</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/">PostgreSQL窗口函数中 ROWS 和 RANGE 模式的区别</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/">[翻译]为什么PostgreSQL的logo是一个大象？</a>
-          </li>
-        
-          <li>
-            <a href="/2014/12/29/Java乱码解决方案/">Java乱码解决方案</a>
           </li>
         
       </ul>
