@@ -3,29 +3,17 @@
 <head>
   <meta charset="utf-8">
   
-  <title>使用 Hexo 生成博客 | PostgreSQL DBA</title>
+  <title>Tag: 算法 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Hexo介绍
-官方网站一句话就了然了：A fast, simple &amp; powerful blog framework, powered by Node.js.就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。
-安装步骤
-1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：Nodejs官网
-2）安装好Nodejs后，因为 Hexo">
-<meta property="og:type" content="article">
-<meta property="og:title" content="使用 Hexo 生成博客">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/">
+  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PostgreSQL DBA">
+<meta property="og:url" content="http://dreamer-yzy.github.io/tags/算法/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="Hexo介绍
-官方网站一句话就了然了：A fast, simple &amp; powerful blog framework, powered by Node.js.就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。
-安装步骤
-1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：Nodejs官网
-2）安装好Nodejs后，因为 Hexo">
+<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="使用 Hexo 生成博客">
-<meta name="twitter:description" content="Hexo介绍
-官方网站一句话就了然了：A fast, simple &amp; powerful blog framework, powered by Node.js.就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。
-安装步骤
-1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：Nodejs官网
-2）安装好Nodejs后，因为 Hexo">
+<meta name="twitter:title" content="PostgreSQL DBA">
+<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -92,14 +80,16 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-create-blog-by-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main">
+  
+    <article id="post-《啊哈！算法》学习笔记之桶排序" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/02/create-blog-by-hexo/" class="article-date">
-  <time datetime="2014-12-02T09:57:12.000Z" itemprop="datePublished">12月 2 2014</time>
+    <a href="/2015/01/06/《啊哈！算法》学习笔记之桶排序/" class="article-date">
+  <time datetime="2015-01-06T13:19:02.000Z" itemprop="datePublished">1月 6 2015</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/日志/">日志</a>►<a class="article-category-link" href="/categories/日志/程序员/">程序员</a>
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/算法/">算法</a>
   </div>
 
   </div>
@@ -109,8 +99,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 class="article-title" itemprop="name">
-      使用 Hexo 生成博客
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/06/《啊哈！算法》学习笔记之桶排序/">《啊哈！算法》学习笔记之桶排序</a>
     </h1>
   
 
@@ -118,93 +108,32 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Hexo介绍">Hexo介绍</h1>
-<p>官方网站一句话就了然了：<code>A fast, simple &amp; powerful blog framework, powered by Node.js.</code>就是说：Hexo 是一个基于 Nodejs 快速的，简单的，强大的博客框架。</p>
-<h1 id="安装步骤">安装步骤</h1>
-<p>1）因为 Hexo 是基于 Nodejs，所以第一步是先安装 Nodejs。下载地址：<br><a href="http://nodejs.org/" target="_blank" rel="external">Nodejs官网</a></p>
-<p>2）安装好Nodejs后，因为 Hexo 是 Nodejs 的一个软件包来的。所以要用 npg 来安装 Hexo：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">npm <span class="operator"><span class="keyword">install</span> -g hexo</span></div><div class="line"></div><div class="line">安装完毕后，检查是否安装：打开命令行（Windows下是 CMD，Linux下是Bash）运行以下命令：</div><div class="line">hexo <span class="keyword">version</span></div></pre></td></tr></table></figure>
+        <h2 id="时间复杂度：O(M+N)">时间复杂度：O(M+N)</h2>
+<p>M:桶的个数（也是该数值的最大数）<br>N:待排序个数</p>
+<h2 id="Java实现">Java实现</h2>
+<p>随便输入N个不大于M的数字，然后从小到大输出：（从大到小，作一下小修改即可）</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> static void main(<span class="built_in">String</span>[] args) {</div><div class="line">    <span class="built_in">int</span> M= <span class="number">100</span>;</div><div class="line">    <span class="built_in">int</span> N = <span class="number">5</span>;</div><div class="line">    <span class="built_in">int</span>[] <span class="built_in">array</span> = <span class="keyword">new</span> <span class="built_in">int</span>[M+ <span class="number">1</span>];</div><div class="line">    Scanner scan = <span class="keyword">new</span> Scanner(System.<span class="keyword">in</span>);</div><div class="line">    <span class="built_in">int</span> <span class="keyword">in</span> = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; N; i++) {</div><div class="line">        <span class="keyword">in</span> = scan.nextInt();</div><div class="line">        <span class="built_in">array</span>[<span class="keyword">in</span>] = <span class="built_in">array</span>[<span class="keyword">in</span>] + <span class="number">1</span>;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">array</span>.length; i++) {</div><div class="line">        <span class="keyword">for</span> (<span class="built_in">int</span> j = <span class="number">0</span>; j &lt; <span class="built_in">array</span>[i]; j++) {</div><div class="line">            System.out.println(i);</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
-<p>3）安装好之后，创建一个 Hexo 项目：打开终端，运行以下命令</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">C:<span class="command">\Users</span><span class="command">\Zhiyong</span> Yang<span class="command">\Desktop</span><span class="command">\blog</span>&gt;hexo init blog</div><div class="line"></div><div class="line">执行完毕之后，Node 会提示你运行 npm install 命令，如果没有执行这条命令，是运行不正常的。所以再执行：</div><div class="line">cd blog</div><div class="line">npm install</div></pre></td></tr></table></figure>
-
-<p>4）安装完之后，就可以启动 Hexo 的服务器了：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">server</span></div></pre></td></tr></table></figure>
-
-<p>这时，便可以打开 <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a> 来访问你的博客了。</p>
-<p>5）Hexo 各目录说明</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">scaffolds 脚手架，也就是一个工具模板</div><div class="line">scripts 写文件的js，扩展hexo的功能</div><div class="line"><span class="built_in">source</span> 存放博客正文内容</div><div class="line"><span class="built_in">source</span>/_drafts 草稿箱</div><div class="line"><span class="built_in">source</span>/_posts 文件箱，也就是正式显示在网站的文件</div><div class="line">themes 存放皮肤的目录</div><div class="line">themes/landscape 默认的皮肤</div><div class="line">_config.yml 全局的配置文件</div><div class="line">db.json 静态常量</div></pre></td></tr></table></figure>
-
-<h1 id="写博客">写博客</h1>
-<p>1）进入你的项目目录的 source 目录的 _posts 目录。</p>
-<p>2）使用命令来创建一个文件</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">new</span> hello-world</div><div class="line">注意，hexo会自动在文件名后面添加上 .md 后缀的。所以，上面一条命令的结果就是生成一个 hello-world.md 的文件。</div></pre></td></tr></table></figure>
-
-<p>3）编辑文件。<br>首先文件的规范是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">#这个表示文章的标题</div><div class="line">title: 新的开始</div><div class="line"></div><div class="line">#这个表示文章的创建时间 </div><div class="line">date: 2014-05-07 18:44:12</div><div class="line"></div><div class="line">#这个表示文章的修改时间</div><div class="line">updated    : 2014-05-10 18:44:12</div><div class="line"></div><div class="line">#这个表示在浏览器的 URL 中的替代名字，默认是 title。即访问URL心为 http://host/yyyy/mm/dd/abc/</div><div class="line">permalink: abc</div><div class="line">tags: #下面的表示是该文章所属的标签</div><div class="line"><span class="bullet">- </span>标签1</div><div class="line"><span class="bullet">- </span>标签2</div><div class="line"><span class="bullet">- </span>标签3</div><div class="line">categories: #下面的表示文章所属的目录</div><div class="line"><span class="bullet">- </span>所属目录1</div><div class="line"><span class="bullet">- </span>所属目录2</div><div class="line"><span class="header"> </span></div><div class="line">---</div></pre></td></tr></table></figure>
-
-<h1 id="上传到_github_pages">上传到 github pages</h1>
-<p>1）修改 hexo 项目目录里的 _config.yml 文件为自己相应的信息。比较重要的有：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># Site</span></div><div class="line"><span class="label">title:</span> PostgreSQL DBA 这个是你网站的全局标题</div><div class="line"><span class="label">subtitle:</span> Zhiyong Yang 这个是显示你的子标题</div><div class="line"><span class="label">description:</span> 这是你网站的描述</div><div class="line"><span class="label">author:</span> Zhiyong yang 作者</div><div class="line"><span class="label">email:</span>    dreamers.yzy@gmail.com 邮箱</div><div class="line"><span class="label">language:</span> <span class="built_in">zh</span>-CN 语言</div><div class="line"> </div><div class="line"><span class="preprocessor"># URL</span></div><div class="line"><span class="preprocessor">## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'</span></div><div class="line"><span class="label">url:</span> https://dreamer-yzy.github.com 这里改为你的github pages 地址</div></pre></td></tr></table></figure>
-
-<p>2）注册一个github，然后 创建一个名为：<code>你的用户名.github.io</code> 的仓库</p>
-<p>3）修改 hexo 项目目录里的 _config.yml 文件中的 deploy 配置为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">deploy:</div><div class="line">  <span class="class"><span class="keyword">type</span>: <span class="title">github</span></span></div><div class="line">  repository: https:<span class="comment">//github.com/你的用户名/你的用户名.github.io.git</span></div></pre></td></tr></table></figure>
-
-<p>4）然后进入 你的 Hexo 项目根目录，执行以下命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">hexo <span class="keyword">generate</span> </div><div class="line">hexo deploy</div></pre></td></tr></table></figure>
-
-<p>顺利执行完毕后，过几分钟，打开你的github pages地址就可以看到你写的博客了，比如我的：<br><a href="http://dreamer-yzy.github.io/" target="_blank" rel="external">PostgreSQL DBA</a></p>
+<h2 id="个人总结">个人总结</h2>
+<p>这种算法适合于范围比较小的排序，并且是需要知道输入的最大值。不然就不适用了。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="peb1gav26h926ygw" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/06/《啊哈！算法》学习笔记之桶排序/" data-id="uvyhwvrsjovo8cy3" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
 
     </footer>
   </div>
   
-    
-<nav id="article-nav">
-  
-    <a href="/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          《数据库查询优化器的艺术》第一章学习笔记
-        
-      </div>
-    </a>
-  
-  
-</nav>
-
-  
 </article>
 
 
-  <section id="comments">
-    <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-create-blog-by-hexo" data-title="使用 Hexo 生成博客" data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/"></div>
-    <!-- 多说评论框 end -->
-    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-    <script type="text/javascript">
-    var duoshuoQuery = {short_name:'postgresqldba'};
-      (function() {
-        var ds = document.createElement('script');
-        ds.type = 'text/javascript';ds.async = true;
-        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-        ds.charset = 'UTF-8';
-        (document.getElementsByTagName('head')[0] 
-         || document.getElementsByTagName('body')[0]).appendChild(ds);
-      })();
-      </script>
-    <!-- 多说公共JS代码 end -->
-  </section>
-  </section>
+  
+  
+</section>
         
           <aside id="sidebar">
   
