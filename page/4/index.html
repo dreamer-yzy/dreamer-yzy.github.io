@@ -82,6 +82,664 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-PostgreSQL选择某组sum结果最小的所有数据" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" class="article-date">
+  <time datetime="2014-12-05T13:46:10.000Z" itemprop="datePublished">12月 5 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/">PostgreSQL选择某组sum结果最小的所有数据</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在 PostgreSQL 技术群里，今天发现有个人在群里“求救”，说想要执行一条SQL语句，获取某表中以某字段为组，并且sum（其他字段）结果最小的，所有结果。</p>
+<p>比如，有张表如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function">path</span>(int)  <span class="function">cost</span>(<span class="value">decimal</span>)</div></pre></td></tr></table></figure>
+
+<p>想要的结果是，以path所有相同的字段分组，并且 sum(cost)字段，选择出sum(cost)值最小的，所有path字段。如：</p>
+<p><img src="/img/postgresql-sum-window-fucntion.png" alt=""></p>
+<h2 id="我写的SQL：">我写的SQL：</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">with cte as (<span class="operator"><span class="keyword">select</span> path, cost, <span class="keyword">sum</span>(cost) over (<span class="keyword">partition</span> <span class="keyword">by</span> path ) <span class="keyword">as</span> sum_cost <span class="keyword">from</span> tcost)</span></div><div class="line"><span class="keyword">select</span> path , cost <span class="keyword">from</span> cte <span class="keyword">where</span> sum_cost = (<span class="keyword">select</span> <span class="keyword">min</span>(sum_cost) <span class="keyword">from</span> cte);</div></pre></td></tr></table></figure>
+
+<h4 id="我的解题思路">我的解题思路</h4>
+<p>在没有接触到PostgreSQL之前，我一直使用MySQL，每次想到“组”这个字，总会想到 group by 。虽然可能使用group by 也可能实现相同的结果，但是经常需要表自身join表，所以性能方面对于数据量大的表话，是满足不了要求的，即使是有索引。因为索引最适合于那种存在索引，而且选择率低的表，否则的话，索引的优势其实和全表扫描差不多，甚至有时候，常常是全表扫描比索引的全表扫描性能还要好。（当然，在PostgreSQL中，如果是只读索引来扫描的话，性能是最好的）。因为MySQL的 InnoDB 是索引组织表，所以索引全表和普通的全表扫描，性能几乎是没有差别。但是在PostgreSQL中，这种差别就很明显了，选择率大的索引全表扫描，比顺序全表扫描SeqScan慢好多。</p>
+<p>说远了，回到题目上来。这思路虽然也是要分组，但这种分组跟group by 的分组差得比较远，这种需要一种“窗口函数”（Window Function，在Oracle里叫分析函数）来处理这钟需求，而且这种窗口函数的性能是比那种需要自表连接的性能快好多的，即使是没有索引情况下。之前在群里也遇到这种情况，利用窗口函数几秒钟就可以出结果，但那种自连接的（特别在数据量大的情况下）要几十分钟。这种窗口分组来处理数据，可以避免好多性能问题，而且非常易于理解。</p>
+<p>所以，对于PostgreSQL，一有那种需要那种类似窗口的分组操作，首先要想到 Window Function，真的是非常好用。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/05/PostgreSQL选择某组sum结果最小的所有数据/" data-id="otl2lu6snsa3t4jn" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-PostgreSQL-进程构架" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/04/PostgreSQL-进程构架/" class="article-date">
+  <time datetime="2014-12-04T12:34:53.000Z" itemprop="datePublished">12月 4 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/04/PostgreSQL-进程构架/">PostgreSQL 进程构架</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="ps_aux_|_grep_postgres">ps aux | grep <strong>postgres</strong></h1>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">postgres <span class="number">31964</span>  <span class="number">0.0</span>  <span class="number">0.3</span> <span class="number">162180</span> <span class="number">12436</span> pts/<span class="number">0</span>    S    <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> /usr/<span class="built_in">local</span>/pg/bin/postgres -D /usr/<span class="built_in">local</span>/pg/data</div><div class="line">postgres <span class="number">31966</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162312</span>  <span class="number">2192</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: checkpointer <span class="built_in">process</span>                  </div><div class="line">postgres <span class="number">31967</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>  <span class="number">1820</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: writer <span class="built_in">process</span>                       </div><div class="line">postgres <span class="number">31968</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">162180</span>   <span class="number">960</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: wal writer <span class="built_in">process</span>                   </div><div class="line">postgres <span class="number">31969</span>  <span class="number">0.0</span>  <span class="number">0.0</span> <span class="number">163032</span>  <span class="number">2064</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: autovacuum launcher <span class="built_in">process</span>           </div><div class="line">postgres <span class="number">31970</span>  <span class="number">0.0</span>  <span class="number">0.0</span>  <span class="number">18000</span>   <span class="number">948</span> ?        Ss   <span class="number">18</span>:<span class="number">09</span>   <span class="number">0</span>:<span class="number">00</span> postgres: stats collector <span class="built_in">process</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">postgre<span class="variable">s:</span> logger proces<span class="variable">s:</span>  在PostgreSQL中称为SysLogger(<span class="number">8.0</span>)，用于整个系统的日志输出；</div><div class="line">postgre<span class="variable">s:</span> checkpointer proces<span class="variable">s:</span>  在PostgreSQL中称为Checkpointer(<span class="number">9.2</span>），用于处理checkpoints；</div><div class="line">postgre<span class="variable">s:</span> writer proces<span class="variable">s:</span>  在PostgreSQL中称为BgWriter，用于将脏页刷出到磁盘；</div><div class="line">postgre<span class="variable">s:</span> wal writer proces<span class="variable">s:</span>  在PostgreSQL中称为WalWriter(<span class="number">8.3</span>)，处理预写日志输出；</div><div class="line">postgre<span class="variable">s:</span> autovacuum launcher proces<span class="variable">s:</span>   在PostgreSQL中称为AutoVacuum(<span class="number">8.1</span>)，用于系统的自动清理；</div><div class="line">postgre<span class="variable">s:</span> archiver proces<span class="variable">s:</span>  在PostgreSQL中称为PgArch，用于预写日志归档；</div><div class="line">postgre<span class="variable">s:</span> stats collector proces<span class="variable">s:</span>  在PostgreSQL中称为PgStat，用于统计数据收集。</div></pre></td></tr></table></figure>
+
+<p><img src="/img/postgres-process-arch.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/04/PostgreSQL-进程构架/" data-id="jxr132m1zvsrkxb5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-PostgreSQL基础学习（一）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/03/PostgreSQL基础学习（一）/" class="article-date">
+  <time datetime="2014-12-03T15:14:47.000Z" itemprop="datePublished">12月 3 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/03/PostgreSQL基础学习（一）/">PostgreSQL基础学习（一）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="简介">简介</h2>
+<p><a href="http://www.postgresql.org/" target="_blank" rel="external">PostgreSQL官网</a></p>
+<blockquote>
+<p>PostgreSQL 官网号称：它是最世界最先进的开源数据库（顺便说一下，MySQL官网说它自己是最流行的开源数据库）。我觉得这一句话，也已经非常足够概括 PostgreSQL 了（MySQL 官网的那句话，也概括了它自己的特点，一个是最先进，一个是最流行）。也有号称是 Oracle 的开源版，因为PostgreSQL被经常拿来与Oracle这个重量级的商业数据库比较。的确，PostgreSQL 与 Oracle 兼容性非常强，Oracle 的 DBA 可以非常快地上手 PostgreSQL。在 PostgreSQL 技术群里的大牛大多都是从 Oracle 转到 PostgreSQL，使我印象非常深刻就是 <a href="http://blog.163.com/digoal@126/" target="_blank" rel="external">@德哥</a>，绝对是PostgreSQL的大神级别。我也是跟着德哥的视频一边看，一边学习的。</p>
+</blockquote>
+<h2 id="安装（以_Ubuntu_下源码安装_PostgreSQL_9-3-5_为例）">安装（以 Ubuntu 下源码安装 PostgreSQL 9.3.5 为例）</h2>
+<h4 id="下载">下载</h4>
+<p><a href="http://www.postgresql.org/ftp/source/" target="_blank" rel="external">PostgreSQL 源码下载地址</a></p>
+<h4 id="安装与使用">安装与使用</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line">#安装必要的编译环境</div><div class="line">sudo apt-get <span class="operator"><span class="keyword">install</span> build-essential libreadline-dev</span></div><div class="line"></div><div class="line">#解压</div><div class="line">tar -xvjf postgresql-<span class="number">9.3</span><span class="number">.5</span>.tar.bz2</div><div class="line"></div><div class="line">#创建一个目录，将PostgreSQL安装到这个目录</div><div class="line">sudo mkdir /usr/<span class="keyword">local</span>/pg</div><div class="line"></div><div class="line">#配置</div><div class="line">cd postgresql-<span class="number">9.3</span><span class="number">.5</span></div><div class="line">./configure <span class="comment">--prefix=/usr/local/pg</span></div><div class="line"></div><div class="line">#开始编译</div><div class="line">make -j</div><div class="line">-j：开启多核编译</div><div class="line">如果有：<span class="keyword">All</span> <span class="keyword">of</span> PostgreSQL successfully made. Ready <span class="keyword">to</span> <span class="keyword">install</span>. 表示编译成功</div><div class="line"></div><div class="line">#安装</div><div class="line">sudo make <span class="keyword">install</span></div><div class="line">如果出现：PostgreSQL installation complete. 表示安装成功</div><div class="line"></div><div class="line">#添加 PostgreSQL 用户</div><div class="line">sudo useradd -s /<span class="keyword">bin</span>/bash -d /home/postgres postgres</div><div class="line"></div><div class="line">#创建 PostgreSQL 的 <span class="keyword">data</span> 数据目录</div><div class="line">sudo mkdir /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> -p</div><div class="line"></div><div class="line">#修改拥有者身份</div><div class="line">sudo chown postgres:postgres /usr/<span class="keyword">local</span>/pg/ -R</div><div class="line"></div><div class="line">#初始化数据库</div><div class="line">su - postgres</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/initdb -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span></div><div class="line"></div><div class="line">#启动数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/postgres -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> &gt;<span class="keyword">logfile</span> <span class="number">2</span>&gt;&<span class="number">1</span> &</div><div class="line">或者</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/pg_ctl -D /usr/<span class="keyword">local</span>/pg/<span class="keyword">data</span> -l <span class="keyword">logfile</span> <span class="keyword">start</span></div><div class="line"></div><div class="line">#创建数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/createdb test</div><div class="line"></div><div class="line">#连接数据库</div><div class="line">/usr/<span class="keyword">local</span>/pg/<span class="keyword">bin</span>/psql test</div></pre></td></tr></table></figure>
+
+<h4 id="配置环境变量">配置环境变量</h4>
+<blockquote>
+<p>为了避免每次使用绝对路径以及一些参数问题，可以使用一些环境变量来代替，PostgreSQL 在没有指定参数时，就会读取这些环境变量的值</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">vi /home/postgres/.bash_profile</div><div class="line"></div><div class="line"><span class="comment">#这个是默认的PostgreSQL端口</span></div><div class="line"><span class="keyword">export</span> PGPORT=<span class="number">5432</span></div><div class="line"></div><div class="line"><span class="comment">#这个是PostgreSQL数据目录</span></div><div class="line"><span class="keyword">export</span> PGDATA=/usr/local/pg/data</div><div class="line"></div><div class="line"><span class="comment">#所使用的语言</span></div><div class="line"><span class="keyword">export</span> LANG=en_US.utf8</div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL 安装目录</span></div><div class="line"><span class="keyword">export</span> PGHOME=/usr/local/pg</div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL 连接库文件</span></div><div class="line"><span class="keyword">export</span> LD_LIBRARY_PATH=<span class="variable">$PGHOME</span>/lib:/lib64:/usr/lib64:/usr/local/lib64:/lib:/usr/lib:/usr/local/lib:<span class="variable">$LD_LIBRARY_PATH</span></div><div class="line"><span class="keyword">export</span> DATE=`date +<span class="string">"%Y%m%d%H%M"</span>`</div><div class="line"></div><div class="line"><span class="comment">#将PostgreSQL的命令行工具添加到 PATH 环境变量 ，这样子就不用每次使用绝对路径了</span></div><div class="line"><span class="keyword">export</span> PATH=<span class="variable">$PGHOME</span>/bin:<span class="variable">$PATH</span></div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL的 man 手册</span></div><div class="line"><span class="keyword">export</span> MANPATH=<span class="variable">$PGHOME</span>/share/man:<span class="variable">$MANPATH</span></div><div class="line"></div><div class="line"><span class="comment">#PostgreSQL的默认用户</span></div><div class="line"><span class="keyword">export</span> PGUSER=postgres</div><div class="line"></div><div class="line"><span class="comment">#这个是PostgreSQL默认主机地址</span></div><div class="line"><span class="keyword">export</span> PGHOST=<span class="number">127.0</span>.<span class="number">0.1</span></div><div class="line"></div><div class="line"><span class="comment">#连接数据库时默认的数据库名</span></div><div class="line"><span class="keyword">export</span> PGDATABASE=postgre</div></pre></td></tr></table></figure>
+
+<p><a href="http://www.postgresql.org/docs/9.3/static/libpq-envars.html" target="_blank" rel="external">PostgreSQL所有环境变量</a></p>
+<h4 id="PostgreSQL_的_bin_目录常用工具说明">PostgreSQL 的 bin 目录常用工具说明</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#clusterdb</span></div><div class="line"> </div><div class="line">     — 对一个PostgreSQL数据库进行建簇</div><div class="line"> </div><div class="line"><span class="preprocessor">#createdb</span></div><div class="line"> </div><div class="line">    — 创建一个新的 PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#createlang</span></div><div class="line"> </div><div class="line">    — 定义一种新的 PostgreSQL 过程语言</div><div class="line"> </div><div class="line"><span class="preprocessor">#createuser</span></div><div class="line"> </div><div class="line">     — 定义一个新的 PostgreSQL 用户帐户</div><div class="line"> </div><div class="line"><span class="preprocessor">#dropdb</span></div><div class="line"> </div><div class="line">     — 删除一个现有 PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#droplang</span></div><div class="line"> </div><div class="line">    — 删除一种 PostgreSQL 过程语言</div><div class="line"> </div><div class="line"><span class="preprocessor">#dropuser</span></div><div class="line"> </div><div class="line">    — 删除一个 PostgreSQL 用户帐户</div><div class="line"> </div><div class="line"><span class="preprocessor">#ecpg</span></div><div class="line"> </div><div class="line">    — 嵌入的<span class="constant"> SQL </span>C 预处理器</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_basebackup</span></div><div class="line"> </div><div class="line">    -- 做一个PostgreSQL集群的基础备份</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_config</span></div><div class="line"> </div><div class="line">    — 检索已安装版本的 PostgreSQL 的信息</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_dump</span></div><div class="line"> </div><div class="line">    — 将一个PostgreSQL数据库抽出到一个脚本文件或者其它归档文件中</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_dumpall</span></div><div class="line"> </div><div class="line">    — 抽出一个 PostgreSQL 数据库集群到脚本文件中</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_restore</span></div><div class="line"> </div><div class="line">    — 从一个由 pg_dump 创建的备份文件中恢复 PostgreSQL 数据库。</div><div class="line"> </div><div class="line"><span class="preprocessor">#psql</span></div><div class="line"> </div><div class="line">    — PostgreSQL 交互终端</div><div class="line"> </div><div class="line"><span class="preprocessor">#reindexdb</span></div><div class="line"> </div><div class="line">    -- 重新建立一个数据库索引</div><div class="line"> </div><div class="line"><span class="preprocessor">#vacuumdb</span></div><div class="line"> </div><div class="line">    — 收集垃圾并且分析一个PostgreSQL 数据库</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_receivexlog</span></div><div class="line"> </div><div class="line">    从另一台运行PG的数据库里接收 wal 日志</div><div class="line"> </div><div class="line"><span class="preprocessor">#pg_resetxlog</span></div><div class="line"> </div><div class="line">    重置一个 PostgreSQL 数据库集群的预写日志以及其它控制内容</div></pre></td></tr></table></figure>
+
+<h4 id="PostgreSQL_的_data_目录说明">PostgreSQL 的 data 目录说明</h4>
+<p><img src="/img/postgresql-data-dir.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/PostgreSQL基础学习（一）/" data-id="9a33ip3zs8r9j5eg" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《数据库查询优化器的艺术》第三章物理查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" class="article-date">
+  <time datetime="2014-12-03T14:09:15.000Z" itemprop="datePublished">12月 3 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/">《数据库查询优化器的艺术》第三章物理查询优化学习笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="代价模型">代价模型</h1>
+<pre><code>总代价 = IO 代价 + <span class="built_in">CPU</span> 代价
+COST = P * a_page_cpu_time + W * T
+
+P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
+T：访问的元组。反映了<span class="built_in">CPU</span>花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是<span class="built_in">CPU</span>）。如果是索引扫描，则还会包括索引读取的花费。
+W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，又称选择率（selectivity）。选择率用于表示在关系R中，满足条件“A&lt;op&gt;a”的元组数与R的所有元组N的比值。
+</code></pre><h1 id="单表扫描算法">单表扫描算法</h1>
+<pre><code>全表扫描，局部扫描。单表扫描与IO操作密切相关。
+
+1）顺序扫描（SeqScan）。当无索引可用，或访问表中的大部分数据，或表的数据量很小时，使用顺序扫描效果较好。
+
+2）索引扫描（IndexScan）。根据索引键读索引，找出物理元组的位置。【如果选择率很高，不适宜使用索引扫描】
+
+3）只读索引扫描（IndexOnlyScan）。根据索引键读索引，索引中的数据能够满足条件判断，不需要读取数据页面。比索引扫描少了读取数据的IO花费。
+
+4）行扫描（RowIdScan）。用于直接定位表中的某一行。对于元组，通常为元组增加特殊的列，通过特殊的列计算出元组r物理位置，然后直接读取元组对应的页面，获取元组。在PostgreSQL中称为【Tid】扫描，此种方式是在元组头上增加名为【CTID】的列，用这列的值可直接计算本条元组的物理存储位置。
+
+5）并行表扫描（ParallelTableScan）。对同一个表，并行地、通过顺序的方式获取表的数据，结果是得到一个完整的表数据。
+
+6）并行索引扫描（ParallelIndexScan）。对同一个表，并行地、通过索引的方式获取表的数据，将结果合并在一起。
+
+7）组合多个索引扫描（MultipleIndexScan）。
+</code></pre><h1 id="顺序扫描代价估算公式">顺序扫描代价估算公式</h1>
+<pre><code>COST = N_page <span class="keyword">*</span> a_tuple_IO_time + N_tuple <span class="keyword">*</span> a_tuple_CPU_time
+</code></pre><h1 id="索引扫描代价估算公式">索引扫描代价估算公式</h1>
+<pre><code><span class="constant">COST</span> = C_index + N_page_index * a_tuple_IO_time
+<span class="constant">C_index：索引的IO花费。C_index</span> = N_page_index * a_page_IO_time
+<span class="constant">N_page_index：索引作用下的可用元组数。N_page_index</span> = N_tuple * 索引选择率
+</code></pre><h1 id="索引">索引</h1>
+<pre><code>本质上是通过索引直接定位表的物理元组，加快数据获取的方式，所以索引优化的手段是物理查询优化。
+</code></pre><h1 id="如何利用索引">如何利用索引</h1>
+<pre><code><span class="number">1</span>）索引列作为条件出现在 <span class="keyword">WHERE</span>，HAVING， <span class="keyword">ON</span> 子句中。
+
+<span class="number">2</span>）索引列是被连接的表（内表）对象的列且存在于连接条件中
+
+除了上述两种情况，还有一些特殊情况可以使用索引，如：排序操作、在索引列上求<span class="keyword">MIN</span>、<span class="keyword">MAX</span>值等。
+</code></pre><p>（1）对表做查询，没有列对应作为过滤条件（如出现在WHERE子句中），只能做顺序扫描。</p>
+<p>（2）对表做查询，有列对象且索引列作为过滤条件，可做索引扫描。</p>
+<p>（3）对表做查询，有列对象作为过滤条件，但索引列被运算符“-”处理，查询优化器不能在执行前进行取反运算，这时不可利用索引扫描，只能做顺序扫描。</p>
+<p>（4）对表做查询，有列对象作为过滤条件，且目标列没有超出索引列，可做只读索引扫描，这种扫描方式比单纯的索引扫描的效率更高。</p>
+<p>（5）对表做查询，有索引存在，但选择条件不包括索引列对象，只能使用顺序扫描。</p>
+<p>（6）对表做查询，有索引存在，选择条件包括索引列对象，可使用索引扫描，对选择条件中不存在索引的列作为过滤器被使用。</p>
+<p>（7）对表做查询，有索引存在，选择条件包括索引列对象，但索引列对象位于一个表达式中，参与了运算，不是“key=常量”格式，则索引不可使用，只能是顺序扫描。如：<br>    select a.<em> from a where a.a1 + a.a3 = 2；（a1列是索引），这时只能做顺序扫描。<br>    或<br>    select a.</em> from a where a.a1 = 2 - a.a3 ；（a1列是索引），这时只能做顺序扫描。</p>
+<p>（8）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &gt; 或 &lt; ，可做索引扫描。</p>
+<p>（9）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &lt;&gt; ，不可做索引扫描。</p>
+<p>（10）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符BETWEEN-AND ，可做索引扫描。</p>
+<h1 id="索引列的位置对使用索引的影响">索引列的位置对使用索引的影响</h1>
+<pre><code>（<span class="number">1</span>）索引列出现在目标列，通常不可使用索引（但不是全部情况下不能使用索引）
+
+（<span class="number">2</span>）聚集函数<span class="keyword">MIN</span> <span class="subst">/</span> <span class="keyword">MAX</span>用在索引列上，出现在目标列，可使用索引。
+
+（<span class="number">3</span>）索引列出现在<span class="keyword">WHERE</span>子句中，可使用索引。
+
+（<span class="number">4</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为连接条件，有时不可使用索引。（这取决于代价估算模型）
+
+（<span class="number">5</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为限制条件满足“key <span class="subst">&lt;</span>op<span class="subst">&gt;</span> 常量 ”格式可用索引。
+
+（<span class="number">6</span>）（<span class="number">5</span>）索引列出现在 <span class="keyword">WHERE</span>子句中，但与子查询比较，格式上不满足<span class="string">"key &lt;op&gt; 常量"</span>，不可用索引。
+</code></pre><h1 id="索引列对GROUP_BY子句的影响">索引列对GROUP BY子句的影响</h1>
+<pre><code>（<span class="number">1</span>）索引列出现在 <span class="keyword">group</span> <span class="keyword">by</span> 子句中，不触发索引扫描。
+
+（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现索引列，【且】<span class="keyword">GROUP</span> <span class="keyword">BY</span> 子句出现索引列，索引扫描被使用。
+
+（<span class="number">3</span>）<span class="keyword">WHERE</span>子句中出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>子句出现索引列，索引扫描不被使用。
+</code></pre><h1 id="索引列对HAVING子句的影响">索引列对HAVING子句的影响</h1>
+<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>和HAVING子句出现索引列，索引扫描被使用。
+</code></pre><h1 id="索引列对ORDER_BY子句的影响">索引列对ORDER BY子句的影响</h1>
+<pre><code>（<span class="number">1</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句出现索引列，可使用索引。
+
+（<span class="number">2</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句使用非索引列，不可使用索引扫描。
+</code></pre><h1 id="索引列对_DISTINCT_的影响">索引列对 DISTINCT 的影响</h1>
+<pre><code>（<span class="number">1</span>）<span class="keyword">DISTINCT</span> 子句管辖范围内出现索引列，不可使用索引。
+</code></pre><h1 id="联合索引对索引使用的影响">联合索引对索引使用的影响</h1>
+<pre><code><span class="input"><span class="prompt">（1）使用联合索引的全部索引键，可触发索引的使用。
+
+（2）使用联合索引的前缀部分索引键。如：key_part_1 &lt;op&gt;</span> 常量。可触发索引的使用。</span>
+<span class="input"><span class="prompt">
+（3）使用部分索引，但不是联合索引的前缀部分，如“key_part_2 &lt;op&gt;</span> 常量<span class="string">"，不可触发索引的使用。
+
+（4）使用索引索引的全部索引键，但索引键不是AND操作，不可触发索引的使用。</span></span>
+</code></pre><h1 id="多个索引对索引使用的影响">多个索引对索引使用的影响</h1>
+<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引，优选最简单的索引。（但这也是要根据代价估算模型来决定的）
+
+（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引且索引键有重叠部分，优选最简单的索引。
+</code></pre><h1 id="聚簇索引">聚簇索引</h1>
+<blockquote>
+<p>是指表的一个或多个列作为索引的关键字，以关键字的具体值为依据，把所有具有相同值的元组连续放在外存上。当从磁盘扫描读取的块进入内存时，相同值的其他元组在内存中的概率增大，能有效减少IO。即：聚簇索引确定表中数据的物理顺序。聚簇索引对于那些经常要搜索范围值的列特别有效。使用聚簇索引找到包含第一个值的行后，便可以确保包含后续索引值的行在物理相邻。</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="4wduali8a8ceckwz" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" class="article-date">
+  <time datetime="2014-12-03T14:05:59.000Z" itemprop="datePublished">12月 3 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/">《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="主要解决的问题">主要解决的问题</h1>
+<pre><code>如何找出SQL语句等价的变换形式，使得SQL执行更高效。
+</code></pre><h1 id="可优化的思路">可优化的思路</h1>
+<pre><code>（<span class="number">1</span>）子句局部优化。
+如等价谓词重写，<span class="keyword">WHERE</span>和HAVING条件化简中的大部分情况。
+
+（<span class="number">2</span>）子句间关联优化。
+子句与子句之间关联的语义存在优化的可能，如外连接消除、连接消除、子查询优化、视图重写等。
+
+（<span class="number">3</span>）局部与整体的优化。
+协同局部与整体。如<span class="keyword">OR</span>重写并集规则需要考虑<span class="keyword">UNION</span>操作（<span class="keyword">UNION</span>是变换后的整体形式）的花费和<span class="keyword">OR</span>操作（<span class="keyword">OR</span>是局部表达式）的花费。
+
+（<span class="number">4</span>）形式变化优化
+多个子句存在嵌套，可能通过形式的变化完成优化。如：嵌套连接消除。
+
+（<span class="number">5</span>）语义优化
+根据完整性约束，SQL表达的含义等信息对语句进行语义优化
+
+（<span class="number">6</span>）其他优化
+根据一些规则对非SPJ做的其他优化，根据硬件环境进行的并行查询优化。
+
+它们都是依据关系代数和启发式规则进行。
+</code></pre><h1 id="关系模型">关系模型</h1>
+<h4 id="关系数据结构">关系数据结构</h4>
+<pre><code>即二维结构，二维表。即数据库中的表。
+关系是一种对象
+关系即是表
+关系的元数据，即表结构，通常称为列或属性。
+关系的数据，即表的行数据，通常称为元组（<span class="keyword">tuple</span>），也称为记录(<span class="keyword">record</span>)。        
+</code></pre><h4 id="关系操作集合">关系操作集合</h4>
+<pre><code>并，交，差，积，选择，投影，连接，除。。
+选择：单个关系中筛选元组。
+投影：单个关系中筛选列。
+连接：多个关系中根据列间的逻辑运算筛选元组（自然连接，等值连接）
+除：多个关系中根据条件筛选元组（<span class="keyword">NOT</span> EXISTS 的子查询实现除）
+并：多个关系合并元组（用<span class="keyword">UNION</span>实现并）
+交：多个关系中根据条件筛选元组（用两次<span class="keyword">NOT</span> <span class="keyword">IN</span> 实现交）
+差：多个关系中根据条件筛选元组（<span class="keyword">NOT</span> <span class="keyword">IN</span> 子查询实现差）
+积：无连接条件。N*M条元组
+</code></pre><h4 id="关系类型">关系类型</h4>
+<pre><code><span class="xml">R <span class="tag">&lt;<span class="title">op</span>&gt;</span> S
+
+自然连接：R和S中“公共属性”，结果包括公共属性名字上相等的所有元组的组合，在结果中把重复的列去掉。（是同时从列和行的角度进行去重）
+
+@-连接：R和S中没有公共属性，结果包括在R和S中满足操作符@的所有组合。@通常包括：<span class="tag">&lt; &lt;=<span class="value">,</span> =<span class="value">,</span> =<span class="value">,</span> &gt;</span>=。即从关系R和S的广义笛卡儿积中选取A，B属性相等的那些元组，是从“行”的角度进行运算。
+
+等值连接：操作符是 = 的@-连接。
+
+半连接：结果包括在S中公共属性名字上相等的元组的所有的R中的元组。即结果包括R的部分元组，而R中的部分元组的公共属性的值在S中同样存在。SQL中没有自己的连接操作符，使用EXISTS， IN 关键字做子句的子查询常被查询优化器转换为半连接。
+
+反连接：结果是在S中没有在公共属性名字上相等的元组的R的元组。即为半连接的补集，反连接有时称为反半连接。在SQL中没有自己的连接操作符，使用了 NOT EXISTS 则被查询优化器转换为反半连接。
+
+外连接（左外连接）：结果包括R中的所有元组。若在S中有在公共属性名字上相等的元组，则正常连接；若在S中没有公共属性名字上相等的元组，则依旧保留此元组，并将对应的其他列设为NULL
+
+外连接（右外连接）：结果包括S中的所有元组。若在R中有在公共属性名字上相等的元组，则正常连接；若在R中没有公共属性名字上相等的元组，则依旧保留此元组，并将对应的其他列设为NULL
+
+外连接（全外连接）：结果包括S和R中的所有元组。对于每个元组，若在另一个关系中有在公共属性名字上相等的元组，则正常连接；若在另一人关系中没有公共属性名字上相等的元组，则依旧保留此元组，并将对应的其他列设为NULL</span>
+</code></pre><h4 id="关系完整性约束">关系完整性约束</h4>
+<h1 id="查询句与二叉树">查询句与二叉树</h1>
+<pre><code>叶子是关系（表）
+
+内部结点是运算符（或称算子，操作符，如 <span class="built_in">LEFT</span> OUT <span class="built_in">JOIN</span>，表示左右子树的运算方式）
+
+子树是子表达式或SQL片段
+
+根结点是最后运算符的操作符
+
+根结点运算后，得到的是SQL查询优化后的结果
+
+这样一棵树就是一个查询的路径
+
+多个关系连接，连接顺序不同，可以得出多个类似的二叉树
+
+查询优化就是找出代价最小的二叉树，即最优的查询路径。
+
+基于代价估算的查询优化就是通过计算和比较，找出花费最少的是优二叉树。
+</code></pre><h1 id="从运算符的角度考虑优化">从运算符的角度考虑优化</h1>
+<pre><code>不同的运算符优化可<span class="built_in">c</span>减少中间生成物的大小和数量，节约<span class="type">IO</span>和内存<span class="type">CPU</span>等，从而提高执行速度。前提是优化前和优化后是等价的。
+</code></pre><h4 id="选择_——_基本选择性质">选择 —— 基本选择性质</h4>
+<pre><code>对同一个表的同样选择条件，作一次即可。
+可优化的原因：
+幂等性：多次应用同一个选择有同样的效果
+交换性：应用选择的次序在最终结果中没有影响
+选择可有效减少在它的操作数中的元组数的运算（元组数减少）
+</code></pre><h4 id="选择_——_分解有复杂条件的选择">选择 —— 分解有复杂条件的选择</h4>
+<pre><code>合取：合并多个选择为更少的需求值的选择，多个等式可以合并。它等价于针对这些单独的一系列选择。
+析取：分解它们使得其成员选择可被移动或单独优化。它等价于选择的并集。
+</code></pre><h4 id="选择_——_和叉积">选择 —— 和叉积</h4>
+<pre><code>尽可能选做选择：关系有<span class="keyword">N</span>和M行，先做积运算将包含<span class="keyword">N</span>*M行。先做选择运算，减少<span class="keyword">N</span>和M，则可避免不满足条件的条件参与积的运算，节约时间减少结果的大小。
+
+尽可能下推选择：如果积不跟随着选择运算，可尝试使用其他规则从表达式树更高层下推选择。
+</code></pre><h4 id="选择_——_和集合运算">选择 —— 和集合运算</h4>
+<pre><code>选择下推到的集合运算中：选择在差集，交集和并集算子上满足分配律。
+</code></pre><h4 id="选择_——_和投影">选择 —— 和投影</h4>
+<pre><code>在投影之前进行选择：如果选择条件中引用的字段是投影中的字段的子集，则选择与投影满足交换性。
+</code></pre><h4 id="投影_——_和基本投影性质">投影 —— 和基本投影性质</h4>
+<pre><code>尽可能先做投影：投影是幂等性的；投影可以减少元组大小。
+</code></pre><h4 id="投影_——_和集合运算。">投影 —— 和集合运算。</h4>
+<pre><code>投影下推到集合运算中：投影在差集，交集和并集运算上满足分配律。
+</code></pre><h1 id="运算规则主导的优化">运算规则主导的优化</h1>
+<h4 id="连接、笛卡儿积_交换律">连接、笛卡儿积 交换律</h4>
+<pre><code>做连接、做积运算，可交换前后位置，其结果不变。如两表连接算法中嵌套连接算法，对外表和内表有要求，外表尽可能小则有利于做“基于块的嵌套循环连接“，所以，通过交换律可以把元组少的表作为外表。
+</code></pre><h4 id="连接、笛卡儿积_结合律">连接、笛卡儿积 结合律</h4>
+<pre><code>做连接、做积运算，如果新的结合有利于减少中间关系的大小，则可优先处理。
+</code></pre><h4 id="投影的串接定律">投影的串接定律</h4>
+<pre><code>在同一个关系上，只需要做一次投影运算，且一次投影时选择多列同时完成。所以许多数据库优化引擎为同一个关系收集齐本关系上的所有列（目标列和 <span class="keyword">WHERE</span>， <span class="keyword">GROUP</span> <span class="keyword">BY</span> 等子句的本关系的列）
+</code></pre><h4 id="选择的串接定律">选择的串接定律</h4>
+<pre><code>选择条件可以合并，使得可一次就检查全部条件，不必多次过滤元组，所以可以把同层的合取条件收集在一起，统一判断。
+</code></pre><h4 id="选择与投影的交换律">选择与投影的交换律</h4>
+<pre><code>（1）先投影后选择，可以改为先选择后投影，这对于以行为存储格式的主流数据库而言，很有优化意义。存储方式总是在先获得元组后才能解析得到其中的列。
+
+（2）先择选后投影，可以改为带有选择条件中列的投影后再选择，最后完成最外层的投影，这样，使得内层的选择和投影可以同时进行。
+</code></pre><h4 id="选择与笛卡儿积的分配律">选择与笛卡儿积的分配律</h4>
+<pre><code>条件下推到相关的关系上，先做选择后做积运算，这样可以减小中间结果的大小。
+</code></pre><h4 id="选择与并的分配律">选择与并的分配律</h4>
+<pre><code>条件下推到相关的关系上，先做选择后做并运算，可以减小每个关系输出结果的大小。
+</code></pre><h4 id="选择与差的分配律">选择与差的分配律</h4>
+<pre><code>条件下推到相关的关系上，先做选择后做差运算，可以减小每个关系输出结果的大小。
+</code></pre><h4 id="投影与笛卡儿积的分配律">投影与笛卡儿积的分配律</h4>
+<pre><code>先做投影后做积，可减少做积前每个元组的长度，使得再做积后得到新元组的长度变短。
+</code></pre><h4 id="投影与并的分配律">投影与并的分配律</h4>
+<pre><code>先做投影后做并，可减少做并前每个元组的长度。
+</code></pre><h1 id="OLTP">OLTP</h1>
+<pre><code>On-<span class="built_in">line</span> Transaction Processing, OLTP。
+</code></pre><h1 id="SPJ">SPJ</h1>
+<pre><code><span class="operator"><span class="keyword">SELECT</span>， 投影（PROJECT）， 连接（<span class="keyword">JOIN</span>）</span>
+</code></pre><h1 id="查询优化对SPJ的优化方式如下：">查询优化对SPJ的优化方式如下：</h1>
+<pre><code><span class="number">1</span>）选择操作。对应的是限制条件（格式类似 field&lt;op&gt;consant）优化方式是选择操作下推，目的是尽量减少连接操作前的元组数，使得中间临时关系尽量少。这可减少IO和CPU等的消耗。
+
+<span class="number">2</span>）投影操作：对应<span class="keyword">SELECT</span>查询的目的的列对象。优化方式是投影操作下推。目的是尽量减少连接操作前的列数，使得中间临时关系尽量小（选择操作是使元组个数”尽量少“，投影操作，是使一条元组”尽量小“）。这样，虽然不能减少IO（多数数据库存储方式是行存储，元组是读取的最基本单位，所以想要操作列必须读取一行数据）。但可以减少连接后的中间关系的元组大小，节约内存。
+
+<span class="number">3</span>）连接操作：对应的是连接条件。（格式为field1&lt;op&gt;field2, field1和field表示”不同表“上的列对象。表示两个表连接条件。（<span class="number">1</span>）”多表连接中每个表被连接的顺序决定着效率。“，即如果ABC三个表，ABC， ACB， CBA， BCA等不同的连接后结果一样的话，则要计算哪种效率最高。（<span class="number">2</span>）多表连接每个表被连接的顺序由用户语义决定，这决定着表之间的前后连接次序是不能随意更换的。
+
+<span class="number">4</span>）非SPJ（在SPJ的基础上存在 <span class="keyword">GROUP</span> <span class="keyword">BY</span> 操作的查询，这是一种复杂的查询）。
+</code></pre><h1 id="子查询优化">子查询优化</h1>
+<pre><code>它是一种比较耗时的操作，优化子查询对查询效率的提升有着直接的影响。
+</code></pre><h4 id="子查询可出现的位置及对优化的影响">子查询可出现的位置及对优化的影响</h4>
+<pre><code><span class="number">1</span>）目标列
+这时，只能是标量子查询，否则数据库可能返回类似”错误：子查询必须只能返回一个字段“的提示。
+
+<span class="number">2</span>）<span class="keyword">FROM</span>子句
+相关子查询不能出现在<span class="keyword">FROM</span>子句中；非相关子查询出现在<span class="keyword">FROM</span>子句中，可上拉子查询到父层，在多表连接时统一考虑连接代价后择优。
+
+<span class="number">3</span>）<span class="keyword">WHERE</span>子句
+
+<span class="number">4</span>）<span class="keyword">JOIN</span>/<span class="keyword">ON</span>子句
+它们处理方式同<span class="keyword">FROM</span>子句和<span class="keyword">WHERE</span>子句
+
+<span class="number">5</span>）<span class="keyword">GROUP</span> <span class="keyword">BY</span>子句
+目标列必须和 <span class="keyword">GROUP</span> <span class="keyword">BY</span> 关联。可将子查询写在<span class="keyword">GROUP</span> <span class="keyword">BY</span>位置，但没有什么实用意义。
+
+<span class="number">6</span>）HAVING子句
+
+<span class="number">7</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span> 子句
+</code></pre><h1 id="子查询优化技术">子查询优化技术</h1>
+<pre><code>1）子查询合并
+等价的情况下。多个子查询能够合并成一个子查询。这样可以把多次表扫描，多次连接减少为单次表扫描和单次连接。如：
+
+<span class="operator"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">where</span> a1 &lt; <span class="number">10</span> <span class="keyword">and</span> (<span class="keyword">exists</span> (<span class="keyword">select</span> a2 <span class="keyword">from</span> t2 <span class="keyword">where</span> t2.a2 &lt; <span class="number">5</span> <span class="keyword">and</span> t2.b2 = <span class="number">1</span>) <span class="keyword">or</span> <span class="keyword">exists</span> (<span class="keyword">select</span> a2 <span class="keyword">from</span> t2 <span class="keyword">where</span> t2.a2 &lt; <span class="number">5</span> <span class="keyword">and</span> t2.b2 = <span class="number">2</span>)
+
+可优化为
+
+<span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">where</span> a1 &lt; <span class="number">10</span> <span class="keyword">and</span> ( <span class="keyword">exists</span> (<span class="keyword">select</span> a2 <span class="keyword">from</span> t2 <span class="keyword">where</span> t2.a2 &lt; <span class="number">5</span> <span class="keyword">and</span> ( t2.b2 = <span class="number">1</span> <span class="keyword">or</span> t2.b2 = <span class="number">2</span>));</span>
+
+2）子查询展开
+又称子查询反嵌套，又称为子查询上拉。把一些子查询置于外层的父查询中，作为连接关系与外层父查询并列。实质上是把某些子查询重写为等价的多表连接操作。如：
+
+<span class="operator"><span class="keyword">select</span> * <span class="keyword">from</span> t1, ( <span class="keyword">select</span> * <span class="keyword">from</span> t2 <span class="keyword">where</span> t2.a2 &gt; <span class="number">10</span>) v_t2 <span class="keyword">where</span> t1.a1 &lt; <span class="number">10</span> <span class="keyword">and</span> v_t2.a2 &lt; <span class="number">20</span>
+
+可优化为
+
+<span class="keyword">select</span> * <span class="keyword">from</span> t1, t2 <span class="keyword">where</span> t1.a1 &lt; <span class="number">10</span> <span class="keyword">and</span> t2.a2 &lt; <span class="number">20</span> <span class="keyword">and</span> t2.a2 &gt; <span class="number">10</span>
+
+<span class="number">3</span>）聚集子查询消除
+将聚集函数上推，将子查询转变为一个新的不包含聚集函数的子查询，并与父查询的部分或者全部表做左外连接。
+
+<span class="number">4</span>）其他
+利用窗口函数消除子查询的技术。子查询推进等技术</span>
+</code></pre><h1 id="子查询展开">子查询展开</h1>
+<pre><code><span class="number">1</span>）如果子查询出现了聚集、<span class="keyword">GROUP</span> <span class="keyword">BY</span>， <span class="keyword">DISTINCT</span> 子句，则子查询只能单独求解，不可以上拉到上层。
+
+<span class="number">2</span>）如果子查询只是一个简单格式（SPJ）的查询语句，则可以上拉到上层，这样往往能提高查询效率。
+</code></pre><h4 id="子查询展开的规则">子查询展开的规则</h4>
+<pre><code>1）如果上层查询的结果没有重复（即<span class="operator"><span class="keyword">SELECT</span>子句中包含主键），则可以展开其子查询，并且展开后的查询的<span class="keyword">SELECT</span> 子句前就回上 <span class="keyword">DISTINCT</span> 标志。
+
+<span class="number">2</span>）如果上层有 <span class="keyword">DISTINCT</span> 标志，则可以直接展开子查询
+
+<span class="number">3</span>）如果内层查询结果没有重复元组，则可以展开。</span>
+</code></pre><h4 id="子查询展开的步骤">子查询展开的步骤</h4>
+<pre><code><span class="number">1</span>）将子查询和上层查询的<span class="keyword">FROM</span>子句连接，为同一个<span class="keyword">FROM</span>子句，并修改相应的运行参数
+
+<span class="number">2</span>）将子查询的谓词符号进行相应修改。如 <span class="keyword">IN</span>修改为=ANY
+
+<span class="number">3</span>）将子查询的<span class="keyword">WHERE</span>条件作为一个整体与上层查询的<span class="keyword">WHERE</span>条件合并，并用<span class="keyword">AND</span>条件连接词连接。
+</code></pre><h1 id="子查询优化说明">子查询优化说明</h1>
+<pre><code>子查询类似： <span class="number">10</span> IN (select <span class="keyword">...</span>）这不能做上拉操作，所以不能优化
+子查询类似：出现 random()等易失函数，子查询结果不能确定，所以查询优化器就不能对子查询优化。
+</code></pre><h1 id="ALL/SOME/ANY类型">ALL/SOME/ANY类型</h1>
+<pre><code>如果子查询没有 GROUP BY 子句，也没有聚集函数。则可以使用如下表达式做等价转换：
+
+val &gt; ALL (select <span class="keyword">...</span>) 等价为 val &gt; MAX(select <span class="keyword">...</span>)
+
+val &lt; ALL (select <span class="keyword">...</span>) 等价为 val &lt; min( select <span class="keyword">...</span>)
+
+val &gt; any (select <span class="keyword">...</span>) 等价为 val &gt; min(select ....）
+
+val &lt; any (select <span class="keyword">...</span>) 等价为 val&lt;max(select ....)
+
+val &gt;= ALL 同上
+val &lt;= ALL
+val &gt;= ANY
+val &lt;= ANY
+</code></pre><h1 id="视图重写">视图重写</h1>
+<pre><code>就是将视图的引用重写为对基本表的引用。如：
+<span class="operator"><span class="keyword">create</span> <span class="keyword">table</span> t_a ( a <span class="built_in">int</span> , b <span class="built_in">int</span> );</span>
+<span class="operator"><span class="keyword">create</span> <span class="keyword">view</span> v_a <span class="keyword">as</span> <span class="keyword">select</span> * <span class="keyword">from</span> t_a;</span>
+
+基于视图的命令：
+<span class="operator"><span class="keyword">select</span> col_a <span class="keyword">from</span> v_a <span class="keyword">where</span> col_b &gt; <span class="number">100</span>;</span>
+经过视图重写后：
+<span class="operator"><span class="keyword">select</span> col_a <span class="keyword">from</span> ( <span class="keyword">select</span> col_a , col_b <span class="keyword">from</span> t_a) <span class="keyword">where</span> col_b &gt; <span class="number">100</span>;</span>
+再经过优化后，则是：
+<span class="operator"><span class="keyword">select</span> col_a <span class="keyword">from</span> t_a <span class="keyword">where</span> col_b &gt; <span class="number">100</span>;</span>
+
+简单的视图（SPJ）可以被查询优化器较好地处理。
+但复杂视图则不能被查询优化器很好地处理。
+</code></pre><h1 id="等价谓词重写">等价谓词重写</h1>
+<pre><code><span class="number">1</span>）LIKE规则
+如：name like <span class="string">'abc%'</span>
+重写为
+name <span class="subst">&gt;=</span> <span class="string">'abc'</span> <span class="literal">and</span> name <span class="subst">&lt;</span> <span class="string">'abd'</span>;
+应用like规则的好处：转换前针对 like 谓词只能进行全表扫描。如果name列上存在索引，则转换后可以进行索引范围扫描。
+
+如果没有通配符（<span class="subst">%</span>或_）。则是与 <span class="subst">=</span> 等价
+name like <span class="string">'abc'</span>
+重写为
+name <span class="subst">=</span> <span class="string">'abc'</span>
+
+<span class="number">2</span>） BETWEEN<span class="attribute">-AND</span>规则
+sno BETWEEN <span class="number">10</span> <span class="literal">AND</span> <span class="number">20</span> 
+重写为
+sno <span class="subst">&gt;=</span> <span class="number">10</span> <span class="literal">and</span> sno <span class="subst">&lt;=</span><span class="number">20</span>
+好处：如果sno建立了索引，则可以用索引扫描代替原来的BETWEEN<span class="attribute">-AND</span>谓词限定的全表扫描，从而提高了查询的效率。
+
+<span class="number">3</span>）<span class="keyword">IN</span>转换<span class="literal">OR</span>规则
+<span class="keyword">IN</span>只是<span class="keyword">IN</span>操作符，而不是<span class="keyword">IN</span>子查询。改为<span class="literal">OR</span>可以更好地利用索引进行优化。将<span class="keyword">IN</span>改为若干个<span class="literal">OR</span>可能会提高效率。
+age <span class="keyword">IN</span> （<span class="number">8</span>, <span class="number">12</span>, <span class="number">21</span>）
+重写为
+age <span class="subst">=</span> <span class="number">8</span> <span class="literal">or</span> age <span class="subst">=</span> <span class="number">12</span> <span class="literal">or</span> age <span class="subst">=</span> <span class="number">21</span>
+效率是否提高，需要看数据库对<span class="keyword">IN</span>谓词是否只支持全表扫描。如果数据库对<span class="keyword">IN</span>谓词只支持全表扫描且<span class="literal">OR</span>谓词中表的age列存在索引，则转换后的查询效率会更好。
+
+<span class="number">4</span>）<span class="keyword">IN</span>转换ANY规则
+因为<span class="keyword">IN</span>可以转换为<span class="literal">OR</span>，而<span class="literal">OR</span>可转换为ANY，所以可以直接把<span class="keyword">IN</span>转换为ANY。这可能会提高效率。
+age <span class="keyword">IN</span> (<span class="number">8</span>, <span class="number">12</span>, <span class="number">21</span>)
+重写为
+age any (<span class="number">8</span>, <span class="number">12</span>, <span class="number">21</span>)
+效率是否提高，依赖于数据库对ANY操作的支持情况。
+如：PostgreSQL没有显式支持 ANY 操作，但在内部实现时把<span class="keyword">IN</span>操作转换为了ANY操作。（通过 explain 知道）
+
+
+<span class="number">5</span>）<span class="literal">OR</span>转换为ANY规则
+这样可以更好地利用 <span class="keyword">MIN</span>/<span class="keyword">MAX</span> 操作进行优化。但（PG9<span class="number">.2</span><span class="number">.3</span> 和 MySQL <span class="number">5.6</span><span class="number">.10</span> 目前都还没有支持）
+
+<span class="number">6</span>）<span class="literal">ALL</span>/ANT 转换为集函数规则
+这样可以更好地利用 <span class="keyword">MIN</span>/<span class="keyword">MAX</span> 操作进行优化。如：
+sno <span class="subst">&gt;</span> ANY (<span class="number">10</span>, <span class="number">2</span><span class="subst">*</span><span class="number">5</span><span class="subst">+</span><span class="number">3</span>, sqrt(<span class="number">9</span>))
+重写为
+sno <span class="subst">&gt;</span> sqrt(<span class="number">9</span>)
+通常，聚集函数<span class="keyword">MAX</span>(), <span class="keyword">MIN</span>()等的效率比ANY， <span class="literal">ALL</span>谓词的执行效率高。
+
+<span class="number">7</span>）<span class="literal">NOT</span>规则
+<span class="literal">NOT</span> (col_1 <span class="subst">!=</span> <span class="number">2</span>) 重写为 col_1 <span class="subst">=</span> <span class="number">2</span> 其他类似
+好处：如果 col_1 上建立了索引，则可以用索引扫描代替原来的全表扫描。
+
+<span class="number">8</span>）<span class="literal">OR</span>重写并集规则
+如：
+<span class="keyword">select</span> <span class="subst">*</span> from student <span class="keyword">where</span> ( sex <span class="subst">=</span> <span class="string">'f'</span> <span class="literal">and</span> sno <span class="subst">&gt;</span> <span class="number">15</span> ) <span class="literal">or</span> age <span class="subst">&gt;</span> <span class="number">18</span>；
+这条SQL会强迫查询优化器使用顺序存取，因为这个语句要检索的是<span class="literal">OR</span>操作的集合。假设，sex, age 上有索引，则可优化为：
+<span class="keyword">select</span> <span class="subst">*</span> from student <span class="keyword">where</span> sex <span class="subst">=</span> <span class="string">'f'</span> <span class="literal">and</span> sno <span class="subst">&gt;</span> <span class="number">15</span> union <span class="keyword">select</span> <span class="subst">*</span> from student <span class="keyword">where</span> age <span class="subst">&gt;</span> <span class="number">18</span>；
+</code></pre><h1 id="条件简化">条件简化</h1>
+<pre><code><span class="number">1</span>）把HAVING条件并入WHERE条件。（只有SQL语句不存在 GROUP BY 条件 或聚集函数的情况下才可以使用）
+
+<span class="number">2</span>）去除表达式中冗余的括号。这样子可以减少语法分析时产生的AND和OR树的层次。
+
+<span class="number">3</span>）常量传递。如：<span class="variable">col_1 =</span> col_2 <span class="constant">and</span> <span class="variable">col_2 =</span> <span class="number">3</span> 。改为：<span class="variable">col_1 =</span> <span class="number">3</span> <span class="constant">and</span> <span class="variable">col_2 =</span> <span class="number">3</span>;
+
+<span class="number">4</span>）消除死码。如：永恒为假的条件。
+
+<span class="number">5</span>）表达式计算：如：where <span class="variable">col_1 =</span> <span class="number">1</span> + <span class="number">2</span> ，改为 where <span class="variable">col_1 =</span> <span class="number">3</span>
+
+<span class="number">6</span>）等式变换：化简条件（如反转关系操作符的操作数顺序）。如： <span class="variable">-a =</span> <span class="number">3</span>; 简化为 <span class="variable">a =</span> -<span class="number">3</span>；
+
+<span class="number">7</span>）不等式变换。化简条件。如：a &gt; <span class="number">10</span> <span class="constant">and</span> <span class="variable">b =</span> <span class="number">6</span> <span class="constant">and</span> a &gt; <span class="number">2</span> ，简化为 <span class="variable">b =</span> <span class="number">6</span> <span class="constant">and</span> a &gt; <span class="number">10</span>
+
+<span class="number">8</span>）布尔表达式变换。
+
+<span class="number">9</span>）谓词传递闭包。
+
+<span class="number">10</span>）任何一个布尔表达式都能被转换为一个等价的合取范式（CNF）。如：<span class="constant">and</span> 操作符是可交换的，所以优化器可以按先易后难的顺序计算表达式。
+
+<span class="number">11</span>）索引的利用。
+</code></pre><h1 id="外连接消除">外连接消除</h1>
+<pre><code>外连接的左右子树不能互换。
+查询重写的一项技术就是把外连接，转换为内连接。意义：
+1）查询优化器在处理外连接操作时所需要的时间多于内连接
+
+2）优化器在选择表连接顺序时，可以有更多更灵活的选择，从而sk以选择更好的表连接顺序。
+
+3）表的一些连接算法，将规模小的或筛选严格的条件的作为外表，可以减少不必要的IO开销，极大地加快算法执行的速度。
+</code></pre><h1 id="嵌套连接消除">嵌套连接消除</h1>
+<pre><code>嵌套连接是指：当执行连接操作的次序不是从左到右逐个进行时，就说明这样的连接表达式存在嵌套。
+
+<span class="number">1</span>）如果连接表达式只包括内连接（<span class="keyword">JOIN</span> <span class="keyword">ON</span>），括号可以去掉，这意味着表之间的次序可以交换。
+
+<span class="number">2</span>）如果连接表达式包括外连接，括号不可以去掉，意味着表之间的次序只能按原语义进行，至多能执行的就是外连接向内连接转换。
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" data-id="rc6e68yrmy4do0qq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-自行测试的1亿条数据中PostgreSQL性能" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" class="article-date">
@@ -151,7 +809,7 @@ select <span class="command">count</span>(<span class="property">id</span>) <spa
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="5iqylpvoc2alvk9n" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/自行测试的1亿条数据中PostgreSQL性能/" data-id="ugee33bc8lw7pbrc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
@@ -275,7 +933,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="l6c5m2fgv830338f" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/《数据库查询优化器的艺术》第一章学习笔记/" data-id="tzzgp1pz6z7xr9oe" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
@@ -354,7 +1012,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="peb1gav26h926ygw" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/02/create-blog-by-hexo/" data-id="s3le7mmy20hxej06" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hexo/">Hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Markdown/">Markdown</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/博客/">博客</a></li></ul>
@@ -379,7 +1037,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">26</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">24</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">25</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -388,7 +1046,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -397,7 +1055,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 14.00px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 12.00px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 12.00px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 10.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 10.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 11.67px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 13.33px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.33px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.67px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
     </div>
   </div>
 
@@ -406,7 +1064,7 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -418,23 +1076,23 @@ PG和MySQL采取了基于规则和代价估算的查询优化策略。
       <ul>
         
           <li>
-            <a href="/2015/01/06/《啊哈！算法》学习笔记之桶排序/">《啊哈！算法》学习笔记之桶排序</a>
+            <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/">[翻译]PostgreSQL 9.0 构架</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/">使用PostgreSQL无限递归 SELECT 评论系统</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/">《啊哈！算法》学习笔记之栈</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/">PostgreSQL使用 postgres_fdw 进行跨库操作</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之队列/">《啊哈！算法》学习笔记之队列</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/-转载-你知道数据库索引的工作原理吗？/">[转载]你知道数据库索引的工作原理吗？</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之快速排序/">《啊哈！算法》学习笔记之快速排序</a>
           </li>
         
           <li>
-            <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/">[翻译]使用部分索引来加速PostgreSQL</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/">《啊哈！算法》学习笔记之冒泡排序</a>
           </li>
         
       </ul>

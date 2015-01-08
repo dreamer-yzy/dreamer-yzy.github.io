@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>[翻译]PostgreSQL 9.0 构架 | PostgreSQL DBA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="原文
+作者：Raghavendra
+很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
+在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
+大部">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[翻译]PostgreSQL 9.0 构架">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/">
+<meta property="og:site_name" content="PostgreSQL DBA">
+<meta property="og:description" content="原文
+作者：Raghavendra
+很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
+在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
+大部">
+<meta property="og:image" content="/img/postgresql-architecture.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[翻译]PostgreSQL 9.0 构架">
+<meta name="twitter:description" content="原文
+作者：Raghavendra
+很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
+在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
+大部">
+
+  
+    <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-57440117-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">PostgreSQL DBA</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Zhiyong Yang</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://dreamer-yzy.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post--翻译-PostgreSQL-9-0-构架" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/" class="article-date">
+  <time datetime="2015-01-08T12:26:04.000Z" itemprop="datePublished">1月 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      [翻译]PostgreSQL 9.0 构架
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://raghavt.blogspot.com/2011/04/postgresql-90-architecture.html" target="_blank" rel="external">原文</a></p>
+<h2 id="作者：Raghavendra">作者：Raghavendra</h2>
+<p>很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。</p>
+<p>在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。</p>
+<p>大部分的设计都是在我们的PostgreSQL提交者（Heikki,Robert Haas,Bruce）的帮助下完成的， 我从他们身上学习到了很多关于PostgreSQL内部的东西。 非常感谢他们的协作让我了解到关于PostgreSQL的一切。我不是黑客，也不是构架师，仅仅是为PostgreSQL新手写了一篇文章。请留下你的评论、建议或者发现到我写文章的任何错误也可留言。</p>
+<p><img src="/img/postgresql-architecture.png" alt=""></p>
+<h2 id="PostgreSQL_9-0_构架概述">PostgreSQL 9.0 构架概述</h2>
+<p>PostgreSQL实例由一系列进程和内存组成。PostgreSQL 使用一个简单的 “每个用户一个进程” 的 客户/服务器 模型。PostgreSQL 有许多种类型进程。</p>
+<ul>
+<li><p><code>postmaster</code>进程，是后台监听进程，<code>postmaster</code>附加到共享内存段（我注：其实就是通过共享内存来进行进程间的通信），但是尽量避免访问它（我注：避免我们自定义去访问该共享内存，而是由PG内部各进程进行协调）。</p>
+</li>
+<li><p>实用进程（<code>bgwriter</code>后台写进程，<code>walwriter</code>预写式日志写进程，<code>syslogger</code>系统日志进程，<code>archiver</code>归档进程，<code>statscollector</code>状态收集器进程 以及 <code>autovacuum</code>自动清理进程）以及</p>
+</li>
+<li><p>用户后台进程（<code>postgres</code>进程自身，服务器进程）</p>
+</li>
+</ul>
+<p>当有一个客户端请求连接到数据库时，首先，请求被<code>postmaster</code>后台进程执行身份认证，受权之后会复制一个服务器后台进程（<code>postgres</code>进程）来处理该请求。从那时起，客户端进程和服务器端进程进程通信，而不再需要<code>postmaster</code>介入。因此，<code>postmaster</code>进程是一直在运行的，一直等待连接请求，然而客户端和服务器端进程会继续进行通信。<code>libpq</code>库允许一个单客户端连接到多个服务器进程。</p>
+<p>然而，每个后台进程都是单线程的，一次仅仅只能执行一条查询；所以，任何的一个<code>前端-后台</code>连接都是单线程的。<code>postmaster</code>进程和<code>postgres</code>进程都是以PostgreSQL的”超级用户”身份的用户ID来运行的。每个打开数据库的会话里都会存在一个<code>postgres</code>进程。一旦经过身份验证的用户连接,它就会与共享内存直接连接（与谁，目的是做什么）。</p>
+<h2 id="内存">内存</h2>
+<ul>
+<li>Shared Buffers，共享缓冲区</li>
+<li>WAL Buffers，预写式日志缓冲区</li>
+<li>clog Buffers，是一种 SLRU 类型的缓冲区(Commit log，提交日志缓冲区）</li>
+<li>Other Buffers，其他缓冲区</li>
+</ul>
+<p>PostgreSQL共享内存是非常大的并且所有缓冲区都没有同步的，这意味着都是独立的。一些专家/提交者已经将他们的大量关于PostgreSQL的经验信息放在网站上。结合PostgreSQL文档和这个构架图就会对PostgreSQL构架的有个基础的了解。以下链接有更多概述.</p>
+<p><a href="http://www.postgresql.org/docs/9.0/interactive/runtime-config-resource.html" target="_blank" rel="external">http://www.postgresql.org/docs/9.0/interactive/runtime-config-resource.html</a><br><a href="http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html</a><br><a href="http://www.postgresql.org/files/documentation/books/aw_pgsql/hw_performance/0.html" target="_blank" rel="external">http://www.postgresql.org/files/documentation/books/aw_pgsql/hw_performance/0.html</a></p>
+<h2 id="实用进程:">实用进程:</h2>
+<h4 id="强制性进程：这些进程是没有选项来_开启/关闭_的">强制性进程：这些进程是没有选项来 开启/关闭 的</h4>
+<ul>
+<li><p>BGWriter</p>
+</li>
+<li><p>WAL Writer</p>
+</li>
+</ul>
+<h4 id="可选进程：这些进程是有选项来_开启/关闭_的">可选进程：这些进程是有选项来 开启/关闭 的</h4>
+<ul>
+<li>Stats-collector，状态收集进程</li>
+<li>Autovacuum launcher，自动清理进程</li>
+<li>Archiver，归档进程</li>
+<li>Syslogger，系统日志进程</li>
+<li>WAL Sender，预写式日志发送进程</li>
+<li>WAL Receiver，预写式日志接收进程</li>
+</ul>
+<p>不久，我将会提交一张关于实用性进程和用户后台进程的概要图</p>
+<p>献上我真诚的问候<br>Raghav</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="k4p5vdxfhjbmo404" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《啊哈！算法》学习笔记之栈</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post--翻译-PostgreSQL-9-0-构架" data-title="[翻译]PostgreSQL 9.0 构架" data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">25</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 11.67px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 13.33px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.33px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.67px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/">[翻译]PostgreSQL 9.0 构架</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/">《啊哈！算法》学习笔记之栈</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之队列/">《啊哈！算法》学习笔记之队列</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之快速排序/">《啊哈！算法》学习笔记之快速排序</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/">《啊哈！算法》学习笔记之冒泡排序</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Zhiyong yang<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

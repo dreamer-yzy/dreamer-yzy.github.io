@@ -82,6 +82,208 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-《啊哈！算法》学习笔记之栈" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/" class="article-date">
+  <time datetime="2015-01-08T12:21:47.000Z" itemprop="datePublished">1月 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/算法/">算法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/08/《啊哈！算法》学习笔记之栈/">《啊哈！算法》学习笔记之栈</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="栈">栈</h2>
+<p>实现也很简单，只需要一个一维数组和一个指向栈顶的变量 top 就可以了。我们通过 top 来对栈进行插入和删除操作。</p>
+<h2 id="特点：后进先出">特点：后进先出</h2>
+<h2 id="利用栈判断是否回文（java实现）">利用栈判断是否回文（java实现）</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">    <span class="keyword">char</span>[] character = { <span class="string">'a'</span>, <span class="string">'a'</span>, <span class="string">'h'</span>, <span class="string">'a'</span>, <span class="string">'a'</span> };</div><div class="line">    <span class="keyword">char</span>[] stack = <span class="keyword">new</span> <span class="keyword">char</span>[<span class="number">10</span>];</div><div class="line">    <span class="keyword">int</span> top = -<span class="number">1</span>;</div><div class="line">    <span class="keyword">int</span> mid = character.length % <span class="number">2</span> == <span class="number">0</span> ? character.length / <span class="number">2</span> - <span class="number">1</span> : character.length / <span class="number">2</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= mid; i++) {</div><div class="line">        top++;</div><div class="line">        stack[top] = character[i];</div><div class="line">    }</div><div class="line">    <span class="keyword">if</span> (character.length % <span class="number">2</span> == <span class="number">0</span>) {</div><div class="line">        mid++;</div><div class="line">    }</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = mid; i &lt; character.length; i++) {</div><div class="line">        <span class="keyword">if</span> (top &gt;= <span class="number">0</span>) {</div><div class="line">            <span class="keyword">if</span> (stack[top] != character[i]) {</div><div class="line">                <span class="keyword">break</span>;</div><div class="line">            }</div><div class="line">        }</div><div class="line">        top--;</div><div class="line">    }</div><div class="line">    <span class="keyword">if</span> (top == -<span class="number">1</span>) {</div><div class="line">        System.<span class="keyword">out</span>.println(<span class="string">"YES"</span>);</div><div class="line">    } <span class="keyword">else</span> {</div><div class="line">        System.<span class="keyword">out</span>.println(<span class="string">"NO"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/《啊哈！算法》学习笔记之栈/" data-id="t5cd03m9g132mzk5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《啊哈！算法》学习笔记之队列" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/《啊哈！算法》学习笔记之队列/" class="article-date">
+  <time datetime="2015-01-08T12:20:52.000Z" itemprop="datePublished">1月 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/算法/">算法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/08/《啊哈！算法》学习笔记之队列/">《啊哈！算法》学习笔记之队列</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="列队的主要特点：先进先出">列队的主要特点：先进先出</h2>
+<h2 id="文中题目">文中题目</h2>
+<p>规则是这样的：首先将第 1个数删除，紧接着将第 2 个数放到这串数的末尾，再将第 3 个数删除并将第 4 个数放到这串数的末尾，再将第 5 个数删除……直到剩下最后一个数，将最后一个数也删除。按照刚才删除的顺序，把这些删除的数连在一起就是小哈的 QQ啦.</p>
+<h2 id="Java实现">Java实现</h2>
+<p>例如：加密过的一串数是 “6 3 1 7 5 8 9 2 4”，输出应该是“6 1 5 9 4 7 2 8 3”</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(String[] args) {</div><div class="line">    <span class="keyword">int</span>[] <span class="built_in">array</span> = { <span class="number">6</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>, <span class="number">5</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">2</span>, <span class="number">4</span> };</div><div class="line">    <span class="keyword">int</span>[] <span class="built_in">queue</span> = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">100</span>];</div><div class="line">    <span class="keyword">int</span> head = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> tail = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">array</span>.length; i++) {</div><div class="line">        <span class="built_in">queue</span>[i] = <span class="built_in">array</span>[i];</div><div class="line">        tail++;</div><div class="line">    }</div><div class="line">    <span class="keyword">while</span> (head &lt; tail) {</div><div class="line">        System.out.println(<span class="built_in">queue</span>[head]);</div><div class="line">        head++;</div><div class="line">        <span class="built_in">queue</span>[tail] = <span class="built_in">queue</span>[head];</div><div class="line">        tail++;</div><div class="line">        head++;</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/《啊哈！算法》学习笔记之队列/" data-id="jr3xo7b9rg7f2lc9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《啊哈！算法》学习笔记之快速排序" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/《啊哈！算法》学习笔记之快速排序/" class="article-date">
+  <time datetime="2015-01-08T12:18:41.000Z" itemprop="datePublished">1月 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/算法/">算法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/08/《啊哈！算法》学习笔记之快速排序/">《啊哈！算法》学习笔记之快速排序</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="基本思想">基本思想</h2>
+<p>每次排序的时候设置一个基准点，将小于等于基准点的数全部放到基准点的一边，将大于等于基准点的数全部放到基准点的另一边.</p>
+<h2 id="时间复杂度">时间复杂度</h2>
+<p>因此快速排序的最差时间复杂度和冒泡排序是一样的，都是 O(N^2 )，它的平均时间复杂度为 O(NlogN)。</p>
+<h2 id="Java实现（从大到小）">Java实现（从大到小）</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(String[] args) {</div><div class="line">    <span class="keyword">int</span> length = <span class="number">20</span>;</div><div class="line">    <span class="keyword">int</span> maxValue = <span class="number">20</span>;</div><div class="line">    <span class="keyword">int</span>[] <span class="built_in">array</span> = <span class="keyword">new</span> <span class="keyword">int</span>[length];</div><div class="line">    Random r = <span class="keyword">new</span> Random();</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">array</span>.length; i++) {</div><div class="line">        <span class="built_in">array</span>[i] = r.nextInt(maxValue);</div><div class="line">    }</div><div class="line">    System.out.println(Arrays.toString(<span class="built_in">array</span>));</div><div class="line">    quickSort(<span class="built_in">array</span>, <span class="number">0</span>, length-<span class="number">1</span>);</div><div class="line">    System.out.println(Arrays.toString(<span class="built_in">array</span>));</div><div class="line">}</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="comment">// 假设以左边的为基数，那就要从右边开始移动。左为大于基数，右为小于基数</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> quickSort(<span class="keyword">int</span>[] <span class="built_in">array</span>, <span class="keyword">int</span> leftPoint, <span class="keyword">int</span> rightPoint) {</div><div class="line">    <span class="keyword">if</span> (leftPoint &gt; rightPoint) {</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    }</div><div class="line">    <span class="keyword">int</span> swapTmp = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> baseNumber = <span class="built_in">array</span>[leftPoint];<span class="comment">// 以左边为基准</span></div><div class="line">    <span class="keyword">int</span> i = leftPoint;</div><div class="line">    <span class="keyword">int</span> j = rightPoint;</div><div class="line">    <span class="keyword">while</span> (leftPoint != rightPoint) {</div><div class="line">        <span class="comment">// 从右边开始向左移动，到找第一个大于基数时停止</span></div><div class="line">        <span class="keyword">while</span> (<span class="built_in">array</span>[rightPoint] &lt;= baseNumber && leftPoint &lt; rightPoint) {</div><div class="line">            rightPoint--;</div><div class="line">        }</div><div class="line"> </div><div class="line">        <span class="comment">// 从左边开始向右移动，到找第一个小于基数时停止</span></div><div class="line">        <span class="keyword">while</span> (<span class="built_in">array</span>[leftPoint] &gt;= baseNumber && leftPoint &lt; rightPoint) {</div><div class="line">            leftPoint++;</div><div class="line">        }</div><div class="line"> </div><div class="line">        <span class="comment">// 没有相遇时，就交换</span></div><div class="line">        <span class="keyword">if</span> (leftPoint &lt; rightPoint) {</div><div class="line">            swapTmp = <span class="built_in">array</span>[leftPoint];</div><div class="line">            <span class="built_in">array</span>[leftPoint] = <span class="built_in">array</span>[rightPoint];</div><div class="line">            <span class="built_in">array</span>[rightPoint] = swapTmp;</div><div class="line">        }</div><div class="line">    }</div><div class="line">    <span class="comment">//恢复新一轮的基准，将旧的基准归位，然后又重新定一个新的左边基准位。即将基准数与中间数互换</span></div><div class="line">    <span class="built_in">array</span>[i] = <span class="built_in">array</span>[leftPoint];</div><div class="line">    <span class="built_in">array</span>[leftPoint] = baseNumber;</div><div class="line"> </div><div class="line">    <span class="comment">//递归左，右两边</span></div><div class="line">    quickSort(<span class="built_in">array</span>, i, leftPoint-<span class="number">1</span>);</div><div class="line">    quickSort(<span class="built_in">array</span>, leftPoint+<span class="number">1</span>, j);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/《啊哈！算法》学习笔记之快速排序/" data-id="g818bxtcb93cm7p1" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《啊哈！算法》学习笔记之冒泡排序" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/" class="article-date">
+  <time datetime="2015-01-08T12:17:28.000Z" itemprop="datePublished">1月 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/算法/">算法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/">《啊哈！算法》学习笔记之冒泡排序</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="基本思想">基本思想</h2>
+<p>冒泡排序的基本思想是：每次比较两个相邻的元素，如果它们的顺序错误就把它们交换过来。</p>
+<p>以从大到小为例。</p>
+<p>每次都是比较相邻的两个数，如果后面的数比前面的数大，则交换这两个数的位置。一直比较下去直到最后两个数比较完毕后，最小的数就在最后一个了。就如同是一个气泡，一步一步往后“翻滚” ，直到最后一位。所以这个排序的方法有一个很好听的名字“冒泡排序” 。</p>
+<p>每将一个数归位我们将其称为“一趟” 。每一趟，都是将小的归位（先是最小，后次小，次后第三小…）。</p>
+<p>如果有 n 个数进行排序，只需将 n-1 个数归位，也就是说要进行n-1 趟操作。而“每一趟”都需要从第 1 位开始进行相邻两个数的比较，将较小的一个数放在后面，比较完毕后向后挪一位继续比较下面两个相邻数的大小，重复此步骤，直到最后一个尚未归位的数， 已经归位的数则无需再进行比较 （已经归位的数你还比较个啥， 浪费表情） 。</p>
+<h2 id="核心思想">核心思想</h2>
+<p>冒泡排序的核心部分是双重嵌套循环。</p>
+<h2 id="时间复杂度：O（N^2）">时间复杂度：O（N^2）</h2>
+<h2 id="Java实现">Java实现</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(String[] args) {</div><div class="line">    <span class="keyword">int</span> length = <span class="number">10</span>;</div><div class="line">    <span class="keyword">int</span> maxValue = <span class="number">20</span>;</div><div class="line">    <span class="keyword">int</span>[] <span class="built_in">array</span> = <span class="keyword">new</span> <span class="keyword">int</span>[length];</div><div class="line">    Random r = <span class="keyword">new</span> Random();</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">array</span>.length; i++) {</div><div class="line">        <span class="built_in">array</span>[i] = r.nextInt(maxValue);</div><div class="line">    }</div><div class="line">    System.out.println(<span class="string">"before"</span>);</div><div class="line">    print(<span class="built_in">array</span>);</div><div class="line">    bubbleSort(<span class="built_in">array</span>);</div><div class="line">    System.out.println(<span class="string">"after"</span>);</div><div class="line">    print(<span class="built_in">array</span>);</div><div class="line">}</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> bubbleSort(<span class="keyword">int</span>[] <span class="built_in">array</span>) {</div><div class="line">    <span class="keyword">int</span> tmp = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">array</span>.length; i++) {</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="built_in">array</span>.length-<span class="number">1</span>; j++) {</div><div class="line">            <span class="keyword">if</span> (<span class="built_in">array</span>[j] &lt; <span class="built_in">array</span>[j+<span class="number">1</span>]) {<span class="comment">//如果前一个比后一个小，则进行交换。这样子就可以是从大到小。</span></div><div class="line">                tmp = <span class="built_in">array</span>[j];</div><div class="line">                <span class="built_in">array</span>[j] = <span class="built_in">array</span>[j+<span class="number">1</span>];</div><div class="line">                <span class="built_in">array</span>[j+<span class="number">1</span>] = tmp;</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> print(<span class="keyword">int</span>[] <span class="built_in">array</span>) {</div><div class="line">    System.out.println(Arrays.toString(<span class="built_in">array</span>));</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h2 id="总结">总结</h2>
+<p>冒泡比较耗时</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/" data-id="vd1chg6pfy0spcce" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《啊哈！算法》学习笔记之桶排序" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/06/《啊哈！算法》学习笔记之桶排序/" class="article-date">
@@ -120,7 +322,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/06/《啊哈！算法》学习笔记之桶排序/" data-id="uvyhwvrsjovo8cy3" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/06/《啊哈！算法》学习笔记之桶排序/" data-id="ionrf44pd30oj5vm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
@@ -170,7 +372,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="gdtm2g103889dcew" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="koxz26si1l1deuax" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
@@ -219,7 +421,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="kz8219qkieq20k4n" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="kzx3li30w4m2v55p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-线程/">Java 线程</a></li></ul>
@@ -274,7 +476,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="s9f3401u81qhgfzb" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="u4aoeeznsjgfwr9w" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
@@ -295,7 +497,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">26</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">24</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">1</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">25</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -304,7 +506,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -313,7 +515,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.00px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 12.00px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 14.00px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.00px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 14.00px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 14.00px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 12.00px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 12.00px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 10.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 10.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 11.67px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 13.33px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.33px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.67px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
     </div>
   </div>
 
@@ -322,7 +524,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -334,23 +536,23 @@ ga('send', 'pageview');
       <ul>
         
           <li>
-            <a href="/2015/01/06/《啊哈！算法》学习笔记之桶排序/">《啊哈！算法》学习笔记之桶排序</a>
+            <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/">[翻译]PostgreSQL 9.0 构架</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/使用PostgreSQL无限递归-SELECT-评论系统/">使用PostgreSQL无限递归 SELECT 评论系统</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/">《啊哈！算法》学习笔记之栈</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/">PostgreSQL使用 postgres_fdw 进行跨库操作</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之队列/">《啊哈！算法》学习笔记之队列</a>
           </li>
         
           <li>
-            <a href="/2015/01/05/-转载-你知道数据库索引的工作原理吗？/">[转载]你知道数据库索引的工作原理吗？</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之快速排序/">《啊哈！算法》学习笔记之快速排序</a>
           </li>
         
           <li>
-            <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/">[翻译]使用部分索引来加速PostgreSQL</a>
+            <a href="/2015/01/08/《啊哈！算法》学习笔记之冒泡排序/">《啊哈！算法》学习笔记之冒泡排序</a>
           </li>
         
       </ul>
