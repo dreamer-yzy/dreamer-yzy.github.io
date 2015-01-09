@@ -3,32 +3,27 @@
 <head>
   <meta charset="utf-8">
   
-  <title>《数据库查询优化器的艺术》第三章物理查询优化学习笔记 | PostgreSQL DBA</title>
+  <title>[翻译]PostgreSQL 9.0 内存 &amp; 进程 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="代价模型
-总代价 = IO 代价 + CPU 代价
-COST = P * a_page_cpu_time + W * T
-
-P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
-T：访问的元组。反映了CPU花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是CP">
+  <meta name="description" content="原文作者：Raghav
+在PostgreSQL构架基础上进一步了解，在这里，通过信息链接我将会讨论关于实用进程和内存。许多提交者已经好好地记录了关于进程和内存，在这里有提供链接。在我这里有适当关于PostgreSQL实用进程的描述。
+每个PostgreSQL实例启动，会有一组实用进程（包括强制性和可选性进程）和内存。两个强制性进程（bgwriter后台写进程和walwriter预写式日志写进程）。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="《数据库查询优化器的艺术》第三章物理查询优化学习笔记">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/">
+<meta property="og:title" content="[翻译]PostgreSQL 9.0 内存 & 进程">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="代价模型
-总代价 = IO 代价 + CPU 代价
-COST = P * a_page_cpu_time + W * T
-
-P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
-T：访问的元组。反映了CPU花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是CP">
+<meta property="og:description" content="原文作者：Raghav
+在PostgreSQL构架基础上进一步了解，在这里，通过信息链接我将会讨论关于实用进程和内存。许多提交者已经好好地记录了关于进程和内存，在这里有提供链接。在我这里有适当关于PostgreSQL实用进程的描述。
+每个PostgreSQL实例启动，会有一组实用进程（包括强制性和可选性进程）和内存。两个强制性进程（bgwriter后台写进程和walwriter预写式日志写进程）。">
+<meta property="og:image" content="/img/postgresql-process-memory-10-1.png">
+<meta property="og:image" content="/img/postgresql-process-memory-10-2.png">
+<meta property="og:image" content="/img/postgresql-process-memory-10-3.png">
+<meta property="og:image" content="/img/postgresql-process-memory-10-4.png">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="《数据库查询优化器的艺术》第三章物理查询优化学习笔记">
-<meta name="twitter:description" content="代价模型
-总代价 = IO 代价 + CPU 代价
-COST = P * a_page_cpu_time + W * T
-
-P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
-T：访问的元组。反映了CPU花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是CP">
+<meta name="twitter:title" content="[翻译]PostgreSQL 9.0 内存 & 进程">
+<meta name="twitter:description" content="原文作者：Raghav
+在PostgreSQL构架基础上进一步了解，在这里，通过信息链接我将会讨论关于实用进程和内存。许多提交者已经好好地记录了关于进程和内存，在这里有提供链接。在我这里有适当关于PostgreSQL实用进程的描述。
+每个PostgreSQL实例启动，会有一组实用进程（包括强制性和可选性进程）和内存。两个强制性进程（bgwriter后台写进程和walwriter预写式日志写进程）。">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -95,10 +90,10 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-《数据库查询优化器的艺术》第三章物理查询优化学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post--翻译-PostgreSQL-9-0-内存-进程" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" class="article-date">
-  <time datetime="2014-12-03T14:09:15.000Z" itemprop="datePublished">12月 3 2014</time>
+    <a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" class="article-date">
+  <time datetime="2015-01-09T12:45:53.000Z" itemprop="datePublished">1月 9 2015</time>
 </a>
     
   <div class="article-category">
@@ -113,7 +108,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      《数据库查询优化器的艺术》第三章物理查询优化学习笔记
+      [翻译]PostgreSQL 9.0 内存 &amp; 进程
     </h1>
   
 
@@ -121,103 +116,60 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="代价模型">代价模型</h1>
-<pre><code>总代价 = IO 代价 + <span class="built_in">CPU</span> 代价
-COST = P * a_page_cpu_time + W * T
-
-P：计划运行时访问的页数，a_page_cpu_time 是每个页读取的时间花费，其积反映了IO代价
-T：访问的元组。反映了<span class="built_in">CPU</span>花费。（存储层是以页面为单位，数据以页面的形式读入内存，每个页面上可能有多个元组，访问元组需要解析元组结构，才能把元组上的字段读出，这消耗的是<span class="built_in">CPU</span>）。如果是索引扫描，则还会包括索引读取的花费。
-W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，又称选择率（selectivity）。选择率用于表示在关系R中，满足条件“A&lt;op&gt;a”的元组数与R的所有元组N的比值。
-</code></pre><h1 id="单表扫描算法">单表扫描算法</h1>
-<pre><code>全表扫描，局部扫描。单表扫描与IO操作密切相关。
-
-1）顺序扫描（SeqScan）。当无索引可用，或访问表中的大部分数据，或表的数据量很小时，使用顺序扫描效果较好。
-
-2）索引扫描（IndexScan）。根据索引键读索引，找出物理元组的位置。【如果选择率很高，不适宜使用索引扫描】
-
-3）只读索引扫描（IndexOnlyScan）。根据索引键读索引，索引中的数据能够满足条件判断，不需要读取数据页面。比索引扫描少了读取数据的IO花费。
-
-4）行扫描（RowIdScan）。用于直接定位表中的某一行。对于元组，通常为元组增加特殊的列，通过特殊的列计算出元组r物理位置，然后直接读取元组对应的页面，获取元组。在PostgreSQL中称为【Tid】扫描，此种方式是在元组头上增加名为【CTID】的列，用这列的值可直接计算本条元组的物理存储位置。
-
-5）并行表扫描（ParallelTableScan）。对同一个表，并行地、通过顺序的方式获取表的数据，结果是得到一个完整的表数据。
-
-6）并行索引扫描（ParallelIndexScan）。对同一个表，并行地、通过索引的方式获取表的数据，将结果合并在一起。
-
-7）组合多个索引扫描（MultipleIndexScan）。
-</code></pre><h1 id="顺序扫描代价估算公式">顺序扫描代价估算公式</h1>
-<pre><code>COST = N_page <span class="keyword">*</span> a_tuple_IO_time + N_tuple <span class="keyword">*</span> a_tuple_CPU_time
-</code></pre><h1 id="索引扫描代价估算公式">索引扫描代价估算公式</h1>
-<pre><code><span class="constant">COST</span> = C_index + N_page_index * a_tuple_IO_time
-<span class="constant">C_index：索引的IO花费。C_index</span> = N_page_index * a_page_IO_time
-<span class="constant">N_page_index：索引作用下的可用元组数。N_page_index</span> = N_tuple * 索引选择率
-</code></pre><h1 id="索引">索引</h1>
-<pre><code>本质上是通过索引直接定位表的物理元组，加快数据获取的方式，所以索引优化的手段是物理查询优化。
-</code></pre><h1 id="如何利用索引">如何利用索引</h1>
-<pre><code><span class="number">1</span>）索引列作为条件出现在 <span class="keyword">WHERE</span>，HAVING， <span class="keyword">ON</span> 子句中。
-
-<span class="number">2</span>）索引列是被连接的表（内表）对象的列且存在于连接条件中
-
-除了上述两种情况，还有一些特殊情况可以使用索引，如：排序操作、在索引列上求<span class="keyword">MIN</span>、<span class="keyword">MAX</span>值等。
-</code></pre><p>（1）对表做查询，没有列对应作为过滤条件（如出现在WHERE子句中），只能做顺序扫描。</p>
-<p>（2）对表做查询，有列对象且索引列作为过滤条件，可做索引扫描。</p>
-<p>（3）对表做查询，有列对象作为过滤条件，但索引列被运算符“-”处理，查询优化器不能在执行前进行取反运算，这时不可利用索引扫描，只能做顺序扫描。</p>
-<p>（4）对表做查询，有列对象作为过滤条件，且目标列没有超出索引列，可做只读索引扫描，这种扫描方式比单纯的索引扫描的效率更高。</p>
-<p>（5）对表做查询，有索引存在，但选择条件不包括索引列对象，只能使用顺序扫描。</p>
-<p>（6）对表做查询，有索引存在，选择条件包括索引列对象，可使用索引扫描，对选择条件中不存在索引的列作为过滤器被使用。</p>
-<p>（7）对表做查询，有索引存在，选择条件包括索引列对象，但索引列对象位于一个表达式中，参与了运算，不是“key=常量”格式，则索引不可使用，只能是顺序扫描。如：<br>    select a.<em> from a where a.a1 + a.a3 = 2；（a1列是索引），这时只能做顺序扫描。<br>    或<br>    select a.</em> from a where a.a1 = 2 - a.a3 ；（a1列是索引），这时只能做顺序扫描。</p>
-<p>（8）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &gt; 或 &lt; ，可做索引扫描。</p>
-<p>（9）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符 &lt;&gt; ，不可做索引扫描。</p>
-<p>（10）对表做查询，有索引列对象作为过滤条件，操作符是范围操作符BETWEEN-AND ，可做索引扫描。</p>
-<h1 id="索引列的位置对使用索引的影响">索引列的位置对使用索引的影响</h1>
-<pre><code>（<span class="number">1</span>）索引列出现在目标列，通常不可使用索引（但不是全部情况下不能使用索引）
-
-（<span class="number">2</span>）聚集函数<span class="keyword">MIN</span> <span class="subst">/</span> <span class="keyword">MAX</span>用在索引列上，出现在目标列，可使用索引。
-
-（<span class="number">3</span>）索引列出现在<span class="keyword">WHERE</span>子句中，可使用索引。
-
-（<span class="number">4</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为连接条件，有时不可使用索引。（这取决于代价估算模型）
-
-（<span class="number">5</span>）索引列出现在 <span class="keyword">JOIN</span> <span class="subst">/</span> <span class="keyword">ON</span> 子句中，作为限制条件满足“key <span class="subst">&lt;</span>op<span class="subst">&gt;</span> 常量 ”格式可用索引。
-
-（<span class="number">6</span>）（<span class="number">5</span>）索引列出现在 <span class="keyword">WHERE</span>子句中，但与子查询比较，格式上不满足<span class="string">"key &lt;op&gt; 常量"</span>，不可用索引。
-</code></pre><h1 id="索引列对GROUP_BY子句的影响">索引列对GROUP BY子句的影响</h1>
-<pre><code>（<span class="number">1</span>）索引列出现在 <span class="keyword">group</span> <span class="keyword">by</span> 子句中，不触发索引扫描。
-
-（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现索引列，【且】<span class="keyword">GROUP</span> <span class="keyword">BY</span> 子句出现索引列，索引扫描被使用。
-
-（<span class="number">3</span>）<span class="keyword">WHERE</span>子句中出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>子句出现索引列，索引扫描不被使用。
-</code></pre><h1 id="索引列对HAVING子句的影响">索引列对HAVING子句的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现非索引列，且<span class="keyword">GROUP</span> <span class="keyword">BY</span>和HAVING子句出现索引列，索引扫描被使用。
-</code></pre><h1 id="索引列对ORDER_BY子句的影响">索引列对ORDER BY子句的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句出现索引列，可使用索引。
-
-（<span class="number">2</span>）<span class="keyword">ORDER</span> <span class="keyword">BY</span>子句使用非索引列，不可使用索引扫描。
-</code></pre><h1 id="索引列对_DISTINCT_的影响">索引列对 DISTINCT 的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">DISTINCT</span> 子句管辖范围内出现索引列，不可使用索引。
-</code></pre><h1 id="联合索引对索引使用的影响">联合索引对索引使用的影响</h1>
-<pre><code><span class="input"><span class="prompt">（1）使用联合索引的全部索引键，可触发索引的使用。
-
-（2）使用联合索引的前缀部分索引键。如：key_part_1 &lt;op&gt;</span> 常量。可触发索引的使用。</span>
-<span class="input"><span class="prompt">
-（3）使用部分索引，但不是联合索引的前缀部分，如“key_part_2 &lt;op&gt;</span> 常量<span class="string">"，不可触发索引的使用。
-
-（4）使用索引索引的全部索引键，但索引键不是AND操作，不可触发索引的使用。</span></span>
-</code></pre><h1 id="多个索引对索引使用的影响">多个索引对索引使用的影响</h1>
-<pre><code>（<span class="number">1</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引，优选最简单的索引。（但这也是要根据代价估算模型来决定的）
-
-（<span class="number">2</span>）<span class="keyword">WHERE</span>子句出现两个可利用的索引且索引键有重叠部分，优选最简单的索引。
-</code></pre><h1 id="聚簇索引">聚簇索引</h1>
-<blockquote>
-<p>是指表的一个或多个列作为索引的关键字，以关键字的具体值为依据，把所有具有相同值的元组连续放在外存上。当从磁盘扫描读取的块进入内存时，相同值的其他元组在内存中的概率增大，能有效减少IO。即：聚簇索引确定表中数据的物理顺序。聚簇索引对于那些经常要搜索范围值的列特别有效。使用聚簇索引找到包含第一个值的行后，便可以确保包含后续索引值的行在物理相邻。</p>
-</blockquote>
+        <p><a href="http://raghavt.blogspot.com/2011/04/postgresql-90-memory-processes.html" target="_blank" rel="external">原文</a><br>作者：Raghav</p>
+<p>在PostgreSQL构架基础上进一步了解，在这里，通过信息链接我将会讨论关于实用进程和内存。许多提交者已经好好地记录了关于进程和内存，在这里有提供链接。在我这里有适当关于PostgreSQL实用进程的描述。</p>
+<p>每个PostgreSQL实例启动，会有一组实用进程（包括强制性和可选性进程）和内存。两个强制性进程（<code>bgwriter</code>后台写进程和<code>walwriter</code>预写式日志写进程）。你可以通过命令<code>ps -ef | grep postgres</code>检测一下，结果如图10.1.</p>
+<p>图10.1</p>
+<p><img src="/img/postgresql-process-memory-10-1.png" alt=""></p>
+<h2 id="进程和内存概要">进程和内存概要</h2>
+<p>图10.2</p>
+<p><img src="/img/postgresql-process-memory-10-2.png" alt=""></p>
+<p>关于图10.2，它表明了进程附加到PostgreSQL共享内存。</p>
+<h4 id="BGWriter/Writer_Process后台写进程或者叫写进程:"><code>BGWriter/Writer Process</code>后台写进程或者叫写进程:</h4>
+<p>后台写进程或者叫写进程是一种强制性进程:</p>
+<p>所有PostgreSQL服务器进程从磁盘读取数据然后将它们移到共享缓冲池（<code>Shared Buffer Pool</code>）里。 共享缓冲池使用<code>ARC</code>算法或者<code>LRU</code>（最近最少使用）机制来淘汰页数据。<code>BGWRITER</code>后台写进程很多时候都是在休眠，但每次唤醒，它通过搜索共享缓冲池（<code>Shared Buffer Pool</code>）来寻找被修改的页。每次搜索完之后，<code>BGWRITER</code>后台写进程就会选择那些被修改的页，将它们写到磁盘，然后将它们从共享缓冲池里淘汰出来。后台写进程通过三个参数<code>BGWRITER_DELAY</code>、<code>BGWRITER_LRU_PERCENT</code>以及<code>BGWRITER_LRU_MAXPAGES</code>来控制。</p>
+<p><a href="http://www.enterprisedb.com/docs/en/9.0/pg/kernel-resources.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/kernel-resources.html</a><br><a href="http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html</a></p>
+<h4 id="WAL_Writer_Process预写式日志写进程:"><code>WAL Writer Process</code>预写式日志写进程:</h4>
+<p>预写式日志写进程是一个强制性进程。</p>
+<p>预写式日志写进程在适当间隔时会写入并进行文件同步。为了保证事务安全，预写式日志缓冲区在事务日志里持有数据库的更改操作。预写式日志缓冲区在每次事务提交时写到磁盘，预写式日志写进程负责写到磁盘。<code>WAL_WRITER_DELAY</code>参数是用于调用预写式日志写进程的，然而，还有其他参数同样会使预写式日志写进程比较繁忙。下面有一些链接。</p>
+<p><a href="http://www.enterprisedb.com/docs/en/8.4/pg/wal-configuration.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/wal-configuration.html</a></p>
+<h4 id="Stats_Collector_Process状态收集进程:"><code>Stats Collector Process</code>状态收集进程:</h4>
+<p>状态收集进程是可选进程，默认是开启的。 </p>
+<p>状态收集进程会收集一些关于服务器运作的信息。它会计算访问表和索引二者磁盘块的数量和个别的行项数（我注：一个block有可能多个row item，可以通过 select ctid from tbname来查看，第一个数字就是block数，第二个就是row item数)。它同样会跟踪每一个表的总行数，每一个表关于<code>VACUUM</code>（清理）和<code>ANALYZE</code>（分析）动作的信息。收集这些统计数据会对查询执行有额外的开销，自己决定收不收集这些信息。以下的链接有更多关于状态收集进程以及相关参数的说明。</p>
+<p><a href="http://www.enterprisedb.com/docs/en/9.0/pg/monitoring-stats.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/monitoring-stats.html</a></p>
+<h4 id="Autovacuum_Launcher_Process自动清理启动器进程:"><code>Autovacuum Launcher Process</code>自动清理启动器进程:</h4>
+<p>自动清理进程是一个可选进程，默认是开启的。</p>
+<p>为了自动执行<code>VACUUM</code>和<code>ANALYZE</code>命令，自动清理启动器进程是由许多被称为<code>autovacuum workers(自动清理工作者)</code>组成的后台进程。自动清理启动器进程负责启动<code>autovacuum workers(自动清理工作者)</code>进程来处理所有数据库。启动器会按交叉时间地分发工作，在每个时间间隔里会试图在每一个数据库里启动一个工作者（我注：指<code>autovacuum workers</code>），通过参数<code>autovacuum_naptime</code>来设置间隔时间。每个数据库都会启动一个工作者，通过参数<code>autovacuum_max_workers</code>来设置最大数。每一个工作者进程都会在它所在的数据库里检查每一张表，然后在有需要的时候执行<code>VACUUM</code>或者<code>ANALYZE</code>命令。以下的链接有更多关于<code>AUTOVACUUM</code>自动清理启动器进程的相关参数的说明。</p>
+<p><a href="http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-autovacuum.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-autovacuum.html</a></p>
+<h4 id="Syslogger_Process_/_Logger_Process系统日志进程或者叫日志进程_:"><code>Syslogger Process / Logger Process</code>系统日志进程或者叫日志进程 :</h4>
+<p>图10.3</p>
+<p><img src="/img/postgresql-process-memory-10-3.png" alt=""></p>
+<p>日志是一个可选进程，默认是关闭的。</p>
+<p>依据图10.3， 可以清楚地理解所有 实用进程+用户后台进程 + Postmaster守护进程都附加到系统日志进程来记录这它们的活动信息。每一个进程信息都会被记录在<code>PGDATA/pg_log</code> 目录下的<code>.log</code>文件里。<br>注意：如果数据目录是通过<code>INITDB</code>命令创建的，<code>pg_log</code>目录不会在数据目录里自动创建。需要显式地创建该目录。</p>
+<p>调试更多的进程信息会导致服务器的一些额外开销。总是建议日志是最低级别的，如果有要求的话再提高调试级别。以下的链接有更多关于日志参数的说明。</p>
+<p><a href="http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-logging.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-logging.html</a></p>
+<h4 id="Archiver_Process归档进程:"><code>Archiver Process</code>归档进程:</h4>
+<p>图10.4</p>
+<p><img src="/img/postgresql-process-memory-10-4.png" alt=""></p>
+<p>归档进程是可选进程，默认是关闭的。</p>
+<p>上面图10.4 是从我观察PostgreSQL的归档进程而制作的。设置数据库为归档模式，意味着捕捉预写式日志（WAL）数据填充到每个段文件。在段文件重新回收利用之前，会将数据保存到某些地方。</p>
+<p>图中每个数字标签的解释。</p>
+<p>1.在数据库的归档模式，一旦预写式日志（WAL）数据填充满了预写式日志（WAL）段文件，填充满的段文件会被预写式日志写进程（WAL Writer）在目录<code>$PGDATA/pg_xlog/archive_status</code>下创建一个后缀为”.ready”的文件。文件名将会是“段文件名.ready”。</p>
+<p>2.归档进程就会触发去查找那些被预写式日志写进程创建的“.ready”状态的文件。归档进程选择那些后缀是”.ready”的”段_文件号”文件，然后从<code>$PGDATA/pg_xlog</code>复制这些文件到<code>archive_command</code>参数（在postgresql.conf）指定的目的地里。</p>
+<p>3.成功地从源目录复制到目的目录，归档进程会重命名”段-文件名.ready”为<code>段-文件名.done</code>。这就完成了归档的过程。</p>
+<p>不用说，如果在<code>$PGDATA/pg_xlog/archive_status</code>目录里有任何名为”段-文件名.ready”的文件都是正等待着被复制到归档目的地里（我注：通过参数<code>archive_command</code>来指定）。</p>
+<p>更多关于参数和归档的信息，请看以下链接。 </p>
+<p><a href="http://www.enterprisedb.com/docs/en/9.0/pg/continuous-archiving.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/continuous-archiving.html</a></p>
+<p>请把你的意见/建议提交在这篇文章中,将不胜感激。 </p>
+<p>献上我真诚的问候<br>Raghav</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/" data-id="5d32pbaqty79fpto" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="rasdnh2kb5qxa6gy" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
@@ -225,19 +177,10 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
     
 <nav id="article-nav">
   
-    <a href="/2014/12/03/PostgreSQL基础学习（一）/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          PostgreSQL基础学习（一）
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/03/《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《数据库查询优化器的艺术》第二章逻辑查询优化学习笔记</div>
+      <div class="article-nav-title">[翻译]PostgreSQL 9.0 构架</div>
     </a>
   
 </nav>
@@ -248,7 +191,7 @@ W：权重因子。表明IO到<span class="built_in">CPU</span>的相关性，�
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-《数据库查询优化器的艺术》第三章物理查询优化学习笔记" data-title="《数据库查询优化器的艺术》第三章物理查询优化学习笔记" data-url="http://dreamer-yzy.github.io/2014/12/03/《数据库查询优化器的艺术》第三章物理查询优化学习笔记/"></div>
+    <div class="ds-thread" data-thread-key="post--翻译-PostgreSQL-9-0-内存-进程" data-title="[翻译]PostgreSQL 9.0 内存 &amp; 进程" data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
