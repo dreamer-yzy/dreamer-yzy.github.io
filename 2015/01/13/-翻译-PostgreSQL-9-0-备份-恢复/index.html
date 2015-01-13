@@ -3,30 +3,28 @@
 <head>
   <meta charset="utf-8">
   
-  <title>[翻译]PostgreSQL 9.0 构架 | PostgreSQL DBA</title>
+  <title>[翻译]PostgreSQL 9.0 备份 &amp; 恢复 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="原文
-作者：Raghavendra
-很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
-在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
-大部">
+  <meta name="description" content="在PostgreSQL,备份和恢复相对于其他的数据库是非常友好的。许多人也许不赞同，但我们不要陷入争论中。来讨论下备份，PostgreSQL不支持增量备份，然而，有许多非常统一的备份工具和操作系统级别的解决办法来实现这个目的。
+我的关于PostgreSQL备份和恢复的图解给出了一个完整的概念的想法。看图，你可以辨别出哪个备份可以用来还原或恢复。
+逻辑备份
+pg_dump,pg_restore和p">
 <meta property="og:type" content="article">
-<meta property="og:title" content="[翻译]PostgreSQL 9.0 构架">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/">
+<meta property="og:title" content="[翻译]PostgreSQL 9.0 备份 & 恢复">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="原文
-作者：Raghavendra
-很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
-在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
-大部">
-<meta property="og:image" content="/img/postgresql-architecture.png">
+<meta property="og:description" content="在PostgreSQL,备份和恢复相对于其他的数据库是非常友好的。许多人也许不赞同，但我们不要陷入争论中。来讨论下备份，PostgreSQL不支持增量备份，然而，有许多非常统一的备份工具和操作系统级别的解决办法来实现这个目的。
+我的关于PostgreSQL备份和恢复的图解给出了一个完整的概念的想法。看图，你可以辨别出哪个备份可以用来还原或恢复。
+逻辑备份
+pg_dump,pg_restore和p">
+<meta property="og:image" content="/img/postgresql-backup-recovery-1.png">
+<meta property="og:image" content="/img/postgresql-backup-recovery-2.png">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="[翻译]PostgreSQL 9.0 构架">
-<meta name="twitter:description" content="原文
-作者：Raghavendra
-很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。
-在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。
-大部">
+<meta name="twitter:title" content="[翻译]PostgreSQL 9.0 备份 & 恢复">
+<meta name="twitter:description" content="在PostgreSQL,备份和恢复相对于其他的数据库是非常友好的。许多人也许不赞同，但我们不要陷入争论中。来讨论下备份，PostgreSQL不支持增量备份，然而，有许多非常统一的备份工具和操作系统级别的解决办法来实现这个目的。
+我的关于PostgreSQL备份和恢复的图解给出了一个完整的概念的想法。看图，你可以辨别出哪个备份可以用来还原或恢复。
+逻辑备份
+pg_dump,pg_restore和p">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -93,10 +91,10 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post--翻译-PostgreSQL-9-0-构架" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post--翻译-PostgreSQL-9-0-备份-恢复" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/" class="article-date">
-  <time datetime="2015-01-08T12:26:04.000Z" itemprop="datePublished">1月 8 2015</time>
+    <a href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" class="article-date">
+  <time datetime="2015-01-13T12:40:02.000Z" itemprop="datePublished">1月 13 2015</time>
 </a>
     
   <div class="article-category">
@@ -111,7 +109,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      [翻译]PostgreSQL 9.0 构架
+      [翻译]PostgreSQL 9.0 备份 &amp; 恢复
     </h1>
   
 
@@ -119,57 +117,61 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><a href="http://raghavt.blogspot.com/2011/04/postgresql-90-architecture.html" target="_blank" rel="external">原文</a></p>
-<h2 id="作者：Raghavendra">作者：Raghavendra</h2>
-<p>很高兴在这里发布我的第一篇博客，是关于 PostgreSQL 构架的。</p>
-<p>在很长一段时间里，我在工作、学习上都广泛地接触PostgreSQL。作为一个初学者，想到尝试给出一张关于 PostgreSQL 的架构图。PostgreSQL构架包括几部分：内存、进程和文件存储系统，这难以在一张图里展示所有东西。我尽我所能地给出一个关于PostgreSQL构架的概要。</p>
-<p>大部分的设计都是在我们的PostgreSQL提交者（Heikki,Robert Haas,Bruce）的帮助下完成的， 我从他们身上学习到了很多关于PostgreSQL内部的东西。 非常感谢他们的协作让我了解到关于PostgreSQL的一切。我不是黑客，也不是构架师，仅仅是为PostgreSQL新手写了一篇文章。请留下你的评论、建议或者发现到我写文章的任何错误也可留言。</p>
-<p><img src="/img/postgresql-architecture.png" alt=""></p>
-<h2 id="PostgreSQL_9-0_构架概述">PostgreSQL 9.0 构架概述</h2>
-<p>PostgreSQL实例由一系列进程和内存组成。PostgreSQL 使用一个简单的 “每个用户一个进程” 的 客户/服务器 模型。PostgreSQL 有许多种类型进程。</p>
-<ul>
-<li><p><code>postmaster</code>进程，是后台监听进程，<code>postmaster</code>附加到共享内存段（我注：其实就是通过共享内存来进行进程间的通信），但是尽量避免访问它（我注：避免我们自定义去访问该共享内存，而是由PG内部各进程进行协调）。</p>
-</li>
-<li><p>实用进程（<code>bgwriter</code>后台写进程，<code>walwriter</code>预写式日志写进程，<code>syslogger</code>系统日志进程，<code>archiver</code>归档进程，<code>statscollector</code>状态收集器进程 以及 <code>autovacuum</code>自动清理进程）以及</p>
-</li>
-<li><p>用户后台进程（<code>postgres</code>进程自身，服务器进程）</p>
-</li>
-</ul>
-<p>当有一个客户端请求连接到数据库时，首先，请求被<code>postmaster</code>后台进程执行身份认证，受权之后会复制一个服务器后台进程（<code>postgres</code>进程）来处理该请求。从那时起，客户端进程和服务器端进程进程通信，而不再需要<code>postmaster</code>介入。因此，<code>postmaster</code>进程是一直在运行的，一直等待连接请求，然而客户端和服务器端进程会继续进行通信。<code>libpq</code>库允许一个单客户端连接到多个服务器进程。</p>
-<p>然而，每个后台进程都是单线程的，一次仅仅只能执行一条查询；所以，任何的一个<code>前端-后台</code>连接都是单线程的。<code>postmaster</code>进程和<code>postgres</code>进程都是以PostgreSQL的”超级用户”身份的用户ID来运行的。每个打开数据库的会话里都会存在一个<code>postgres</code>进程。一旦经过身份验证的用户连接,它就会与共享内存直接连接（与谁，目的是做什么）。</p>
-<h2 id="内存">内存</h2>
-<ul>
-<li>Shared Buffers，共享缓冲区</li>
-<li>WAL Buffers，预写式日志缓冲区</li>
-<li>clog Buffers，是一种 SLRU 类型的缓冲区(Commit log，提交日志缓冲区）</li>
-<li>Other Buffers，其他缓冲区</li>
-</ul>
-<p>PostgreSQL共享内存是非常大的并且所有缓冲区都没有同步的，这意味着都是独立的。一些专家/提交者已经将他们的大量关于PostgreSQL的经验信息放在网站上。结合PostgreSQL文档和这个构架图就会对PostgreSQL构架的有个基础的了解。以下链接有更多概述.</p>
-<p><a href="http://www.postgresql.org/docs/9.0/interactive/runtime-config-resource.html" target="_blank" rel="external">http://www.postgresql.org/docs/9.0/interactive/runtime-config-resource.html</a><br><a href="http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/8.4/pg/runtime-config-resource.html</a><br><a href="http://www.postgresql.org/files/documentation/books/aw_pgsql/hw_performance/0.html" target="_blank" rel="external">http://www.postgresql.org/files/documentation/books/aw_pgsql/hw_performance/0.html</a></p>
-<h2 id="实用进程:">实用进程:</h2>
-<h4 id="强制性进程：这些进程是没有选项来_开启/关闭_的">强制性进程：这些进程是没有选项来 开启/关闭 的</h4>
-<ul>
-<li><p>BGWriter</p>
-</li>
-<li><p>WAL Writer</p>
-</li>
-</ul>
-<h4 id="可选进程：这些进程是有选项来_开启/关闭_的">可选进程：这些进程是有选项来 开启/关闭 的</h4>
-<ul>
-<li>Stats-collector，状态收集进程</li>
-<li>Autovacuum launcher，自动清理进程</li>
-<li>Archiver，归档进程</li>
-<li>Syslogger，系统日志进程</li>
-<li>WAL Sender，预写式日志发送进程</li>
-<li>WAL Receiver，预写式日志接收进程</li>
-</ul>
-<p>不久，我将会提交一张关于实用性进程和用户后台进程的概要图</p>
-<p>献上我真诚的问候<br>Raghav</p>
+        <p><img src="/img/postgresql-backup-recovery-1.png" alt=""></p>
+<p>在PostgreSQL,备份和恢复相对于其他的数据库是非常友好的。许多人也许不赞同，但我们不要陷入争论中。来讨论下备份，PostgreSQL不支持增量备份，然而，有许多非常统一的备份工具和操作系统级别的解决办法来实现这个目的。</p>
+<p>我的关于PostgreSQL备份和恢复的图解给出了一个完整的概念的想法。看图，你可以辨别出哪个备份可以用来还原或恢复。</p>
+<h2 id="逻辑备份">逻辑备份</h2>
+<p><code>pg_dump</code>,<code>pg_restore</code>和<code>pg_dumpall</code>工具是用来进行逻辑备份的。<code>pg_dump</code>和<code>pg_restore</code>可以帮助你在数据库级别、模式级别和表级别备份。<code>pg_dumpall</code>用于集群级别备份。</p>
+<p><code>pg_dump</code>支持三种格式，Plain SQL 格式（纯文本SQL格式）， Custom 格式（自定义格式）和 Tar格式（打包格式）。Custom和Tar格式的备份与<code>pg_restore</code>工具是兼容的，然而，Plain SQL（纯文本SQL）格式的备份是与<code>psql</code>工具兼容的用于还原。</p>
+<p>以下是每个备份级别和相关的还原命令的例子。</p>
+<p>注意：在<code>.bash_profile</code>里设置默认的<code>PGDATABASE</code>, <code>PGUSER</code>, <code>PGPASSWORD</code>和<code>PGPORT</code>值。（在Windows里意思是环境变量）</p>
+<h4 id="纯文本SQL格式的备份和还原">纯文本SQL格式的备份和还原</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">$ pg_dump -U username -Fp dbname  &gt;</span>  filename </span></div><div class="line"><span class="keyword">or</span> </div><div class="line"><span class="variable">$ </span>pg_dump -<span class="constant">U</span> username dbname -f  filename </div><div class="line"><span class="keyword">or</span> </div><div class="line"><span class="variable">$ </span>pg_dump -<span class="constant">Fp</span> -<span class="constant">U</span> username dbname -f  filename </div><div class="line"> </div><div class="line">使用 psql 命令来还原</div><div class="line"> </div><div class="line"><span class="variable">$ </span>psql -<span class="constant">U</span> username -f filename dbname </div><div class="line"><span class="keyword">or</span> </div><div class="line">postgres=<span class="comment"># \i SQL-file-name     //in psql terminal with \i option</span></div></pre></td></tr></table></figure>
+
+
+<h4 id="自定义格式">自定义格式</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ pg_dump -Fc dbname <span class="operator">-f</span> filename </div><div class="line">$ pg_restore -Fc -U username <span class="operator">-d</span> dbname filename.dmp</div></pre></td></tr></table></figure>
+
+<h4 id="Tar格式">Tar格式</h4>
+<p>$ pg_dump -Ft dbname -f filename<br>$ pg_restore -U username -d dbname filename<br>or<br>$ cat tar-file.tar | psql -U username dbname  </p>
+<p>注意：模式级别和表级别备份执行方式是一样的，通过添加相关的选项就可以了。</p>
+<h4 id="集群级别备份">集群级别备份</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">$pg_dumpall -p portnumber &gt;</span> filename </span></div><div class="line"> </div><div class="line">使用 psql 命令来还原</div><div class="line"> </div><div class="line"><span class="variable">$ </span>psql -f filename</div></pre></td></tr></table></figure>
+
+<p>这些都是非常好的备份和恢复的方法。特别地，<code>www.2ndQuadrant.com</code> 出版的，作者是Simon Riggs 和 Hannu Krosing 的书： “PostgreSQL 9 Administration Cookbook - 2010”，是学习PostgreSQL备份和恢复的很好方式。</p>
+<h2 id="物理备份（文件系统备份）">物理备份（文件系统备份）</h2>
+<h4 id="冷备份">冷备份</h4>
+<p>在冷备份中，当Postgre实例关闭时，进行一个非常简单的<code>/data</code>目录的文件系统备份，意思是，实现一个前后一致的数据目录备份，在复制之前，数据库服务器应该关闭。PostgreSQL通过软链接来灵活地保持<code>pg_xlog</code>和<code>pg_tablspce</code>在不同挂载点。当复制<code>/data</code>目录并想包括那些软链接的数据时，可以使用以下命令。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">tar czf backup<span class="built_in">.</span>tar<span class="built_in">.</span>gz <span class="variable">$PGDATA</span> </div><div class="line"><span class="literal">or</span> </div><div class="line">cp <span class="attribute">-r</span> <span class="variable">$PGDATA</span> /backup<span class="subst">/</span> </div><div class="line"><span class="literal">or</span> </div><div class="line">rsync <span class="attribute">-a</span> <span class="variable">$PGDATA</span> /wherever/<span class="built_in">data</span></div></pre></td></tr></table></figure>
+
+<h4 id="热备份（在线备份）:">热备份（在线备份）:</h4>
+<p>在热备份中，集群会一直在启动和运行，并且数据库应该是在归档日志模式中。两个系统函数将会唤醒实例来开始、关闭热备份处理（<code>pg_start_backup()</code>, <code>pg_stop_backup()</code>）。在开始进一步进行在线热备前，让我们讨论一下对于在线备份中强制的数据库归档模式。</p>
+<h4 id="开启_WAL（预写式日志）归档:">开启 WAL（预写式日志）归档:</h4>
+<p>下面将简要介绍一下 <code>PITR</code>/调整 WAL 等等。目前，我们先看看WAL归档。在PostgreSQL数据库系统，实际上数据库“写”一些额外被称为预写日志（WAL）文件到磁盘。它包含了一些在数据库系统中的写记录。在崩溃的情况下，数据库可以从这些记录中还原或恢复。</p>
+<p>一般地，写日志记录会在定期匹配时（叫做checkpoints,检查点）记录该检查点，然后在它不再需要时删除它。你也可以使用WAL作为备份，因为它是一个所有数据库的写记录。（我注：就是更改数据库的操作）。</p>
+<h4 id="WAL归档概念:">WAL归档概念:</h4>
+<p>WAL是由每16MB大小（我注：文件）组成的，这被称为segments（段）。WAL驻留在<code>pg_xlog</code>目录下，这是一个位于<code>数据目录</code>下的子目录。文件名会被PostgreSQL实例按数字升序来命名，执行一个WAL基础备份，这需要一个基础备份，一个数据目录的完整备份，并且WAL段会介于基础备份和当前日期之间。</p>
+<p>配置WAL段归档，可以通过在<code>postgresql.conf</code>里的两个配置参数来设置:<code>archive_command</code>和<code>archive_mode</code>。使集群进入归档模式需要重启PostgreSQL。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="setting">archive_mode= <span class="value"><span class="keyword">on</span>/<span class="keyword">off</span> (boolean parameter) </span></span></div><div class="line"><span class="setting">archive_command = <span class="value">'cp –i %p /Archive/Location/f% '</span></span></div></pre></td></tr></table></figure>
+
+<p>注意：<code>%p</code>为通过路径来复制文件来作为一个文件名，<code>%f</code>没有为目标文件设置目录。（我注：也就是%p代表pg_xlog的绝对路径的文件，%f表示pg_xlog目录下的文件名，所以%p前没有目录，%f前有目录前缀）。</p>
+<p>关于归档进程的更加多信息，请参考<a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/">“PostgreSQL 9.0 内存 &amp; 进程”</a></p>
+<h4 id="在线备份_:">在线备份 :</h4>
+<p>采取在线备份：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">步骤 1 <span class="value">: 在psql终端执行 <span class="function">pg_start_backup</span>(<span class="string">'lable'</span>)  </span></div><div class="line">postgres=# select <span class="function">pg_start_backup</span>(<span class="string">'fb'</span>); </div><div class="line"></div><div class="line">步骤 2 <span class="value">: 操作系统级别地复制 <span class="variable">$PGDATA</span> 目录到任何一个备份的位置。</span></div><div class="line">$ cp -r <span class="variable">$PGDATA</span>  /anylocation </div><div class="line"></div><div class="line">步骤 <span class="number">3</span> : 在psql终端执行 <span class="function">pg_stop_backup</span>()</div><div class="line">postgres=# select <span class="function">pg_stop_backup</span>(); </div><div class="line"></div><div class="line">注意：这两个函数不需要在数据库的同一个会话里执行。备份模式是全局的并且是持久的。</div></pre></td></tr></table></figure>
+
+<p><img src="/img/postgresql-backup-recovery-2.png" alt=""></p>
+<p>在PostgreSQL中，没有目录来保存在线备份的开始时间和结束时间。然而，当在线备份正在进行时，会有数个文件会被创建和删除。</p>
+<p><code>pg_start_backup(&#39;label&#39;)</code>和<code>pg_stop_backup</code>是两个执行在线备份的系统函数。通过<code>pg_start_backup(&#39;label&#39;)</code>会创建一个文件<code>backup_label</code>在<code>$PGDATA</code>目录下，通过<code>pg_stop_backup()</code>会创建一个文件<code>wal-segement-number.backup</code>在<code>$PGDATA/pg_xlog</code>目录下。<code>backup_label</code>会给出开始时间以及WAL(预写式日志）段的检查点位置，也会通知PostgreSQL实例是处于备份模式。在<code>$PGDATA/pg_xlog</code>目录下的<code>wal-segment-number.backup</code>文件描述了开始和停止时间，带有WAL段号的检查点位置。</p>
+<p>注意： 在<code>pg_stop_backup()</code>之后，PostgreSQL实例就会删除<code>backup_label</code>文件。</p>
+<p>提交你的评论，建议。</p>
+<p>—Raghav</p>
+<p>By Raghavendra </p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="uz2shzq5xoaks0xz" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="o30bs46ebdf1oon5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -180,19 +182,10 @@ ga('send', 'pageview');
     
 <nav id="article-nav">
   
-    <a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          [翻译]PostgreSQL 9.0 内存 &amp; 进程
-        
-      </div>
-    </a>
   
-  
-    <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《啊哈！算法》学习笔记之栈</div>
+      <div class="article-nav-title">[翻译]PostgreSQL 9.0 内存 &amp; 进程</div>
     </a>
   
 </nav>
@@ -203,7 +196,7 @@ ga('send', 'pageview');
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post--翻译-PostgreSQL-9-0-构架" data-title="[翻译]PostgreSQL 9.0 构架" data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/"></div>
+    <div class="ds-thread" data-thread-key="post--翻译-PostgreSQL-9-0-备份-恢复" data-title="[翻译]PostgreSQL 9.0 备份 &amp; 恢复" data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
