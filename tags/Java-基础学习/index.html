@@ -82,6 +82,89 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-集群中Session解决方案之Spring-Session" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/14/集群中Session解决方案之Spring-Session/" class="article-date">
+  <time datetime="2015-01-14T12:59:23.000Z" itemprop="datePublished">1月 14 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/14/集群中Session解决方案之Spring-Session/">集群中Session解决方案之Spring Session</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="什么是_Spring_Session">什么是 Spring Session</h2>
+<p>主要功能如下：</p>
+<ul>
+<li>从任意的环境中访问一个会话 (例如. web, messaging infrastructure, 等等)</li>
+<li>WEB 环境下</li>
+<li>供应商中立的情况下支持集群</li>
+<li>可插拔策略可以确定 session id</li>
+<li>WebSocket 活跃的时候可以简单的保持 HttpSession</li>
+</ul>
+<p>主要特性</p>
+<ul>
+<li>API and implementations (i.e. Redis) for managing a user’s session</li>
+<li>HttpSession</li>
+<li>Clustered Sessions</li>
+<li>Multiple Browser Sessions</li>
+<li>RESTful APIs</li>
+<li>支持WebSocket </li>
+</ul>
+<h2 id="实现原理">实现原理</h2>
+<p>因为规范里的 <code>HttpSession</code> 以及 <code>HttpServletRequest</code> 都是一种接口，所以可以通过实现该接口来处理我们自定义的逻辑。</p>
+<p>Spring Session里的自定义实现<code>HttpServletRequest</code>的逻辑代码：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SessionRepositoryRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="title">SessionRepositoryRequestWrapper</span>(HttpServletRequest original) {</div><div class="line">        <span class="keyword">super</span>(original);</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> HttpSession <span class="title">getSession</span>() {</div><div class="line">        <span class="keyword">return</span> getSession(<span class="keyword">true</span>);</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> HttpSession <span class="title">getSession</span>(<span class="keyword">boolean</span> createNew) {</div><div class="line">        <span class="comment">// create an HttpSession implementation from Spring Session</span></div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="comment">// ... other methods delegate to the original HttpServletRequest ...</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p><code>HttpServletRequestWrapper</code>是<code>HttpServletRequest</code>实现的一种包装器，可通过继承它来实现自己的主要逻辑代码，而不用直接实现<code>HttpServletRequest</code>接口来写大部分复杂的代码，只需要关注自己想要覆盖逻辑代码即可。<br>在这里，因为我们想要实现的是Session共享机制，所以这里只加入了处理Session的业务逻辑即可。<br>Spring Session默认情况下只有两种Session策略。一种是使用Map来实现，一种是使用Redis来实现。</p>
+<p><img src="/img/cluster-spring-session.png" alt=""></p>
+<p>如果我们想要实现自定义的Session持久化机制，我们可以实现该接口，然后添加到Session策略实现方式即可。</p>
+<p>包装完自定义的<code>HttpServletRequest</code>后，就可使用了。方法是通过 Filter 来将Spring包装的HttpServletRequest代替容器原有的即可。代码如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SessionRepositoryFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response, FilterChain chain) {</div><div class="line">        HttpServletRequest httpRequest = (HttpServletRequest) request;</div><div class="line">        SessionRepositoryRequestWrapper customRequest =</div><div class="line">              <span class="keyword">new</span> SessionRepositoryRequestWrapper(httpRequest);</div><div class="line"> </div><div class="line">        chain.doFilter(customRequest, response, chain);</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="comment">// ...</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h2 id="Maven">Maven</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">dependency</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework.session<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-session-data-redis<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.0.0.BUILD-SNAPSHOT<span class="tag">&lt;/<span class="title">version</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">type</span>&gt;</span>pom<span class="tag">&lt;<span class="title">type</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">dependency</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">dependency</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.springframework<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>spring-web<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">version</span>&gt;</span>4.1.3.RELEASE<span class="tag">&lt;/<span class="title">version</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">dependency</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<h2 id="Hello_World（以Spring为基础，其他框架，也可以参考该思路作小修改即可）">Hello World（以Spring为基础，其他框架，也可以参考该思路作小修改即可）</h2>
+<p>web.xml 添加以下 Filter</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="variable">&lt;filter&gt;</span></div><div class="line">    <span class="variable">&lt;filter-name&gt;</span>spring-session<span class="variable">&lt;/filter-name&gt;</span></div><div class="line">    <span class="variable">&lt;filter-class&gt;</span>org.springframework.web.filter.DelegatingFilterProxy<span class="variable">&lt;/filter-class&gt;</span></div><div class="line">    <span class="variable">&lt;init-param&gt;</span></div><div class="line">        <span class="variable">&lt;param-name&gt;</span>targetBeanName<span class="variable">&lt;/param-name&gt;</span></div><div class="line">        <span class="variable">&lt;param-value&gt;</span>springSession<span class="variable">&lt;/param-value&gt;</span></div><div class="line">    <span class="variable">&lt;/init-param&gt;</span></div><div class="line"><span class="variable">&lt;/filter&gt;</span></div><div class="line"> </div><div class="line"><span class="variable">&lt;filter-mapping&gt;</span></div><div class="line">    <span class="variable">&lt;filter-name&gt;</span>spring-session<span class="variable">&lt;/filter-name&gt;</span></div><div class="line">    <span class="variable">&lt;url-pattern&gt;</span>/<span class="keyword">*</span><span class="variable">&lt;/url-pattern&gt;</span></div><div class="line"><span class="variable">&lt;/filter-mapping&gt;</span></div></pre></td></tr></table></figure>
+
+<p>spring.xml 添加</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">&lt;!--这里添加的是<span class="type">Redis</span>，因为使用的是<span class="type">Spring</span>里自带的<span class="type">Redis</span>的<span class="type">Session</span>策略 --&gt;</div><div class="line">&lt;bean id=<span class="string">"v2redisConnectionFactory"</span> class=<span class="string">"org.springframework.data.redis.connection.jedis.JedisConnectionFactory"</span></div><div class="line">    p:host-name=<span class="string">"10.0.0.40"</span> p:port=<span class="string">"6379"</span> p:use-pool=<span class="string">"true"</span> p:database=<span class="string">"8"</span> /&gt;</div><div class="line"> </div><div class="line">&lt;bean id=<span class="string">"stringRedisSerializer"</span></div><div class="line">    class=<span class="string">"org.springframework.data.redis.serializer.StringRedisSerializer"</span>/&gt;</div><div class="line"> </div><div class="line">&lt;bean id=<span class="string">"v2redisTemplate"</span> class=<span class="string">"org.springframework.data.redis.core.RedisTemplate"</span></div><div class="line">    p:connection-factory-<span class="keyword">ref</span>=<span class="string">"v2redisConnectionFactory"</span></div><div class="line">    p:keySerializer-<span class="keyword">ref</span>=<span class="string">"stringRedisSerializer"</span></div><div class="line">    p:valueSerializer-<span class="keyword">ref</span>=<span class="string">"stringRedisSerializer"</span></div><div class="line">    p:hashKeySerializer-<span class="keyword">ref</span>=<span class="string">"stringRedisSerializer"</span></div><div class="line">    p:hashValueSerializer-<span class="keyword">ref</span>=<span class="string">"stringRedisSerializer"</span> /&gt;</div><div class="line">&lt;!-- 这里的是为了下面的 <span class="type">Session</span>策略过滤器提供构造函数传入的参数，因为<span class="type">Session</span>过滤器要依赖该对象来构造，所以创建一个先 --&gt;</div><div class="line">&lt;bean name=<span class="string">"redisOperationsSessionRepository"</span> class=<span class="string">"org.springframework.session.data.redis.RedisOperationsSessionRepository"</span>&gt;</div><div class="line">    &lt;constructor-arg <span class="keyword">ref</span>=<span class="string">"v2redisConnectionFactory"</span>&gt;&lt;/constructor-arg&gt;</div><div class="line">&lt;/bean&gt;</div><div class="line"> </div><div class="line">&lt;!-- 这个是<span class="type">Session</span>策略过滤器，即将容器原有的<span class="type">Session</span>持久化机制，代替为<span class="type">Spring</span>的 <span class="type">Redis</span>持久化<span class="type">Session</span>机制。 --&gt;</div><div class="line">&lt;!-- 注意，这个名字与 web.xml里的targetBean的下value是要一致的。 --&gt;</div><div class="line">&lt;bean name=<span class="string">"springSession"</span> class=<span class="string">"org.springframework.session.web.http.SessionRepositoryFilter"</span>&gt;</div><div class="line">    &lt;constructor-arg <span class="keyword">ref</span>=<span class="string">"redisOperationsSessionRepository"</span>&gt;&lt;/constructor-arg&gt;</div><div class="line">&lt;/bean&gt;</div></pre></td></tr></table></figure>
+
+<p>使用上跟普通使用 Session 的方式是一样的。</p>
+<p>打完收工。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/14/集群中Session解决方案之Spring-Session/" data-id="ttryntmypa95wsl5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Session/">Session</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring/">Spring</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/集群/">集群</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-Java乱码解决方案" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2014/12/29/Java乱码解决方案/" class="article-date">
@@ -120,7 +203,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="ydfun5wba3c6hybn" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/29/Java乱码解决方案/" data-id="j0og7duur7gzkl85" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
@@ -169,7 +252,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="w5s5y7xzhqcwi2gg" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="igk1i64d77aqentj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-线程/">Java 线程</a></li></ul>
@@ -224,7 +307,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="ak7q6caip03g8y91" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-为什么在Java里不能将Integer强制转换成String/" data-id="rp7utpqs1hmyl7s5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li></ul>
@@ -245,7 +328,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">29</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">8</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">30</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">28</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -254,7 +337,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">17</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -263,7 +346,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 11.67px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 13.33px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.33px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 16.67px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.00px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.00px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.86px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.29px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.57px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.43px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 12.86px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 17.14px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 12.86px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 12.86px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.43px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.43px;">SQL基础</a><a href="/tags/Session/" style="font-size: 10.00px;">Session</a><a href="/tags/Spring/" style="font-size: 10.00px;">Spring</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.71px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.71px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a><a href="/tags/集群/" style="font-size: 10.00px;">集群</a>
     </div>
   </div>
 
@@ -272,7 +355,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -284,6 +367,14 @@ ga('send', 'pageview');
       <ul>
         
           <li>
+            <a href="/2015/01/14/集群中Session解决方案之Spring-Session/">集群中Session解决方案之Spring Session</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/14/-翻译-PostgreSQL中的死锁/">[翻译]PostgreSQL中的死锁</a>
+          </li>
+        
+          <li>
             <a href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/">[翻译]PostgreSQL 9.0 备份 &amp; 恢复</a>
           </li>
         
@@ -293,14 +384,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/01/08/-翻译-PostgreSQL-9-0-构架/">[翻译]PostgreSQL 9.0 构架</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/08/《啊哈！算法》学习笔记之栈/">《啊哈！算法》学习笔记之栈</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/08/《啊哈！算法》学习笔记之队列/">《啊哈！算法》学习笔记之队列</a>
           </li>
         
       </ul>
