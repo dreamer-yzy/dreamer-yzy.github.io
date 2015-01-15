@@ -3,38 +3,29 @@
 <head>
   <meta charset="utf-8">
   
-  <title>PostgreSQL删除表空间 | PostgreSQL DBA</title>
+  <title>PostgreSQL中代替MySQL的内存表方法 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
-123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
-
-原因
-想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
-找出有哪些对象使用到了表空间
-SQL语句：
-1234567891">
+  <meta name="description" content="今天在群里发现有人问PostgreSQL里，有没有类似MySQL的内存表（Memory引擎）。
+其实在PostgreSQL里，就只有一种表：堆表。不像MySQL那种提供那么多种的表类型（这个是由引擎来决定的，比如InnoDB的是索引组织表等）。
+替代方法
+1） 使用RAM Disk。创建一个表空间到Ram Disk上，然后建表的时候指定表空间到该 Ram Disk即可。
+2） 如果需要创建那种全局">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PostgreSQL删除表空间">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/">
+<meta property="og:title" content="PostgreSQL中代替MySQL的内存表方法">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
-123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
-
-原因
-想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
-找出有哪些对象使用到了表空间
-SQL语句：
-1234567891">
+<meta property="og:description" content="今天在群里发现有人问PostgreSQL里，有没有类似MySQL的内存表（Memory引擎）。
+其实在PostgreSQL里，就只有一种表：堆表。不像MySQL那种提供那么多种的表类型（这个是由引擎来决定的，比如InnoDB的是索引组织表等）。
+替代方法
+1） 使用RAM Disk。创建一个表空间到Ram Disk上，然后建表的时候指定表空间到该 Ram Disk即可。
+2） 如果需要创建那种全局">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL删除表空间">
-<meta name="twitter:description" content="昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 
-123postgres=# drop tablespace mytmp;ERROR:  tablespace 'mytmp' is not emptypostgres=#
-
-原因
-想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。
-找出有哪些对象使用到了表空间
-SQL语句：
-1234567891">
+<meta name="twitter:title" content="PostgreSQL中代替MySQL的内存表方法">
+<meta name="twitter:description" content="今天在群里发现有人问PostgreSQL里，有没有类似MySQL的内存表（Memory引擎）。
+其实在PostgreSQL里，就只有一种表：堆表。不像MySQL那种提供那么多种的表类型（这个是由引擎来决定的，比如InnoDB的是索引组织表等）。
+替代方法
+1） 使用RAM Disk。创建一个表空间到Ram Disk上，然后建表的时候指定表空间到该 Ram Disk即可。
+2） 如果需要创建那种全局">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -101,10 +92,10 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-PostgreSQL删除表空间" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-PostgreSQL中代替MySQL的内存表方法" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/26/PostgreSQL删除表空间/" class="article-date">
-  <time datetime="2014-12-26T12:30:19.000Z" itemprop="datePublished">12月 26 2014</time>
+    <a href="/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" class="article-date">
+  <time datetime="2015-01-15T15:41:08.000Z" itemprop="datePublished">1月 15 2015</time>
 </a>
     
   <div class="article-category">
@@ -119,7 +110,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      PostgreSQL删除表空间
+      PostgreSQL中代替MySQL的内存表方法
     </h1>
   
 
@@ -127,34 +118,38 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>昨天在群里看到有同鞋问：如何删除表空间？因为删除的时候，一直报 </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=<span class="preprocessor"># drop tablespace mytmp;</span></div><div class="line"><span class="keyword">ERROR</span>:  tablespace <span class="string">"mytmp"</span> <span class="keyword">is</span> <span class="keyword">not</span> empty</div><div class="line">postgres=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
+        <p>今天在群里发现有人问PostgreSQL里，有没有类似MySQL的内存表（Memory引擎）。</p>
+<p>其实在PostgreSQL里，就只有一种表：堆表。不像MySQL那种提供那么多种的表类型（这个是由引擎来决定的，比如InnoDB的是索引组织表等）。</p>
+<h2 id="替代方法">替代方法</h2>
+<p>1） 使用RAM Disk。创建一个表空间到Ram Disk上，然后建表的时候指定表空间到该 Ram Disk即可。</p>
+<p>2） 如果需要创建那种全局可见的临时表，建表时可以使用<code>UNLOGGED</code>选项来创建表。这种表性能比一般的快。</p>
+<h2 id="实战使用_Ram_Disk_作为“临时表”">实战使用 Ram Disk 作为“临时表”</h2>
+<p>步骤1：创建一个Ram Disk</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo mount tmpfs <span class="regexp">/home/</span>postgres<span class="regexp">/ramdisk/</span> -t tmpfs</div></pre></td></tr></table></figure>
 
-<h2 id="原因">原因</h2>
-<p>想要删除表空间，那么该表空间必须为空（即没有任何其他的对象会使用到该表空间）才能被删除。</p>
-<h2 id="找出有哪些对象使用到了表空间">找出有哪些对象使用到了表空间</h2>
-<p>SQL语句：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">postgres=# SELECT                </div><div class="line"><span class="code">  c.relname,</span></div><div class="line"><span class="code">  t.spcname</span></div><div class="line">FROM</div><div class="line"><span class="code">  pg_class c</span></div><div class="line"><span class="code">    JOIN pg_tablespace t ON c.reltablespace = t.oid</span></div><div class="line">WHERE</div><div class="line"><span class="code">  t.spcname = 'mytmp';</span></div><div class="line"><span class="header">relname | spcname</span></div><div class="line">---------+---------</div><div class="line"><span class="code"> tsp     | mytmp</span></div><div class="line">(1 row)</div><div class="line"><span class="code"> </span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
+<p>步骤2：更改拥有者为Postgres</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">sudo</span> chown postgres:postgres /home/postgres/ -R</div></pre></td></tr></table></figure>
 
-<h2 id="删除">删除</h2>
-<p>找到表空间的使用对象时，这时如果确实要删除表空间，那就要将该表空间下的表对象都删除了最后才能删除表空间。</p>
-<h4 id="删除该表空间下的表">删除该表空间下的表</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">drop</span> <span class="keyword">table</span> tsp;</span></div><div class="line"><span class="operator"><span class="keyword">DROP</span> <span class="keyword">TABLE</span></span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
+<p>步骤3：创建Ram的表空间</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">tablespace</span> ramdis location <span class="string">'/home/postgres/ramdisk'</span>;</span></div></pre></td></tr></table></figure>
 
-<h4 id="删除该表空间">删除该表空间</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">drop</span> <span class="keyword">tablespace</span> mytmp;</span></div><div class="line"><span class="operator"><span class="keyword">DROP</span> <span class="keyword">TABLESPACE</span></span></div><div class="line">postgres=#</div></pre></td></tr></table></figure>
+<p>步骤4：创建一个表，并指定表空间到Ram Disk的表空间</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">create</span> <span class="keyword">table</span> ram (id <span class="built_in">serial</span>, name <span class="built_in">varchar</span>(<span class="number">40</span>), age <span class="built_in">int</span>) <span class="keyword">TABLESPACE</span> ramdis;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span></span></div><div class="line">test=#</div></pre></td></tr></table></figure>
 
-<h4 id="再检查一次看看">再检查一次看看</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="variable">postgres=</span><span class="comment"># select * from pg_tablespace where spcname = 'mytmp';</span></div><div class="line">spcname | spcowner | spcacl | spcoptions</div><div class="line">---------+----------+--------+------------</div><div class="line">(<span class="number">0</span> rows)</div><div class="line"> </div><div class="line"><span class="variable">postgres=</span><span class="comment"># </span></div><div class="line"></div><div class="line"><span class="variable">postgres=</span><span class="comment"># SELECT               </span></div><div class="line">postgres-<span class="comment">#   c.relname,</span></div><div class="line">postgres-<span class="comment">#   t.spcname</span></div><div class="line">postgres-<span class="comment"># FROM</span></div><div class="line">postgres-<span class="comment">#   pg_class c</span></div><div class="line">postgres-<span class="comment">#     JOIN pg_tablespace t ON c.reltablespace = t.oid</span></div><div class="line">postgres-<span class="comment"># WHERE</span></div><div class="line">postgres-<span class="comment">#   t.spcname = 'mytmp';</span></div><div class="line">relname | spcname</div><div class="line">---------+---------</div><div class="line">(<span class="number">0</span> rows)</div><div class="line"> </div><div class="line"><span class="variable">postgres=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
+<h2 id="注意">注意</h2>
+<p>有人担心重启电脑后，Ram disk 的表空间不存在了，会不会影响PostgreSQL服务器的启动。这其实是不用担心的，本人测试过，关闭PostgreSQL，然后删除Ram Disk 的表空间目录，然后再启动PostgreSQL，完全是没问题的。</p>
+<p>不过，创建在该表空间的表就不能操作了。典型的错误提示如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=<span class="comment"># select * from ram;</span></div><div class="line">ERROR:  could <span class="operator">not</span> <span class="built_in">open</span> <span class="built_in">file</span> <span class="string">"pg_tblspc/16718/PG_9.4_201409291/16389/16729"</span>: No such <span class="built_in">file</span> <span class="operator">or</span> <span class="built_in">directory</span></div><div class="line">test=<span class="comment">#</span></div></pre></td></tr></table></figure>
 
+<p>删除该表就OK了。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="r9hshba2mit0u8xo" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="csn1vlr60bvx48tn" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
 
     </footer>
   </div>
@@ -162,19 +157,10 @@ ga('send', 'pageview');
     
 <nav id="article-nav">
   
-    <a href="/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          PostgreSQL查看及设置参数、单位、描述等信息
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2015/01/14/集群中Session解决方案之Spring-Session/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">PostgreSQL中 copy 和 \copy 的区别</div>
+      <div class="article-nav-title">集群中Session解决方案之Spring Session</div>
     </a>
   
 </nav>
@@ -185,7 +171,7 @@ ga('send', 'pageview');
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-PostgreSQL删除表空间" data-title="PostgreSQL删除表空间" data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/"></div>
+    <div class="ds-thread" data-thread-key="post-PostgreSQL中代替MySQL的内存表方法" data-title="PostgreSQL中代替MySQL的内存表方法" data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
