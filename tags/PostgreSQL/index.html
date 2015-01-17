@@ -82,6 +82,99 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post--翻译-高效使用PostgreSQL索引" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/17/-翻译-高效使用PostgreSQL索引/" class="article-date">
+  <time datetime="2015-01-17T00:54:20.000Z" itemprop="datePublished">1月 17 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/17/-翻译-高效使用PostgreSQL索引/">[翻译]高效使用PostgreSQL索引</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="https://devcenter.heroku.com/articles/postgresql-indexes" target="_blank" rel="external">原文</a></p>
+<p>在Postgres里有许多种索引类型，也有不同的方式来使用它们。在本文中,我们概述一下可用的索引类型，并解释不同的使用和维护最常见的索引类型的方式:B树。</p>
+<p>索引是一种从表中检索的行数相对较小的有效方式。如果从一个表中检索的行数相对较小时索引是非常有用的（例如：按条件来检索行——WHERE子句选择）。对于免排序的，B树索引也是非常有用的。</p>
+<h2 id="索引类型">索引类型</h2>
+<p>Postgres支持许多不同的索引类型：</p>
+<ul>
+<li><p>B树对于当你执行<code>CREATE INDEX</code>时是默认的索引类型。实际上，所有数据库都有一些B树索引。字母B代表是<code>Balanced</code>（平衡），这个大意是,两边的树的数据量是大致相同的。因此，必须遍历去找行的层次数总是在相同的范围内。B树索引可以有效地用于等值和范围查询，并且也可以用于检索<code>NULL</code>值。B树的设计与缓存可以很好地工作，即使只是缓存部分。</p>
+</li>
+<li><p>哈希索引只在等值比较时才有用，但是你几乎从来没有想使用它们，因为它们不是事务安全的，崩溃后需要手工重建，并且是不会被复制到从库的，因此，比B树索引的优势是相当小的。</p>
+</li>
+<li><p>当一个索引必须映射多个值到一行时通用反转索引（GIN，Generalized Inverted Indexes）（通用逆向索引、广义倒排索引）是非常有用的，然而当一行有一个单键值时，B树索引会做一些优化。GIN对于索引数组值以及实现全文搜索是比较好的。</p>
+</li>
+<li><p>通用搜索树（广义搜索树）（GiST，Generalized Search Tree）索引允许你建立普通平衡树结构，也能用于等值和范围比较之外的操作。它们用于索引几何数据类型，也可用于全文搜索。</p>
+</li>
+</ul>
+<p>本文是关于如何最有效地使用默认的B树索引。GIN和GiST索引使用例子，请参考扩展包说明。</p>
+<h2 id="为什么我的查询没有用上索引？">为什么我的查询没有用上索引？</h2>
+<p>有许多原因导致为什么Postgres查询计划没有选择使用索引。大多数的时候，查询计划器是正确的，即使它不是那么明显地为什么会这样。<br>如果相同的查询有几次会使用索引扫描，但其他时候不使用索引扫描，这是没问题的。从表中检索到的行数可以基于特定的常数值的查询检索而变化。（我注：即不同的常量值，会导致不同的结果行数）。因此，例如，查询计划器对于查询<code>select * from foo where bar = 1</code>使用索引可能是正确的，但对于查询<code>select * from foo where bar = 2</code>却可能不使用索引，这发生于对于<code>bar</code>值为2的行有比较多的话。发生这种情况时，顺序扫描实际上是最有可能比索引扫描快得多，因此，查询计划器实际上是判断正确的，这时顺序扫描的性能代价相比索引扫描更低。</p>
+<h2 id="部分索引">部分索引</h2>
+<p>部分索引包含表数据的一个子集。它是一个带有<code>WHERE</code>子句的索引。这个概念是为了提高索引的效率,减少索引的大小。小的索引占更少的存储空间，易于维护，扫描更快。</p>
+<p>例如，假设你允许用户评论你的网站，从而设置标记布尔值为真（true）。然后你批量处理标标记的评论。你可能想创建一个类似这样子的索引：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> articles_flagged_created_at_index <span class="keyword">ON</span> articles(created_at) <span class="keyword">WHERE</span> flagged <span class="keyword">IS</span> <span class="literal">TRUE</span>;</span></div></pre></td></tr></table></figure>
+
+<p>这个索引将会是相当小的， 在复杂查询中也能使用其他索引来结合它一起使用。</p>
+<h2 id="表达式索引">表达式索引</h2>
+<p>表达式索引对于匹配一些函数或修改的数据是有用的。Postgres允许你索引函数结果，以便搜索变得像通过原始数据值搜索一样有效。例如，你可能要求用户保存他们的邮箱登录地址，但你想大小写不敏感的认证。在这种情况下可以保存邮件地址，但是搜索上使用<code>WHERE lower(email) = &#39;&lt;lowercased-email&gt;&#39;</code>。在这种查询下，唯一使用索引的方式是通过表达式索引，例如这样：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> users_lower_email <span class="keyword">ON</span> users(<span class="keyword">lower</span>(email));</span></div></pre></td></tr></table></figure>
+
+<p>另一个常见例子是，查找给定日期的行，这里我们已经保存时间戳在一个<code>datatime</code>字段，但是想通过转换的<code>date</code>值来查找他们。一个像这样子的索引：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> articles_day <span class="keyword">ON</span> articles ( <span class="built_in">date</span>(published_at) )</span></div></pre></td></tr></table></figure>
+
+<p>可以用在包含<code>WHERE date(articles.created_at) = date(&#39;2011-03-07&#39;)</code>的查询中使用。</p>
+<h2 id="唯一索引">唯一索引</h2>
+<p>唯一索引保证表不会有超过1行的相同值的行。创建唯一索引的有利的两个原因：数据完整和性能。在唯一索引上查找通常是非常快的。<br>在数据完整性方面，使用模型类的<code>validates_uniqueness_of</code>并不是真正保证唯一的，因为这可能在并发用户时会创建无效的记录。<br>因此，你应该问题在数据库级别创建约束——通过索引或者唯一约束。</p>
+<p>唯一索引和唯一约束之间有点差别。唯一索引可以想成是更低级别，因为表达式索引和部分索引不能创建唯一约束。表达式上的部分唯一索引就有可能。</p>
+<h2 id="多列索引">多列索引</h2>
+<p>虽然Postgres已经能够创建多列索引，重要的是要理解这样子做的意义。Postgres查询计划器通过位图索引扫描（bitmap index scan）在一条多列查询中有能力结合和使用多个单列索引。通常，你可以在覆盖查询条件的每个列上创建索引并且大部分情况下Postgres将会使用到它们，所以在你创建一个多列索引之前做一个基准测试并证明创建一个多列索引是有效的。正如之前一样，索引是有代价的，并且一个多列索引仅能在查询引用的列是与创建索引时的列的顺序是一样的才会被优化，虽然多个单列索引提供大量的查询的性能改进。</p>
+<p>然而在某些情况下,一个多列索引显然是有意义的。一个在列（a,b）上的索引能够用在查询包含<code>WHERE a = x AND b = y</code>，或者查询仅使用<code>WHERE a = x</code>的情况，但是不会用于查询使用<code>WHERE b = y</code>的情况。所以，如果这匹配到你的应用程序的查询模式，多列索引就是值得考虑的。也要注意在本例中创建一个独立的索引（我注：我理解是在这种情况下，创建多个单列索引）是多余的。</p>
+<h2 id="B树和排序">B树和排序</h2>
+<p>B树索引项默认按升序排序保存的。在某些情况下,它可以为索引提供一个不同的排序顺序。比如当你正分页显示文章的情况，首先按最近发布的来排序。我们在<code>articles</code>表上可能有一列<code>published_at</code>。对于未发表的文章，<code>published_at</code>的值是<code>NULL</code>。在这种情况下，我们可以创建一个这样子的索引：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> articles_published_at_index <span class="keyword">ON</span> articles(published_at <span class="keyword">DESC</span> NULLS <span class="keyword">LAST</span>);</span></div></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在Postgre 9.2及之后版本，值得注意的是索引并不总是需要去查找表的，我们可以提供一切需要从索引得到的数据。（也就是，没有索引的列是不感兴趣的）。这个特性叫“只读索引扫描”。</p>
+</blockquote>
+<p>由于我们会按<code>published_at</code>排序以及限制结果数来查询表，我们可以从创建同样的顺序的索引中得到一些好处。Postgres会以正确的顺序在索引中找到这些行，然后去数据块里检索数据。如果索引不是排序的，Postgres就有一个好机会来顺序读取数据块并且排序结果。</p>
+<p>这种技巧主要是当你要求相关的单列索引并且“null在排序的最后”的行为上，否则的话顺序已经是可用的，索引扫描可以在任何方向扫描。当用一个多列索引时来对付一个当查询要求一个混合排序时，例如：a ASC, b DESC，它会变得更加的相关。</p>
+<h2 id="管理和维护索引">管理和维护索引</h2>
+<p>在Postgres里索引并不拥有所有的行数据。即使使用索引来查询和匹配查找到的行，Postgres还会到磁盘中去取行数据。另外，行可见性信息（在MVCC文章中讨论）是不保存到索引的，因此，Postgres必须去磁盘取到这些信息。有了这一点，您可以看到在某些情况下如何使用索引并没有真正意义。索引必须足够选择性地减少磁盘的查找,这才是值得的使用索引的。例如，在一个足够大的表里按一个主键查找，这就很好地利用索引：代替匹配查询条件的顺序扫描，Postgres能够在索引里查找到目标行，然后从磁盘里选择性地取出它们。对于非常小的表，例如，一张查找城市的表，索引可能是不可取，即使你是通过城市名来搜索。在那种情况下，Postgres可能决定忽略索引而支持顺序扫描。Postgres在一些会命中很大一部分表数据的查询上将决定执行顺序扫描。如果你在那些列上有索引，它将会是一个永不被使用的死索引——并且 索引并不是“免费”的：他们在存储和维护方面是有代价的。</p>
+<p>当调优一条查询并且了解索引是非常有意义的，从没有在你的开发机上尝试过的话。是否使用索引决定于许多因素，包括Postgres服务器配置、表的数据、索引和查询。例如，在你的开发机上带有一小部分的测试数据的表上尝试使一条查询用上索引是会令你挫败的：Postgres会决定数据集是如此小以致不值得使用索引的额外的“读”开销，然后从磁盘取数据。随机 I/O 比顺序 I/O 是非常慢的，所以，顺序扫描的代价比通过索引读取然后从磁盘查找数据的随机I/O更少。进行索引调优应该在生产或在暂存环境中完成，尽可能在生产环境中。在Heroku 的Postgres数据库平台，可以很容易地复制你的生产数据库到一个不同的环境。</p>
+<p>当你准备在你的生产数据库上应用一个索引时，请记住创建索引会锁表并阻塞写操作。对于大表，这可能意味着你的网站是停机几个小时。幸运的是，Postgres允许你<code>CREATE INDEX CONCURRENTLY</code>（并发创建索引），这会导致花更多的时间来建索引，但是不要求锁住写锁。正常的<code>CREATE INDEX</code>命令要求一个锁来锁住写操作，但允许读。最终，在之后一段时间，索引会变得碎片和未优化，如果在表中的行经常更新或删除就特别容易这样。在这种情况下，就可能需要执行一个<code>REINDEX</code>命令来平衡及优化你的索引了。然而，要谨慎重建索引会在父表中获得写锁。有个策略在在线的网站来实现相同的结果就是并发地在相同的表和列但有一个不同的名称的索引，然后，删除旧的索引并且重新命名新的索引。这个过程可能持续比较久，但不要求在在线的(活跃）表有任何长久执行的锁。当准备创建B树索引时Postgres提供了许多灵活性来优化你特定的使用情况，也有许多选项来管理你应用程序不断增长的数据库。这些建议应该会帮你保持你的数据库健康，以及你的查询非常爽快。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="cagauvy7uqlgm8gr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-PostgreSQL中代替MySQL的内存表方法" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" class="article-date">
@@ -136,7 +229,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="csn1vlr60bvx48tn" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="ka0q8fcjnlkql5tt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -237,7 +330,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="bjfi5e7dzes5kse6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="ko2ocsd4bh4lvj22" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -330,7 +423,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="9eedjvk3xzkvbzh4" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="2td9d08ykjxkdy4o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -418,7 +511,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="3udzik0cigkaorwk" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="0y7aajfzuv19h88b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -506,7 +599,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="5d2zehz4ycb2ifz6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="1aj8smb2mu7z9wu6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -586,7 +679,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="fxb8fa08737wycha" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="z432ppm2t1i4n7mv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
@@ -667,7 +760,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="5kz82mz25ytq8atb" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="zkilk0aqxsx347pf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -716,7 +809,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="0xsuibcv88r7jhgb" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="65yq4drb4lzve15b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
@@ -781,198 +874,10 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="1x9x6rhmoycwnfsk" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="9zjk9n7q445phahc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-MySQL与PostgreSQL9-0的复制功能对比" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" class="article-date">
-  <time datetime="2014-12-09T14:03:42.000Z" itemprop="datePublished">12月 9 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/">[翻译]MySQL与PostgreSQL9.0的复制功能对比</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.theserverside.com/feature/Comparing-MySQL-and-Postgres-90-Replication" target="_blank" rel="external">源文地址</a></p>
-<p>作者:Robin Schumacher 和 Gary Carter,EnterpriseDB 公司</p>
-<p>原文:<br>Replication is one of the most popular features used in RDBMS’s today. Replication is used for disaster recovery purposes (i.e. backup or warm stand-by servers), reporting systems where query activity is offloaded onto another machine to conserve resources on the transactional server, and scale-out architectures that use sharding or other methods to increase overall query performance and data throughput.</p>
-<p>翻译:<br>今天，“复制”是关系数据库的最受欢迎的功能之一。复制的目的是用于灾难恢复（也就是备份或者叫“热”备用服务器），用于在事务服务器上报告系统，将查询活动转移到其他机器，以节约资源。并且这种分区或其他方法的横向扩展构架将会提升整体的查询性能以及数据的吞吐率。</p>
-<p>原文:<br>Replication is not restricted to only the major proprietary databases; open source databases such as MySQL and PostgreSQL also offer replication as a feature. While MySQL has offered built-in replication for a number of years, PostgreSQL replication used to be accomplished via community software that was an add-on to the core Postgres Server. That all changed with the release of version 9.0 of PostgreSQL, which now offers built-in streaming replication that is based on its proven write ahead log technology.</p>
-<p>翻译:<br>复制功能，并不仅仅限制在专利的商业数据库，一些开源的比如：MySQL 和 PostgreSQL 也提供复制的功能。当MySQL已经内建提供复制功能好几年时，PostgreSQL的复制功能还只是社区通过附加组件形式被添加到核心PostgreSQL服务器。但是，直到PostgreSQL9.0版本时，一切都发生改变了，PostgreSQL现在提供内建一种基于WAL(预写日志）技术的流复制功能。</p>
-<p>原文:<br>With the two most popular open source databases now providing built-in replication, questions are being asked about how they differ in their replication technologies. What follows is a brief overview of both MySQL and PostgreSQL replication, with a brief compare and contrast of the implementations being performed immediately afterwards.</p>
-<p>翻译:<br>现在，这两个最流行的开源数据库都已经提供了内建的复制功能，那么问题来了：他们两者之间的复制功能有什么区别？下面对MySQL和PostgreSQL作一些简要概述，作一个简单的比较和它们的实现区别之后来简单实践一下。</p>
-<p>原文：<br>An Overview of MySQL Replication</p>
-<p>Asynchronous replication was introduced into Oracle’s MySQL with version 3.23 and today it remains the primary feature employed by many MySQL users to create scale-out architectures, standby servers, read-only data marts, and more. The various supported MySQL replication topologies include:</p>
-<p>•        Single master to one slave</p>
-<p>•        Single master to multiple slaves</p>
-<p>•        Single master to one slave to one or more slaves</p>
-<p>•        Circular replication (A to B to C and back to A)</p>
-<p>•        Master to master</p>
-<p>The major replication topology not currently supported in Oracle’s MySQL today is multi-source replication: having one or more master servers feed a single slave.</p>
-<p>A graphical view of how MySQL replication functions can be represented as follows:</p>
-<p>翻译:<br>MySQL的复制功能概要</p>
-<p>异步复制在MySQL的3.23版本时就被引入了。今天，异步复制仍然是许多MySQL用户用于横向扩展、备库、只读数据等等的主要功能。MySQL支持的各种拓扑结构包括：</p>
-<p>•        单主，一从</p>
-<p>•        单主，多从</p>
-<p>•        单主一从到多从</p>
-<p>•        环形复制（A - B - C - A）</p>
-<p>•        主对主</p>
-<p>对于现在的MySQL主要不支持的拓扑结构是“多源复制”，也就是：拥有一个或多个主服务器，但只有一个从库。</p>
-<p>MySQL复制功能的图形化表示如下：</p>
-<p><img src="/img/postgresql-mysql-replication-mysql.png" alt=""></p>
-<p>原文：<br>Object, data, and security operations run on the master are copied to the master server’s binary log. A user has the option of replicating an entire server, one or more databases, or just selected tables (although filtering by table is only done on the slave). The slave server obtains information from the master’s binary log over the network , copies the commands and/or data, and first applies them to the slave’s relay binary log. That log is then read by another process – the SQL thread – that applies the replicated operations/data to the slave database and its binary log.</p>
-<p>翻译：<br>在主库上，对象、数据和安全的操作全部都会被复制到主库服务器的二进制日志。用户可以选择复制整个服务器、一个或多个数据库、或仅仅选择某些表来进行复制（尽管表过滤只是在从库完成）。从库通过网络传输从主库获取二进制日志信息，复制的命令或数据会首先应用到从库的 relay 二进制日志里。这个 relay 二进制日志，会被其他工具处理 —— SQL 线程，SQL线程会将replay二进制日志里复制的操作命令和数据应用到从库自己的二进制日志里。</p>
-<p>原文：<br>Prior to release 5.1, MySQL replication was statement-based, meaning that the actual SQL commands were replicated from the master to one or more slaves. However, certain use cases did not lend themselves to statement-based replication (e.g. non-deterministic function calls) so in MySQL 5.1 row-based replication was introduced. A user now has the option of setting a configuration parameter to use either statement or row-based replication.</p>
-<p>翻译：<br>在5.1版本之前，MySQL 复制是基于语句的，意味着实际的SQL命令是通过复制从主库到一个或多个备库中的。然而，某些使用情况不能让它们基于语句复制（例如，非确定函数调用）。所以，在MySQL 5.1版本提供了基于行复制功能。用户现在可以通过配置相应的参数来决定是使用基于语句还是基于行复制。</p>
-<p>原文：<br>The primary bottleneck for busy MySQL replication configurations is the single-threaded nature of its design: replication operations are not multi-threaded at the moment, although MySQL has declared it is coming in a future release. This limitation can cause some slave servers under heavy load to get far behind the master in regards to applying binary log information.</p>
-<p>翻译：<br>在繁忙时的MySQL复制配置里，主要的瓶颈是由于它自身的单线程设计性质：复制操作都不是多线程的，尽管MySQL已经声称将来会将这个多线程特性添加到未来的版本中。这个限制可能导致从库在高负载情况下应用执行二进制日志将会远远落后于主库的日志信息。</p>
-<p>原文：<br>Setting up MySQL replication is a fairly painless process. Although various setup procedures exist, in general, the following is a basic outline of how it is done:</p>
-<p>•      The master and slave servers are identified</p>
-<p>•      The master server is modified to include a replication security account</p>
-<p>•      The master server’s MySQL configuration file is modified to enable binary logging. A few other parameters are included as well (e.g. a unique server ID, type of replication such as statement or row-based, etc.)</p>
-<p>•      The slave server’s MySQL configuration file is modified to include a unique server ID</p>
-<p>•      The master server is restarted</p>
-<p>•      The master server’s log file position is recorded</p>
-<p>•      The master’s data is copied to the slave to initially seed the slave server. This can be done via a cold backup/restore, using the mysqldump utility, locking the master tables and doing a file copy, etc.</p>
-<p>•      The slave server is restarted</p>
-<p>•      The MySQL CHANGE MASTER command is executed on the slave server to set the master host name on the slave server as well as other parameters such as the master account username and password, the log file name, and beginning log file position</p>
-<p>翻译：<br>设置MySQL的复制功能是一个非常痛苦的过程。尽管有许多种设置规则存在，但通常，以下是一些通常的步骤：</p>
-<p>•      主库和从库都要标识</p>
-<p>•      主库添加一个用于安全复制的账号</p>
-<p>•      在主库中修改配置文件以开启二进制日志功能，还有一些其他的参数也要开启。 （比如：唯一的服务器ID， 复制的类型，等等）</p>
-<p>•      在从库中修改配置文件，添加一个唯一的服务器ID。</p>
-<p>•      重启主服务器</p>
-<p>•      主库的日志文件位置被记录。</p>
-<p>•      主库的数据将被初始化到从库中。这是通过冷备份/恢复完成的，例如使用：mysqldump 工具，锁住主库的表然后完成文件复制，等等。</p>
-<p>•      重启从库</p>
-<p>•      MySQL CHANGE MASTER 命令是在从库服务器上执行设置将主库的主机名以及其他的参数如：主库的用户名，密码，日志文件名以及日志文件起始位置设置到从库。</p>
-<p>原文：<br>Once set up, MySQL replication is quite reliable. Being asynchronous in nature, however, there are use cases that could result in data loss between a master and slave. To help combat these situations, MySQL 5.5 introduced semi-synchronous replication where a pending transaction is sent from a master to a slave, but not committed on the slave; it merely ‘lands’ safely on the slave to be run as soon as possible. Once the master is notified that the transaction is safely recorded on the slave, then the transaction is committed on the master.</p>
-<p>翻译：<br>一旦设置完毕，MySQL复制是相当可靠的。因为本质上是异步的，所以有一些使用情况下还是会导致在主库和从库之间丢失数据。为了帮助解决这个问题，MySQL 5.5 提供了“半同步”复制，它会将事务从主库发送到从库，但在从库并未提交（只是记录到relay二进制日志）。它仅仅是尽可能快速地被安全送到从库。一旦主库收到事务已经被安全地记录在从库上，然后主库才会正式提交事务。</p>
-<p>原文：<br>In terms of MySQL replication limitations and missing features, besides the already mentioned single threaded nature of the implementation and the inability to perform multi-source replication, other wish-list items include a full synchronous option, conflict detection and resolution, time-delayed replication, changing the binary log to a storage engine, better replication filtering on the master, global statement ID’s, and graphical tools to manage replication functions.</p>
-<p>翻译：<br>MySQL在复制功能方面有许多限制以及不足，除了之前已经提过的单线程性质，还有不能进行多源进制，其他的希望加入的特性包括：完全同步选项，冲突检测及解决办法，延时复制，更改二进制日志的存储引擎，在主库上更好的复制过滤功能，全局语句的ID标识以及管理复制函数的图形化工具。</p>
-<p>原文：<br>There are third-party providers of MySQL replication solutions that overcome some of the current shortcomings in what is provided out-of-the-box with MySQL. One example is Continuent’s Tungsten product.</p>
-<p>For more information about Oracle’s MySQL replication, see: <a href="http://dev.mysql.com/doc/refman/5.5/en/replication.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication.html</a>.</p>
-<p>翻译：<br>有许多第三方提供即开即用的MySQL复制解决方案来克服当前MySQL内建复制功能的缺点。一个例子是：Continuent’s Tungsten 的数据库产品。<br>更多关于MySQL复制功能，请看：<a href="http://dev.mysql.com/doc/refman/5.5/en/replication.html." target="_blank" rel="external">MySQL5.5复制</a></p>
-<p>原文：<br>An Overview of PostgreSQL Replication</p>
-<p>PostgreSQL replication is based on a mature and long used technology called write ahead log (WAL) archiving.  WAL technology has been in use since version 7.1 and has been used in features such as backup and restore and warm standby servers (i.e. slave servers offline kept in synch with the master to step in during crash recovery) for high availability.</p>
-<p>PostgreSQL 9.0 introduced significant enhancements producing extremely fast WAL processing that results in near real-time replication and hot standby capabilities for slave servers.  The supported PostgreSQL replication topologies include:</p>
-<p>•        Single master to one slave</p>
-<p>•        Single master to multiple slaves</p>
-<p>A graphical view of how PostgreSQL replication functions can be represented as follows:</p>
-<p>翻译：<br>PostgreSQL的复制功能概要</p>
-<p>PostgreSQL 复制功能是基于一个成熟并且被长时间使用的技术，叫WAL（预写日志）归档。WAL技术已经在PostgreSQL 7.0版本被使用，并且是用在备份/恢复和热备用服务器的高可用中。（比如，从库离线【注，这里我认为是作者写错了，应该是online在线，而不是offline离线】保持与主库同步，并且在主库崩溃时介入以进行恢复）。</p>
-<p>PostgreSQL9.0 版本显著地改进以产生极快的WAL日志处理，结果就是一个几乎是近实时复制并且是双机（主从）热备功能的从库。PostgreSQL支持的复制拓扑结构包括：</p>
-<p>•        单主单从</p>
-<p>•        单主多从</p>
-<p>A graphical view of how PostgreSQL replication functions can be represented as follows:</p>
-<p>PostgreSQL复制功能的图形化表示如下：</p>
-<p><img src="/img/postgresql-mysql-replication-postgresql.png" alt=""></p>
-<p>原文：</p>
-<p>All objects and data (including schema) and security operation executed on the master are written to the WAL log directly on the slave machine for safety (avoiding complete data loss in the event of a catastrophic master failure).  WAL also ensures that no transaction is committed on the master until a successful write of the WAL log has occurred.  No filtering is currently possible (although replication with filtering is possible with the xDB Replication Server from EnterpriseDB) so a complete copy of the master is replicated on the slave.</p>
-<p>翻译：<br>所有的对象和数据（包括模式）和在主库安全的操作都被写到WAL日志会立即安全地同步地从库(完全避免了在主库发生灾难时导致的数据丢失)。WAL也会确保在主库上不会有事务被提交，直到该事务已经成功地写到入WAL日志。当前版本并没有选择性复制功能（尽管选择性复制功能可能在 EnterpriseDB 的 xDB复制服务器提供了），所以主库会完整地被复制到从库。</p>
-<p>原文：<br>The slave then applies the WAL log by directly rewriting the raw table data on disk, which is much faster than statement based replication.  It is also safer since statements such as:</p>
-<p>INSERT INTO table (column) VALUES (SELECT function());</p>
-<p>may have unexpected and inconsistent results if the function returns different values on different servers - perhaps because it involves a generated timestamp or uuid.</p>
-<p>翻译：<br>从库然后直接应用磁盘上的WAL日志来重写元数据，这点比基于语句复制更加快速。并且，遇到以下这种SQL时都是安全的：</p>
-<p>INSERT INTO table (column) VALUES (SELECT function());</p>
-<p>如果这个function函数在主从两个不同的服务器之间产生不同的值，这可能有意想不到和不一致的结果。比如可能它调用一个产生UUID或Timestamp的函数。</p>
-<p>原文：<br>The primary limitations of PostgreSQL replication are topology based.  It cannot currently do cascading replication or filter tables by rows for replication.  Again, these are capabilities available in a separate replication solution from EnterpriseDB called xDB Replication Server.</p>
-<p>翻译：<br>PostgreSQL复制的主要限制是它的拓扑结构。它目前不能进行联级复制，也不能通过行来过滤表进行复制。同样，这些功能可以通过 EnterpriseDB 里单独提供一种叫 xDB 复制服务器来解决。</p>
-<p>原文：<br>Setting up PostgreSQL replication is very straightforward.  WAL logging is always enabled with minimal configuration needed by the user to utilize replication. The basic process to get replication going is:</p>
-<p>•      The master and slave servers are identified</p>
-<p>•      The postgresql.conf file on the master is edited to turn on streaming replication</p>
-<p>•      The pg_hba.conf file on the master is edited in order to let the slave connect</p>
-<p>•      The recovery.conf and postgresql.conf files on the slave are edited to start up replication and hot standby</p>
-<p>•      The master is shutdown and the data files are copied to the slave</p>
-<p>•      The slave is started first</p>
-<p>•      The master is started</p>
-<p>翻译：<br>设置PostgreSQL复制是非常简单的。开启WAL日志是用户使用复制的最小化配置。使用复制的基本流程如下：</p>
-<p>•      主库和从库都要标识</p>
-<p>•      编辑在主库的postgresql.conf 配置文件里，以开启流复制</p>
-<p>•      编辑在主库的pg_hba.conf 配置文件，以让从库连接到主库</p>
-<p>•      编辑在从库的 recovery.conf 配置文件和postgresql.conf 配置文件，以开始复制和热备用</p>
-<p>•      关闭主库，并且复制data目录所有文件到从库</p>
-<p>•      先启动从库</p>
-<p>•      再启动从库</p>
-<p>原文：<br>The secret sauce to PostgreSQL 9.0’s extremely reliable WAL based replication is a set of enhancements to efficiently stream very small WAL segments compared to earlier versions.  Like MySQL there are cases where data loss could occur – however, depending on how you configure the system, your hardware architecture, and load, its possible the data loss could be as small as a single transaction.</p>
-<p>PostgreSQL does not currently have native synchronous replication. However, there are multiple replication options available from other community and third-party software providers.  PostgreSQL offers multiple solutions for multi-master replication, including solutions based on two phase commit. Offerings include Bucardo, rubyrep, PgPool and PgPool-II and Tungsten Replicator as well as some proprietary solutions. Another promising approach, implementing eager (synchronous) replication is Postgres-R, however it is still in development. Yet another project implementing synchronous replication is Postgres-XC, which is a shared-nothing, transactional scale-out solution that is still under development.</p>
-<p>For more information on PostgreSQL replication see:</p>
-<p>PostgreSQL Documentation: <a href="http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html</a></p>
-<p>Bucardo: <a href="http://bucardo.org/wiki/Bucardo" target="_blank" rel="external">http://bucardo.org/wiki/Bucardo</a></p>
-<p>PgPool-II: <a href="http://pgpool.projects.postgresql.org/" target="_blank" rel="external">http://pgpool.projects.postgresql.org/</a></p>
-<p>Tungsten Replication: <a href="http://www.continuent.com/community/tungsten-replicator" target="_blank" rel="external">http://www.continuent.com/community/tungsten-replicator</a></p>
-<p>翻译：<br>PostgreSQL9.0非常可靠的秘密武器在于基于WAL日志复制，它是一套增强的高效流，利用非常小的一段WAL来进行早期版本的比较。像MySQL在有些情况下可能会导致数据丢失，然而，这取决于你的系统、你的硬件构架以及负载如何，它丢失的数据可能非常小，如：一个事务的数据。</p>
-<p>PostgreSQL目前还没有本地同步复制。然而，有许多种通过社区和第三方软件提供商提供的可用复制方案。PostgreSQL 提供许多“多主复制”的解决方案，包括基于两阶段提交的解决方案。包括：Bucardo, rubyrep, PgPool and PgPool-II and Tungsten Replicator 以及其他一些专有的解决方案。另一种非常有前景的解决办法，实现 饥饿（同步）复制的Postgres-R产品，然而，它目前还在开发中。还有另一个项目实现同步复制的是Postgres-XC，它是一个无共享、事务横向扩展的解决方案，目前也是处于开发中。</p>
-<p>更多关于PostgreSQL复制，请看：<br>PostgreSQL 文档: <a href="http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html" target="_blank" rel="external">http://www.enterprisedb.com/docs/en/9.0/pg/high-availability.html</a></p>
-<p>Bucardo: <a href="http://bucardo.org/wiki/Bucardo" target="_blank" rel="external">http://bucardo.org/wiki/Bucardo</a></p>
-<p>PgPool-II: <a href="http://pgpool.projects.postgresql.org/" target="_blank" rel="external">http://pgpool.projects.postgresql.org/</a></p>
-<p>Tungsten Replication: <a href="http://www.continuent.com/community/tungsten-replicator" target="_blank" rel="external">http://www.continuent.com/community/tungsten-replicator</a></p>
-<p>原文：<br>A Brief Compare and Contrast of MySQL and PostgreSQL Replication</p>
-<p>Those wanting to use an open source database for a particular application project that requires replication have two good choices in MySQL and PostgreSQL. But, the question naturally arises, which should be used? Is one just as good as the other?</p>
-<p>As demonstrated above, there are both feature and functional differences between how MySQL and PostgreSQL implement replication. However, for many general application use cases, either MySQL or PostgreSQL replication will serve just fine; technically speaking, from a functional and performance perspective, it won’t matter which solution is chosen. That said, there still are some considerations to keep in mind in deciding between the different offerings. Some of these include the following:</p>
-<p>•      Oracle’s MySQL offers both statement and row-based replication, whereas PostgreSQL only uses the latter based on write ahead log information. There are pro’s and con’s to using statement-based replication, which MySQL has documented here: <a href="http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html</a>. It is generally acknowledged that row or WAL-based replication is the safest and most reliable form of replication. It does, however, result in larger log files for MySQL than the statement-based option does.</p>
-<p>•      MySQL currently supports more replication topologies than PostgreSQL (e.g. ring, etc.). However PostgreSQL does have a number of community supported replication offerings that help close this gap (e.g. Bucardo’s master-to-master solution).</p>
-<p>•      In regard to data loss, MySQL 5.5 offers the semi-synchronous option, which helps minimize the risk of master-slave synchronization problems due to a master server going down. For PostgreSQL, a full synchronous replication option is in development and scheduled for release sometime in 2011.</p>
-<p>•      As to replication filtering, MySQL provides filtering on the slave server, whereas with PostgreSQL, no filtering is available; in other worlds, the entire database from the master is replicated to the slave. With MySQL, all the information is sent, but then options exist to selectively apply the replicated events on the slave. However, as the MySQL binary log is not used for crash recovery purposes in the same way as PostgreSQL’s WAL is, a user can configure a MySQL master so only certain databases are logged and, in that sense, a filter for the master server is available.</p>
-<p>•      Both MySQL and PostgreSQL replication are single-threaded at the current time.</p>
-<p>•      With respect to monitoring replication, MySQL provides a number of SHOW commands to understand the state of replication between a master and slave. To date, PostgreSQL offers functions to compute the differences in log positions between the master and slave servers, but that is all that is currently provided in 9.0.</p>
-<p>•      For failover and load balancing, the PostgreSQL community provides pgPool, which is middleware that provides connection pooling, load balancing, failover, and more between replicated servers. MySQL 5.5 supports connection pooling in the Enterprise edition, but failover and load balancing must be handled via a third-party product or custom development.</p>
-<p>翻译：<br>简单对比一下MySQL和PostgreSQL复制</p>
-<p>那些想为一个需要复制功能的特定应用的项目使用开源数据库的人，MySQL和PostgreSQL是两个很好的选择。但是，问题自然而然产生了，我们应该使用哪个？还是说这两个一样好？</p>
-<p>综上所述，MySQL和PostgreSQL都有复制功能，但是有不同的实现。然而，对于一般的应用来说，无论是MySQL还是PostgreSQL复制功能会工作得挺好；从技术上说，以及从功能和性能来看，它不会不管要选哪个数据库。这意味着，在不同产品之间还有一些值得注意的事项，其中包括以下内容：</p>
-<p>•  MySQL提供基于语句和基于行的复制，而PostgreSQL只有基于WAL日志信息。有赞成也有反对使用基于语句复制的，MySQL有文档介绍：<a href="http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html" target="_blank" rel="external">http://dev.mysql.com/doc/refman/5.5/en/replication-sbr-rbr.html</a> 。一般认为，基于行或基于WAL 复制是最安全和最可靠的复制形式。的确如此，然而，这会导致比基于语句复制的形式产生更大的日志文件。</p>
-<p>•  MySQL目前比PostgreSQL支持更加多的复制拓扑结构（比如：环形等）。然而，PostgreSQL有许多种社区支持的复制选项，这就缩小了这个因拓扑结构种类而导致的距离（比如 Bucardo 的 主-主解决方案）</p>
-<p>•  考虑到数据丢失，MySQL 5.5 提供了半同步选项，这有助于减小因主库崩溃而导致主从同步问题的风险。对于PostgreSQL，完全同步复制特性正在开发，并且计划于2011年正式可用。</p>
-<p>•  对于过滤复制，MySQL 提供了在从库过滤，而在PostgreSQL，并不能使用过滤，换句话说，就是完整地将数据库从主库复制到从库。对于MySQL，所有信息都会被发送到从库，但如果开启过滤复制，从库会有选择地将事件应用到从库。然而，对于MySQL二进制日志并不是用于灾难恢复的，但PostgreSQL的WAL是可以用于灾难恢复的，用户可以配置MySQL主库指定哪些数据库会被记录到日志，在这种意义上，过滤器对于主库是可用的。</p>
-<p>•  目前，MySQL和PostgreSQL复制都是单线程的</p>
-<p>•  对于复制的监控，MySQL提供了许多 SHOW 命令去了解主从复制的状态。至今，PostgreSQL提供一些函数去计算主从日志位置的区别，但是当前只是在PostgreSQL9.0版本才提供的。</p>
-<p>• 对于故障切换和负载均衡，PostgreSQL社区提供pgPool的中间件，pgPool提供连接池，负载均衡，故障切换和更多种复制形式。MySQL 5.5 在企业版里提供连接池，但是对于故障切换和负载均衡必须通过第三方产品或定制开发。</p>
-<p>原文：<br>Conclusions</p>
-<p>As was previously stated, for many application use cases, both Oracle’s MySQL and PostgreSQL replication will be an equally good choice. The best way to determine which is right for you is to download both and put each through a comprehensive evaluation.</p>
-<p>You can download Oracle’s MySQL at <a href="http://www.mysql.com/downloads/" target="_blank" rel="external">http://www.mysql.com/downloads/</a>, while both community and EnterpriseDB’s offerings of PostgreSQL can be found at: <a href="http://www.enterprisedb.com/products/download.do" target="_blank" rel="external">http://www.enterprisedb.com/products/download.do</a>.</p>
-<p>By Robin Schumacher and Gary Carter, www.enterprisedb.com</p>
-<p>18 Nov 2010</p>
-<p>翻译：<br>结论</p>
-<p>正如前面所指出一样，对于许多应用程序的用例，MySQL和PostgreSQL都是非常好的选择。要决定哪一个最适合你，最好的办法就是同时下载它们两个，然后使用进行综合评估。</p>
-<p>你可以在 <a href="http://www.mysql.com/downloads/" target="_blank" rel="external">http://www.mysql.com/downloads/</a> 下载MySQL，PostgreSQL的社区版和EnterpriseDB提供的PostgreSQL版本都可以在这个地址里找到：<a href="http://www.enterprisedb.com/products/download.do" target="_blank" rel="external">http://www.enterprisedb.com/products/download.do</a> </p>
-<p>作者：Robin Schumacher and Gary Carter, www.enterprisedb.com<br>18 Nov 2010</p>
-<hr>
-<p>注：版权是原作者所有，我只是出于业余爱好进行翻译。</p>
-<p>这也是我的处女版翻译文章，有许多不足或表达不清晰的地方，恳请各位指出，我会加以修改，一起为开源、为PostgreSQL作出一份力量。<br>于2014年12月9号星期二晚，广州</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/09/-翻译-MySQL与PostgreSQL9-0的复制功能对比/" data-id="e4v4svk87ijj0kks" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
@@ -994,7 +899,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">31</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">29</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">32</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">30</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -1003,7 +908,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -1012,7 +917,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.86px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.29px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 18.57px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.43px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 12.86px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 17.14px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 12.86px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 12.86px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.43px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.43px;">SQL基础</a><a href="/tags/Session/" style="font-size: 10.00px;">Session</a><a href="/tags/Spring/" style="font-size: 10.00px;">Spring</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.71px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.71px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a><a href="/tags/集群/" style="font-size: 10.00px;">集群</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 13.33px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 15.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 18.33px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/Session/" style="font-size: 10.00px;">Session</a><a href="/tags/Spring/" style="font-size: 10.00px;">Spring</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 16.67px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 16.67px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a><a href="/tags/集群/" style="font-size: 10.00px;">集群</a>
     </div>
   </div>
 
@@ -1021,7 +926,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -1031,6 +936,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/01/17/-翻译-高效使用PostgreSQL索引/">[翻译]高效使用PostgreSQL索引</a>
+          </li>
         
           <li>
             <a href="/2015/01/15/PostgreSQL中代替MySQL的内存表方法/">PostgreSQL中代替MySQL的内存表方法</a>
@@ -1046,10 +955,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/">[翻译]PostgreSQL 9.0 备份 &amp; 恢复</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/">[翻译]PostgreSQL 9.0 内存 &amp; 进程</a>
           </li>
         
       </ul>
