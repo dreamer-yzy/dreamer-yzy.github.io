@@ -82,6 +82,62 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post--翻译-PostgreSQL中的log-xlog和clog" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" class="article-date">
+  <time datetime="2015-01-21T15:44:08.000Z" itemprop="datePublished">1月 21 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/">[翻译]PostgreSQL中的log, xlog和clog</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://it.toolbox.com/blogs/database-soup/pg_log-pg_xlog-and-pg_clog-45611" target="_blank" rel="external">原文</a></p>
+<p>译记：该文章开头还有一段内容就不翻译了。主要翻译这些log的主要内容。</p>
+<h2 id="pg_log">pg_log</h2>
+<p><code>$PGDATA/pg_log</code>是数据库运行活动日志的默认保存目录，它包括错误信息，查询日志以及启动/关闭数据库的信息。当PostgreSQL启动失败时，这里应该是你第一个应该查看的信息。一些Linux发行版以及其他的软件包管理系统会将这个日志目录移到某些地方，比如：<code>/var/log/postgresql</code></p>
+<p>你可以在<code>pg_log</code>目录里自由地删除、重命名、压缩或者移动文件而不会有什么不好的结果，只要Postgres用户仍然有权限写该目录。如果<code>pg_log</code>随着许多大文件而膨胀，你可能需要在<code>postgresql.conf</code>里减小你想记录日志的事件。</p>
+<h2 id="pg_xlog">pg_xlog</h2>
+<p><code>$PGDATA/pg_xlog</code>是PostgreSQL的事务日志。 这是一些二进制日志文件的集合，文件名类似<code>00000001000000000000008E</code>，它包含最近事务的一些描述数据。这些日志也被用于二进制复制。如果复制、归档或者<code>PITR</code>失败了，当归档正在恢复时，这个目录保存的数据库日志可能会膨胀数GB。这可能会导致你用完你的磁盘空间。不像<code>pg_log</code>，你不能自由地删除、移动或者压缩这个目录的文件。你甚至不能在没有符号链接到该目录的情况下移动这个目录。删除<code>pg_xlog</code>的文件可能会导致不可恢复的数据库损坏。</p>
+<p>Deleting pg_xlog files may result in irrecoverable database corruption.如果你发现自己处在这样的情况：你发现有100G大小的文件在<code>pg_xlog</code>目录并且数据也启动不了，并且你已经禁止<code>归档/复制</code>并且尝试清理磁盘空间等任何其他的方式，请做以下两个步骤：</p>
+<ol>
+<li>从<code>pg_xlog</code>目录里移动文件到一个备份磁盘或者共享网络驱动器中，也不要删除它们，并且 </li>
+<li>移动一些最老的文件，直到足够允许PostgreSQL启动起来。 </li>
+</ol>
+<h2 id="pg_clog">pg_clog</h2>
+<p><code>$PGDATA/pg_clog</code>包含了事务的元数据。这种日志用于告诉PostgreSQL哪个事务已经完成、哪个还没有完成。clog是比较小的并且没有任何理由会膨胀，所以，你应该没有任何理由去碰触它。在任何时候你都不应该从<code>pg_clog</code>里删除文件，如果你这样子做，还不如完全地删除整个数据库目录。缺少clog是不可恢复的。请注意，这意味着，如果你在<code>$PGDATA</code>目录里备份文件，你应该确定同时包含<code>pg_clog</code>和<code>pg_xlog</code>，否则你可能会发现你的备份是不可用的。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="9d2ps76vuefad6bu" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-高效使用PostgreSQL索引" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/17/-翻译-高效使用PostgreSQL索引/" class="article-date">
@@ -163,7 +219,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="cagauvy7uqlgm8gr" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="mez2gzr7ldmt0avw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -229,7 +285,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="ka0q8fcjnlkql5tt" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="4ge06sydb0ve2w1f" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -330,7 +386,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="ko2ocsd4bh4lvj22" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="k5d1zro6k0lufown" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -423,7 +479,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="2td9d08ykjxkdy4o" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="im71z36hzyl9duk8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -511,7 +567,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="0y7aajfzuv19h88b" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="zi475coi8gd4mtje" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -599,7 +655,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="1aj8smb2mu7z9wu6" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="8gs79yyv6vv8h3xe" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -679,7 +735,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="z432ppm2t1i4n7mv" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="vgqj0r0gbrzjduin" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
@@ -760,7 +816,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="zkilk0aqxsx347pf" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="59w57dpbstn3mdul" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -809,75 +865,10 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="65yq4drb4lzve15b" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="jpn6qxhla146ijpr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
-  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
-<hr>
-<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
-<h1 id="CTEs">CTEs</h1>
-<ul>
-<li>不可以建索引（但可以使用引用到的对象的索引）</li>
-<li>不能有约束</li>
-<li>本质上是一个一次性视图</li>
-<li>只在下一个执行查询时存在</li>
-<li>可以递归</li>
-<li>没有专门的统计状态数据（只依赖于底层对象）</li>
-</ul>
-<h1 id="临时表">临时表</h1>
-<ul>
-<li>是存在于临时数据库的真正物化的表</li>
-<li>可以建索引</li>
-<li>可以有约束</li>
-<li>在当前连接的会话中会一直存在</li>
-<li>可以被其他查询或子查询引用</li>
-<li>引擎可以有专门为它准备的统计数据</li>
-</ul>
-<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
-<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="9zjk9n7q445phahc" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
 
     </footer>
   </div>
@@ -899,7 +890,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">32</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">30</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">33</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">31</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -908,7 +899,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">20</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -917,7 +908,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 13.33px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 15.00px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.67px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 20.00px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 13.33px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 18.33px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 13.33px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 13.33px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.67px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.67px;">SQL基础</a><a href="/tags/Session/" style="font-size: 10.00px;">Session</a><a href="/tags/Spring/" style="font-size: 10.00px;">Spring</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 16.67px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 16.67px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a><a href="/tags/集群/" style="font-size: 10.00px;">集群</a>
+      <a href="/tags/CTE表达式/" style="font-size: 10.00px;">CTE表达式</a><a href="/tags/Cookie/" style="font-size: 10.00px;">Cookie</a><a href="/tags/HTTP/" style="font-size: 10.00px;">HTTP</a><a href="/tags/Hexo/" style="font-size: 10.00px;">Hexo</a><a href="/tags/Java/" style="font-size: 12.86px;">Java</a><a href="/tags/Java-基础学习/" style="font-size: 14.29px;">Java 基础学习</a><a href="/tags/Java-线程/" style="font-size: 10.00px;">Java 线程</a><a href="/tags/Markdown/" style="font-size: 10.00px;">Markdown</a><a href="/tags/PostgreSQL/" style="font-size: 20.00px;">PostgreSQL</a><a href="/tags/PostgreSQL-优化/" style="font-size: 10.00px;">PostgreSQL 优化</a><a href="/tags/PostgreSQL-升级/" style="font-size: 11.43px;">PostgreSQL 升级</a><a href="/tags/PostgreSQL-基础学习/" style="font-size: 18.57px;">PostgreSQL 基础学习</a><a href="/tags/PostgreSQL-案例/" style="font-size: 10.00px;">PostgreSQL 案例</a><a href="/tags/PostgreSQL-管理/" style="font-size: 12.86px;">PostgreSQL 管理</a><a href="/tags/PostgreSQL-翻译/" style="font-size: 17.14px;">PostgreSQL 翻译</a><a href="/tags/PostgreSQL-读书笔记/" style="font-size: 12.86px;">PostgreSQL 读书笔记</a><a href="/tags/PostgreSQL-高级/" style="font-size: 12.86px;">PostgreSQL 高级</a><a href="/tags/SQL/" style="font-size: 11.43px;">SQL</a><a href="/tags/SQL基础/" style="font-size: 11.43px;">SQL基础</a><a href="/tags/Session/" style="font-size: 10.00px;">Session</a><a href="/tags/Spring/" style="font-size: 10.00px;">Spring</a><a href="/tags/临时表/" style="font-size: 10.00px;">临时表</a><a href="/tags/动画/" style="font-size: 10.00px;">动画</a><a href="/tags/博客/" style="font-size: 10.00px;">博客</a><a href="/tags/啊哈！算法/" style="font-size: 15.71px;">啊哈！算法</a><a href="/tags/电影/" style="font-size: 10.00px;">电影</a><a href="/tags/算法/" style="font-size: 15.71px;">算法</a><a href="/tags/索引/" style="font-size: 10.00px;">索引</a><a href="/tags/集群/" style="font-size: 10.00px;">集群</a>
     </div>
   </div>
 
@@ -926,7 +917,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">20</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -936,6 +927,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/">[翻译]PostgreSQL中的log, xlog和clog</a>
+          </li>
         
           <li>
             <a href="/2015/01/17/-翻译-高效使用PostgreSQL索引/">[翻译]高效使用PostgreSQL索引</a>
@@ -951,10 +946,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/01/14/-翻译-PostgreSQL中的死锁/">[翻译]PostgreSQL中的死锁</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/">[翻译]PostgreSQL 9.0 备份 &amp; 恢复</a>
           </li>
         
       </ul>

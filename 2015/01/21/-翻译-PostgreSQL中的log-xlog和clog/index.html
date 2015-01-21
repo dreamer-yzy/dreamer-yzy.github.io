@@ -3,17 +3,29 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: CTE表达式 | PostgreSQL DBA</title>
+  <title>[翻译]PostgreSQL中的log, xlog和clog | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="I'm a PostgreSQL Lover and a Java Programmer.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="PostgreSQL DBA">
-<meta property="og:url" content="http://dreamer-yzy.github.io/tags/CTE表达式/">
+  <meta name="description" content="原文
+译记：该文章开头还有一段内容就不翻译了。主要翻译这些log的主要内容。
+pg_log
+$PGDATA/pg_log是数据库运行活动日志的默认保存目录，它包括错误信息，查询日志以及启动/关闭数据库的信息。当PostgreSQL启动失败时，这里应该是你第一个应该查看的信息。一些Linux发行版以及其他的软件包管理系统会将这个日志目录移到某些地方，比如：/var/log/postgresql
+你可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[翻译]PostgreSQL中的log, xlog和clog">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta property="og:description" content="原文
+译记：该文章开头还有一段内容就不翻译了。主要翻译这些log的主要内容。
+pg_log
+$PGDATA/pg_log是数据库运行活动日志的默认保存目录，它包括错误信息，查询日志以及启动/关闭数据库的信息。当PostgreSQL启动失败时，这里应该是你第一个应该查看的信息。一些Linux发行版以及其他的软件包管理系统会将这个日志目录移到某些地方，比如：/var/log/postgresql
+你可">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PostgreSQL DBA">
-<meta name="twitter:description" content="I'm a PostgreSQL Lover and a Java Programmer.">
+<meta name="twitter:title" content="[翻译]PostgreSQL中的log, xlog和clog">
+<meta name="twitter:description" content="原文
+译记：该文章开头还有一段内容就不翻译了。主要翻译这些log的主要内容。
+pg_log
+$PGDATA/pg_log是数据库运行活动日志的默认保存目录，它包括错误信息，查询日志以及启动/关闭数据库的信息。当PostgreSQL启动失败时，这里应该是你第一个应该查看的信息。一些Linux发行版以及其他的软件包管理系统会将这个日志目录移到某些地方，比如：/var/log/postgresql
+你可">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -80,12 +92,10 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post--翻译-CTE表达式和临时表的区别" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post--翻译-PostgreSQL中的log-xlog和clog" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/12/-翻译-CTE表达式和临时表的区别/" class="article-date">
-  <time datetime="2014-12-11T16:02:52.000Z" itemprop="datePublished">12月 12 2014</time>
+    <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" class="article-date">
+  <time datetime="2015-01-21T15:44:08.000Z" itemprop="datePublished">1月 21 2015</time>
 </a>
     
   <div class="article-category">
@@ -99,8 +109,8 @@ ga('send', 'pageview');
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/12/-翻译-CTE表达式和临时表的区别/">[翻译]CTE表达式和临时表的区别</a>
+    <h1 class="article-title" itemprop="name">
+      [翻译]PostgreSQL中的log, xlog和clog
     </h1>
   
 
@@ -108,47 +118,66 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>翻译于<a href="http://dba.stackexchange.com/a/13117" target="_blank" rel="external">dba.stackexchange.com</a><br>版权归原作者所有，本人只是业余爱好翻译。</p>
-<hr>
-<p>这个问题是相当广泛的，但尽我所能给你一个普通的回答。</p>
-<h1 id="CTEs">CTEs</h1>
-<ul>
-<li>不可以建索引（但可以使用引用到的对象的索引）</li>
-<li>不能有约束</li>
-<li>本质上是一个一次性视图</li>
-<li>只在下一个执行查询时存在</li>
-<li>可以递归</li>
-<li>没有专门的统计状态数据（只依赖于底层对象）</li>
-</ul>
-<h1 id="临时表">临时表</h1>
-<ul>
-<li>是存在于临时数据库的真正物化的表</li>
-<li>可以建索引</li>
-<li>可以有约束</li>
-<li>在当前连接的会话中会一直存在</li>
-<li>可以被其他查询或子查询引用</li>
-<li>引擎可以有专门为它准备的统计数据</li>
-</ul>
-<p>至于何时使用哪个，他们有不同的应用场景。如果你会有一个非常大的结果集，或者需要不上一次地引用它，那请使用临时表。如果需要使用递归，一次性，或者做一些简单的逻辑计算，那就使用CTE。</p>
-<p>注意，CTE永远不应该用于性能。使用CTE并不会提高你的性能，因为，它仅仅是个一次性视图。你可以用它做一些其他的事，但是为了加快查询真的并不是它的用途。</p>
+        <p><a href="http://it.toolbox.com/blogs/database-soup/pg_log-pg_xlog-and-pg_clog-45611" target="_blank" rel="external">原文</a></p>
+<p>译记：该文章开头还有一段内容就不翻译了。主要翻译这些log的主要内容。</p>
+<h2 id="pg_log">pg_log</h2>
+<p><code>$PGDATA/pg_log</code>是数据库运行活动日志的默认保存目录，它包括错误信息，查询日志以及启动/关闭数据库的信息。当PostgreSQL启动失败时，这里应该是你第一个应该查看的信息。一些Linux发行版以及其他的软件包管理系统会将这个日志目录移到某些地方，比如：<code>/var/log/postgresql</code></p>
+<p>你可以在<code>pg_log</code>目录里自由地删除、重命名、压缩或者移动文件而不会有什么不好的结果，只要Postgres用户仍然有权限写该目录。如果<code>pg_log</code>随着许多大文件而膨胀，你可能需要在<code>postgresql.conf</code>里减小你想记录日志的事件。</p>
+<h2 id="pg_xlog">pg_xlog</h2>
+<p><code>$PGDATA/pg_xlog</code>是PostgreSQL的事务日志。 这是一些二进制日志文件的集合，文件名类似<code>00000001000000000000008E</code>，它包含最近事务的一些描述数据。这些日志也被用于二进制复制。如果复制、归档或者<code>PITR</code>失败了，当归档正在恢复时，这个目录保存的数据库日志可能会膨胀数GB。这可能会导致你用完你的磁盘空间。不像<code>pg_log</code>，你不能自由地删除、移动或者压缩这个目录的文件。你甚至不能在没有符号链接到该目录的情况下移动这个目录。删除<code>pg_xlog</code>的文件可能会导致不可恢复的数据库损坏。</p>
+<p>Deleting pg_xlog files may result in irrecoverable database corruption.如果你发现自己处在这样的情况：你发现有100G大小的文件在<code>pg_xlog</code>目录并且数据也启动不了，并且你已经禁止<code>归档/复制</code>并且尝试清理磁盘空间等任何其他的方式，请做以下两个步骤：</p>
+<ol>
+<li>从<code>pg_xlog</code>目录里移动文件到一个备份磁盘或者共享网络驱动器中，也不要删除它们，并且 </li>
+<li>移动一些最老的文件，直到足够允许PostgreSQL启动起来。 </li>
+</ol>
+<h2 id="pg_clog">pg_clog</h2>
+<p><code>$PGDATA/pg_clog</code>包含了事务的元数据。这种日志用于告诉PostgreSQL哪个事务已经完成、哪个还没有完成。clog是比较小的并且没有任何理由会膨胀，所以，你应该没有任何理由去碰触它。在任何时候你都不应该从<code>pg_clog</code>里删除文件，如果你这样子做，还不如完全地删除整个数据库目录。缺少clog是不可恢复的。请注意，这意味着，如果你在<code>$PGDATA</code>目录里备份文件，你应该确定同时包含<code>pg_clog</code>和<code>pg_xlog</code>，否则你可能会发现你的备份是不可用的。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/12/-翻译-CTE表达式和临时表的区别/" data-id="0heyzu3brmhew9hk" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="9d2ps76vuefad6bu" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CTE表达式/">CTE表达式</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/临时表/">临时表</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/01/17/-翻译-高效使用PostgreSQL索引/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">[翻译]高效使用PostgreSQL索引</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
-</section>
+  <section id="comments">
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="post--翻译-PostgreSQL中的log-xlog和clog" data-title="[翻译]PostgreSQL中的log, xlog和clog" data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+    var duoshuoQuery = {short_name:'postgresqldba'};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] 
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+      </script>
+    <!-- 多说公共JS代码 end -->
+  </section>
+  </section>
         
           <aside id="sidebar">
   
