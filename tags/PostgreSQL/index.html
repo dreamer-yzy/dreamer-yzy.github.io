@@ -115,7 +115,7 @@ ga('send', 'pageview');
 <p>你可以在<code>pg_log</code>目录里自由地删除、重命名、压缩或者移动文件而不会有什么不好的结果，只要Postgres用户仍然有权限写该目录。如果<code>pg_log</code>随着许多大文件而膨胀，你可能需要在<code>postgresql.conf</code>里减小你想记录日志的事件。</p>
 <h2 id="pg_xlog">pg_xlog</h2>
 <p><code>$PGDATA/pg_xlog</code>是PostgreSQL的事务日志。 这是一些二进制日志文件的集合，文件名类似<code>00000001000000000000008E</code>，它包含最近事务的一些描述数据。这些日志也被用于二进制复制。如果复制、归档或者<code>PITR</code>失败了，当归档正在恢复时，这个目录保存的数据库日志可能会膨胀数GB。这可能会导致你用完你的磁盘空间。不像<code>pg_log</code>，你不能自由地删除、移动或者压缩这个目录的文件。你甚至不能在没有符号链接到该目录的情况下移动这个目录。删除<code>pg_xlog</code>的文件可能会导致不可恢复的数据库损坏。</p>
-<p>Deleting pg_xlog files may result in irrecoverable database corruption.如果你发现自己处在这样的情况：你发现有100G大小的文件在<code>pg_xlog</code>目录并且数据也启动不了，并且你已经禁止<code>归档/复制</code>并且尝试清理磁盘空间等任何其他的方式，请做以下两个步骤：</p>
+<p>如果你发现自己处在这样的情况：你发现有100G大小的文件在<code>pg_xlog</code>目录并且数据也启动不了，并且你已经禁止<code>归档/复制</code>并且尝试清理磁盘空间等任何其他的方式，请做以下两个步骤：</p>
 <ol>
 <li>从<code>pg_xlog</code>目录里移动文件到一个备份磁盘或者共享网络驱动器中，也不要删除它们，并且 </li>
 <li>移动一些最老的文件，直到足够允许PostgreSQL启动起来。 </li>
@@ -126,7 +126,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="9d2ps76vuefad6bu" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="pfqeo0463vaz9c51" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -219,7 +219,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="mez2gzr7ldmt0avw" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="6c2k40q4ppw4fiuf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -285,7 +285,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="4ge06sydb0ve2w1f" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/15/PostgreSQL中代替MySQL的内存表方法/" data-id="cyhrgm7mukelpf5f" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -386,7 +386,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="k5d1zro6k0lufown" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="fnhrd9wzvnet91m2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -479,7 +479,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="im71z36hzyl9duk8" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="zc2of1p5kqh4j4jf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -567,7 +567,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="zi475coi8gd4mtje" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="xvkwjbw7hog8rwrs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -655,7 +655,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="8gs79yyv6vv8h3xe" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="fjoc95qzrcpt7nqs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -735,7 +735,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="vgqj0r0gbrzjduin" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="v4lbnltnlymx15zn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
@@ -816,7 +816,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="59w57dpbstn3mdul" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="auaywcywui1ecxc3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
@@ -865,7 +865,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="jpn6qxhla146ijpr" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/15/SQL语句各部分的执行顺序/" data-id="a6dblv8b45mqu0ab" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
