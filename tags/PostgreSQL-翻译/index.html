@@ -82,6 +82,104 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post--翻译-手把手教你配置流复制" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/24/-翻译-手把手教你配置流复制/" class="article-date">
+  <time datetime="2015-01-24T05:24:39.000Z" itemprop="datePublished">1月 24 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/24/-翻译-手把手教你配置流复制/">[翻译]手把手教你配置流复制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://bajis-postgres.blogspot.com/2013/12/step-by-step-guide-to-setup-steaming.html" target="_blank" rel="external">原文</a></p>
+<p>尽管许多人知道流复制，这篇博客是为初学者准备的，我将从必要条件和一些关于流复制的介绍开始。:-)</p>
+<h2 id="必要条件：">必要条件：</h2>
+<ol>
+<li><p>在各自的服务器上安装相同版本的PostgreSQL数据库。</p>
+</li>
+<li><p>配置”postgres”用户的无密码ssh认证（译注：如使用ssh的公私密匙）</p>
+</li>
+<li><p>生产环境的服务器必须在<code>postgresql.conf</code>文件配置通过设置<code>archive_mode</code>和<code>archive_command</code>参数来开启<code>WAL归档模式</code>。</p>
+</li>
+<li><p>生产环境的服务器和备份服务器之间应该一直拥有连接以让归档的<code>WAL</code>文件从生产环境的服务器传输到备份服务器.</p>
+</li>
+<li><p>明确地配置好你的备份机的环境和目录结构要与生产服务器的一样。</p>
+</li>
+</ol>
+<h2 id="介绍">介绍</h2>
+<p>它是一个异步机制；所以备机是延迟于主服务器。但不同于其他复制方法，这个延迟是非常短的，可能是一个单事务的延迟，这取决于网速，数据库负载以及流复制配置。此外，在主机上对每个备机的负载是最小的，允许一个主服务器支持多个备机。</p>
+<p>这个特性包含在PostgreSQL 9.0中，伴随的第二个数据库实例（译注：指stand-by是依赖于主服务器的二进制日志，在这期间会标记备机服务器只能接受只读请求）</p>
+<p>这是实践步骤所需命令：</p>
+<p>1.到主服务器，然后创建一个带有复制权限的<code>replication</code>用户。例如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ psql  </div><div class="line"></div><div class="line">Password <span class="keyword">for</span> user postgre<span class="variable">s:</span>  </div><div class="line"></div><div class="line">psql.bin (<span class="number">9.2</span>.<span class="number">1</span>) Type <span class="string">"help"</span> <span class="keyword">for</span> <span class="keyword">help</span>.  </div><div class="line"></div><div class="line">postgres=# create user replication with replication password <span class="string">'&lt;password&gt;'</span>;</div></pre></td></tr></table></figure>
+
+<p>2.我们需要在主服务器的<code>/opt/PostgreSQL92/data/</code>（译注：就是postgresql的数据目录）目录修改<code>postgresql.conf</code>参数以及<code>pg_hba.conf</code>的验证参数。设置好连接及验证，以让备机服务器可以成功地连接到主服务器的<code>replication</code>这个假的数据库。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="variable">$ </span><span class="variable">$EDITOR</span> postgresql.conf   </div><div class="line">listen_addresses = <span class="string">'*'</span>  </div><div class="line"></div><div class="line"><span class="variable">$ </span><span class="variable">$EDITOR</span> pg_hba.conf  </div><div class="line"><span class="comment">#备机服务器必须有超级用户身份的访问权限</span></div><div class="line"></div><div class="line">host replication replication <span class="number">10.176</span>.<span class="number">0</span>.<span class="number">0</span>/<span class="number">16</span> md5</div></pre></td></tr></table></figure>
+
+<p>3.在主服务器上设置流复制相关的参数。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"> $EDITOR postgresql.conf  </div><div class="line"></div><div class="line"><span class="comment">#为了在备机服务器上开始“只读”查询，wal_level必须设置成“hot_standby”. 但是，如果你一直不会在stand-by模式下连接到备机，你可以选择“archive”  </span></div><div class="line"><span class="variable">wal_level =</span> hot_standby  </div><div class="line"></div><div class="line"><span class="comment">#设置允许备机的最大并发连接数  </span></div><div class="line"><span class="variable">max_wal_senders =</span> <span class="number">5</span>   </div><div class="line"></div><div class="line"><span class="comment">#为了防止主服务器在循环利用WAL段文件前移动备机服务器所要求的WAL段文件，设置保留在 pg_xlog 目录里最小的段文件数。   </span></div><div class="line"><span class="variable">wal_keep_segments =</span> <span class="number">32</span>  </div><div class="line"></div><div class="line"><span class="comment">#在主服务器上开启WAL归档到一个归档目录以让备服务器获取。如果"wal_keep_segments"值足够大以保留备机所要求的WAL段文件数，这可能就不必要开启。  </span></div><div class="line"><span class="variable">archive_mode    =</span> on   </div><div class="line"></div><div class="line"><span class="variable">archive_command =</span> 'cp %p &lt;archive location&gt;%f && scp %p postgres@<span class="number">10.176</span>.<span class="number">112.189</span>:&lt;archive location&gt;/%f'</div></pre></td></tr></table></figure>
+
+<p>注意：在 <code>postgresql</code>文件里修改以上参数时，要重启服务器。</p>
+<p>4.在主服务器上重启postgres并检查参数是否生效。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line">postgres=# <span class="operator"><span class="keyword">show</span> archive_command ;</span>  </div><div class="line">      archive_command  </div><div class="line">     <span class="comment">-----------------  </span></div><div class="line"> cp %p /var/PG92_Archives/%f  </div><div class="line"></div><div class="line">(1 row)  </div><div class="line"></div><div class="line">postgres=# <span class="operator"><span class="keyword">show</span> archive_mode ;</span>  </div><div class="line"> archive_mode  </div><div class="line"><span class="comment">-------------  </span></div><div class="line"> on  </div><div class="line">(1 row)  </div><div class="line"></div><div class="line">postgres=# <span class="operator"><span class="keyword">show</span> wal_level ;</span>  </div><div class="line">  wal_level  </div><div class="line"><span class="comment">------------  </span></div><div class="line"> hot_standby  </div><div class="line"></div><div class="line">(1 row)  </div><div class="line"></div><div class="line">postgres=# <span class="operator"><span class="keyword">show</span> max_wal_senders ;</span>  </div><div class="line"> max_wal_senders  </div><div class="line"><span class="comment">----------------  </span></div><div class="line"> 5  </div><div class="line">(1 row)  </div><div class="line"></div><div class="line">postgres=# <span class="operator"><span class="keyword">show</span> wal_keep_segments ;</span>  </div><div class="line"> wal_keep_segments  </div><div class="line"><span class="comment">------------------  </span></div><div class="line"> 32</div></pre></td></tr></table></figure>
+
+<p>5.对主服务器的数据目录做一个基础备份。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>psql ­c <span class="string">"SELECT pg_start_backup('label', true)"</span>   </div><div class="line"></div><div class="line"><span class="variable">$ </span>cp /opt/<span class="constant">PostgreSQL92</span>/data/* backup/   </div><div class="line"></div><div class="line"><span class="variable">$psql</span> ­c <span class="string">"SELECT pg_stop_backup()"</span>   </div><div class="line"></div><div class="line">-- 打包备份目录并传输到备机的数据目录下  </div><div class="line"></div><div class="line"><span class="variable">$tar</span> ­cvzf backup.tar backup/  </div><div class="line"></div><div class="line"><span class="variable">$scp</span> backup.tar postgres<span class="variable">@10</span>.<span class="number">176.112</span>.<span class="number">189</span><span class="symbol">:/opt/PostgreSQL92/</span></div></pre></td></tr></table></figure>
+
+<p>6.移动备机的数据内容到其他的位置，解压备份的文件并复制解压后的数据到备机的数据目录。</p>
+<p>7.在备服务器上像主服务器那样设置复制相关的参数，连接以及验证，以便让备服务器在主服务器宕机之后可以切换成主服务器。</p>
+<p>8.在备服务器上开启只读查询。但如果在主服务器上的<code>wal_level</code>参数值是<code>archive</code>，那<code>hot_standby</code>就不需要更改（即是：off）</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ <span class="variable">$EDITOR</span> postgresql.conf  </div><div class="line">hot_standby = <span class="literal">on</span></div></pre></td></tr></table></figure>
+
+<p>9.在备机服务器上创建一个恢复命令文件，以下参数对于流复制是必需的。、</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">$ $EDITOR recovery.conf  </div><div class="line"><span class="comment"># 指明是否开启服务器作为一个备机。在流复制里，这个参数必须要开启。</span></div><div class="line"><span class="variable">standby_mode          =</span> 'on'  </div><div class="line"></div><div class="line"><span class="comment"># 指明用于备服务器连接到主服务器的连接字符串。  </span></div><div class="line"><span class="variable">primary_conninfo      =</span> '<span class="variable">host=</span><span class="number">10.176</span>.<span class="number">112.188</span> <span class="variable">port=</span><span class="number">5432</span> <span class="variable">user=</span>replication  </div><div class="line"><span class="variable">password=</span>&lt;password&gt; <span class="variable">application=</span>&lt;app_name&gt;'  </div><div class="line"></div><div class="line"><span class="comment"># 指定一个触发文件让备服务器感觉到它的时候就会停止流复制（即：故障转移）  </span></div><div class="line"><span class="variable">trigger_file =</span> '&lt;any <span class="variable">path=</span><span class="string">""</span>&gt;' ===&gt; 不要创建这个文件。当你想主从切换的时候才需要创建它。</div><div class="line"></div><div class="line"><span class="comment"># 指定一个命令从WAL归档中加载归档段文件。如果“wal_keep_segments”是一个足够大的数值以保留WAL段文件满足备机的要求，这可能不是必要的。但一个高负载情况下可能会导致段文件在备服务器完全同步之前就已经循环利用的，这时就要求你重新开始一个新的基础备份。  </span></div><div class="line"><span class="variable">restore_command =</span> 'cp &lt;archive_location&gt;%f <span class="string">"%p"</span>'  </div><div class="line">&lt;/archive_location&gt;&lt;/any&gt;</div></pre></td></tr></table></figure>
+
+<p>10.在备服务器上启动postgres。它就会开始流复制并且你会看到像以下的信息：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">LOG</span>: <span class="string"> entering standby mode  </span></div><div class="line"><span class="attribute">LOG</span>: <span class="string"> consistent recovery state reached at 0/1D000078  </span></div><div class="line"><span class="attribute">LOG</span>: <span class="string"> record with zero length at 0/1D000078  </span></div><div class="line"><span class="attribute">LOG</span>: <span class="string"> streaming replication successfully connected to primary</span></div></pre></td></tr></table></figure>
+
+<p>11.你可以通过比较主服务器上的当前的WAL写位置与备服务器上的最新“接收/重做”的WAL位置来计算复制的延迟。它们各自可以通过在主服务器端使用<code>pg_current_xlog_location</code>函数来获取，在备服务器上通过<code>pg_last_xlog_receive_location</code>或者<code>pg_last_xlog_replay_location</code>来获取。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>psql ­c <span class="string">"SELECT pg_current_xlog_location()"</span> ­h192.<span class="number">168.0</span>.<span class="number">10</span>  </div><div class="line">(primary host)  </div><div class="line"> pg_current_xlog_location  </div><div class="line"> <span class="number">0</span>/<span class="number">2000000</span>  </div><div class="line"></div><div class="line">(<span class="number">1</span> row)  </div><div class="line"></div><div class="line"><span class="variable">$ </span>psql ­c <span class="string">"select pg_last_xlog_receive_location()"</span> ­h192.<span class="number">168.0</span>.<span class="number">20</span>  </div><div class="line">(standby host)  </div><div class="line"> pg_last_xlog_receive_location  </div><div class="line"> <span class="number">0</span>/<span class="number">2000000</span>  </div><div class="line">(<span class="number">1</span> row)  </div><div class="line"></div><div class="line"><span class="variable">$ </span>psql ­c <span class="string">"select pg_last_xlog_replay_location()"</span> ­h192.<span class="number">168.0</span>.<span class="number">20</span>  </div><div class="line">(standby host)  </div><div class="line"> pg_last_xlog_replay_location  </div><div class="line"> <span class="number">0</span>/<span class="number">2000000</span>  </div><div class="line"></div><div class="line">(<span class="number">1</span> row)</div></pre></td></tr></table></figure>
+
+<p>12.其他检查流复制的方法有：最简单的方法是在备服务器上执行“select now()-pg_last_xact_replay_timestamp();”。<code>pg_last_xact_replay_timestamp()</code>函数给出在恢复期间最近的事务重做的时间戳，这些是在主服务器产生事务产生的提交或中止WAL记录的时间。如果在恢复期间没有事务重做，这个函数就会返回NULL。否则，如果恢复仍然在进行的话，它会一直递增。如果恢复已经完成，这时的值会保留在恢复期间中最近事务重做的值而不会变。当服务器已经正常启动并没有恢复，这个函数就返回NULL.你可以尝试在主服务器上做一些操作，然后检查这个函数的输出。<br>如果你想手工检查主备之间的延迟，那可以做以下步骤：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">步骤1：在主服务器上使用以下命令来创建表。</div><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">table</span> stream_delay (tstamp <span class="keyword">timestamp</span> without <span class="keyword">time</span> zone );</span>  </div><div class="line"></div><div class="line"><span class="operator"><span class="keyword">insert</span> <span class="keyword">into</span> stream_delay <span class="keyword">select</span> <span class="keyword">now</span>();</span>  </div><div class="line"></div><div class="line">步骤2: 在主服务器上使用调度工具cronjob每分钟执行以下命令。 </div><div class="line"><span class="operator"><span class="keyword">update</span> stream_delay <span class="keyword">set</span> tstamp=<span class="string">'now()'</span>;</span>  </div><div class="line"></div><div class="line">步骤3: 通过在备服务器上检索"stream_delay"表来证实延迟。</div><div class="line"></div><div class="line">它应该显示在主服务器上最近更新的时间。这个时间戳和备服务器的当前时间戳之差就是主服务器和备服务器之间的延迟。</div></pre></td></tr></table></figure>
+
+<p>你也可以通过使用ps命令来检查流复制的进展。显示的”LSNs”位置指明了备服务器已经写到了xlog的字节位置。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">[primary] <span class="variable">$ </span>ps ­ef | grep sender  </div><div class="line">postgres  <span class="number">6879</span>  <span class="number">6831</span>  <span class="number">0</span> <span class="number">10</span><span class="symbol">:</span><span class="number">31</span> ?        <span class="number">00</span><span class="symbol">:</span><span class="number">00</span><span class="symbol">:</span><span class="number">00</span> <span class="symbol">postgres:</span> wal sender  </div><div class="line">process postgres <span class="number">127.0</span>.<span class="number">0</span>.<span class="number">1</span>(<span class="number">44663</span>) streaming <span class="number">0</span>/<span class="number">2000000</span>  </div><div class="line"></div><div class="line">[standby] <span class="variable">$ </span>ps ­ef | grep receiver  </div><div class="line"></div><div class="line">postgres  <span class="number">6878</span>  <span class="number">6872</span>  <span class="number">1</span> <span class="number">10</span><span class="symbol">:</span><span class="number">31</span> ? receiver process   streaming <span class="number">0</span>/<span class="number">2000000</span></div></pre></td></tr></table></figure>
+
+<p>谢谢大家，请让我知道我是否遗漏了什么。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/24/-翻译-手把手教你配置流复制/" data-id="6yc0c8mvaccx6sbc" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-PostgreSQL中的log-xlog和clog" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" class="article-date">
@@ -126,7 +224,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="pfqeo0463vaz9c51" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/" data-id="2tmn26ch3v9j0rew" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -219,7 +317,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="6c2k40q4ppw4fiuf" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/17/-翻译-高效使用PostgreSQL索引/" data-id="xshbzpe94znm3eca" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -320,7 +418,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="fnhrd9wzvnet91m2" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/14/-翻译-PostgreSQL中的死锁/" data-id="3mspbnk4bkhehcal" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -413,7 +511,100 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="zc2of1p5kqh4j4jf" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复/" data-id="v8afz45ph3ihemi8" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post--翻译-PostgreSQL-9-0-备份-恢复副本" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复副本/" class="article-date">
+  <time datetime="2015-01-13T12:40:02.000Z" itemprop="datePublished">1月 13 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复副本/">[翻译]PostgreSQL 9.0 备份 &amp; 恢复</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://raghavt.blogspot.com/2011/05/postgresql-90-backup-recovery.html" target="_blank" rel="external">原文</a></p>
+<p><img src="/img/postgresql-backup-recovery-1.png" alt=""></p>
+<p>在PostgreSQL,备份和恢复相对于其他的数据库是非常友好的。许多人也许不赞同，但我们不要陷入争论中。来讨论下备份，PostgreSQL不支持增量备份，然而，有许多非常统一的备份工具和操作系统级别的解决办法来实现这个目的。</p>
+<p>我的关于PostgreSQL备份和恢复的图解给出了一个完整的概念的想法。看图，你可以辨别出哪个备份可以用来还原或恢复。</p>
+<h2 id="逻辑备份">逻辑备份</h2>
+<p><code>pg_dump</code>,<code>pg_restore</code>和<code>pg_dumpall</code>工具是用来进行逻辑备份的。<code>pg_dump</code>和<code>pg_restore</code>可以帮助你在数据库级别、模式级别和表级别备份。<code>pg_dumpall</code>用于集群级别备份。</p>
+<p><code>pg_dump</code>支持三种格式，Plain SQL 格式（纯文本SQL格式）， Custom 格式（自定义格式）和 Tar格式（打包格式）。Custom和Tar格式的备份与<code>pg_restore</code>工具是兼容的，然而，Plain SQL（纯文本SQL）格式的备份是与<code>psql</code>工具兼容的用于还原。</p>
+<p>以下是每个备份级别和相关的还原命令的例子。</p>
+<p>注意：在<code>.bash_profile</code>里设置默认的<code>PGDATABASE</code>, <code>PGUSER</code>, <code>PGPASSWORD</code>和<code>PGPORT</code>值。（在Windows里意思是环境变量）</p>
+<h4 id="纯文本SQL格式的备份和还原">纯文本SQL格式的备份和还原</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">$ pg_dump -U username -Fp dbname  &gt;</span>  filename </span></div><div class="line"><span class="keyword">or</span> </div><div class="line"><span class="variable">$ </span>pg_dump -<span class="constant">U</span> username dbname -f  filename </div><div class="line"><span class="keyword">or</span> </div><div class="line"><span class="variable">$ </span>pg_dump -<span class="constant">Fp</span> -<span class="constant">U</span> username dbname -f  filename </div><div class="line"> </div><div class="line">使用 psql 命令来还原</div><div class="line"> </div><div class="line"><span class="variable">$ </span>psql -<span class="constant">U</span> username -f filename dbname </div><div class="line"><span class="keyword">or</span> </div><div class="line">postgres=<span class="comment"># \i SQL-file-name     //in psql terminal with \i option</span></div></pre></td></tr></table></figure>
+
+
+<h4 id="自定义格式">自定义格式</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ pg_dump -Fc dbname <span class="operator">-f</span> filename </div><div class="line">$ pg_restore -Fc -U username <span class="operator">-d</span> dbname filename.dmp</div></pre></td></tr></table></figure>
+
+<h4 id="Tar格式">Tar格式</h4>
+<p>$ pg_dump -Ft dbname -f filename<br>$ pg_restore -U username -d dbname filename<br>or<br>$ cat tar-file.tar | psql -U username dbname  </p>
+<p>注意：模式级别和表级别备份执行方式是一样的，通过添加相关的选项就可以了。</p>
+<h4 id="集群级别备份">集群级别备份</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">$pg_dumpall -p portnumber &gt;</span> filename </span></div><div class="line"> </div><div class="line">使用 psql 命令来还原</div><div class="line"> </div><div class="line"><span class="variable">$ </span>psql -f filename</div></pre></td></tr></table></figure>
+
+<p>这些都是非常好的备份和恢复的方法。特别地，<code>www.2ndQuadrant.com</code> 出版的，作者是Simon Riggs 和 Hannu Krosing 的书： “PostgreSQL 9 Administration Cookbook - 2010”，是学习PostgreSQL备份和恢复的很好方式。</p>
+<h2 id="物理备份（文件系统备份）">物理备份（文件系统备份）</h2>
+<h4 id="冷备份">冷备份</h4>
+<p>在冷备份中，当Postgre实例关闭时，进行一个非常简单的<code>/data</code>目录的文件系统备份，意思是，实现一个前后一致的数据目录备份，在复制之前，数据库服务器应该关闭。PostgreSQL通过软链接来灵活地保持<code>pg_xlog</code>和<code>pg_tablspce</code>在不同挂载点。当复制<code>/data</code>目录并想包括那些软链接的数据时，可以使用以下命令。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">tar czf backup<span class="built_in">.</span>tar<span class="built_in">.</span>gz <span class="variable">$PGDATA</span> </div><div class="line"><span class="literal">or</span> </div><div class="line">cp <span class="attribute">-r</span> <span class="variable">$PGDATA</span> /backup<span class="subst">/</span> </div><div class="line"><span class="literal">or</span> </div><div class="line">rsync <span class="attribute">-a</span> <span class="variable">$PGDATA</span> /wherever/<span class="built_in">data</span></div></pre></td></tr></table></figure>
+
+<h4 id="热备份（在线备份）:">热备份（在线备份）:</h4>
+<p>在热备份中，集群会一直在启动和运行，并且数据库应该是在归档日志模式中。两个系统函数将会唤醒实例来开始、关闭热备份处理（<code>pg_start_backup()</code>, <code>pg_stop_backup()</code>）。在开始进一步进行在线热备前，让我们讨论一下对于在线备份中强制的数据库归档模式。</p>
+<h4 id="开启_WAL（预写式日志）归档:">开启 WAL（预写式日志）归档:</h4>
+<p>下面将简要介绍一下 <code>PITR</code>/调整 WAL 等等。目前，我们先看看WAL归档。在PostgreSQL数据库系统，实际上数据库“写”一些额外被称为预写日志（WAL）文件到磁盘。它包含了一些在数据库系统中的写记录。在崩溃的情况下，数据库可以从这些记录中还原或恢复。</p>
+<p>一般地，写日志记录会在定期匹配时（叫做checkpoints,检查点）记录该检查点，然后在它不再需要时删除它。你也可以使用WAL作为备份，因为它是一个所有数据库的写记录。（我注：就是更改数据库的操作）。</p>
+<h4 id="WAL归档概念:">WAL归档概念:</h4>
+<p>WAL是由每16MB大小（我注：文件）组成的，这被称为segments（段）。WAL驻留在<code>pg_xlog</code>目录下，这是一个位于<code>数据目录</code>下的子目录。文件名会被PostgreSQL实例按数字升序来命名，执行一个WAL基础备份，这需要一个基础备份，一个数据目录的完整备份，并且WAL段会介于基础备份和当前日期之间。</p>
+<p>配置WAL段归档，可以通过在<code>postgresql.conf</code>里的两个配置参数来设置:<code>archive_command</code>和<code>archive_mode</code>。使集群进入归档模式需要重启PostgreSQL。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="setting">archive_mode= <span class="value"><span class="keyword">on</span>/<span class="keyword">off</span> (boolean parameter) </span></span></div><div class="line"><span class="setting">archive_command = <span class="value">'cp –i %p /Archive/Location/f% '</span></span></div></pre></td></tr></table></figure>
+
+<p>注意：<code>%p</code>为通过路径来复制文件来作为一个文件名，<code>%f</code>没有为目标文件设置目录。（我注：也就是%p代表pg_xlog的绝对路径的文件，%f表示pg_xlog目录下的文件名，所以%p前没有目录，%f前有目录前缀）。</p>
+<p>关于归档进程的更加多信息，请参考<a href="/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/">“PostgreSQL 9.0 内存 &amp; 进程”</a></p>
+<h4 id="在线备份_:">在线备份 :</h4>
+<p>采取在线备份：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">步骤 1 <span class="value">: 在psql终端执行 <span class="function">pg_start_backup</span>(<span class="string">'lable'</span>)  </span></div><div class="line">postgres=# select <span class="function">pg_start_backup</span>(<span class="string">'fb'</span>); </div><div class="line"></div><div class="line">步骤 2 <span class="value">: 操作系统级别地复制 <span class="variable">$PGDATA</span> 目录到任何一个备份的位置。</span></div><div class="line">$ cp -r <span class="variable">$PGDATA</span>  /anylocation </div><div class="line"></div><div class="line">步骤 <span class="number">3</span> : 在psql终端执行 <span class="function">pg_stop_backup</span>()</div><div class="line">postgres=# select <span class="function">pg_stop_backup</span>(); </div><div class="line"></div><div class="line">注意：这两个函数不需要在数据库的同一个会话里执行。备份模式是全局的并且是持久的。</div></pre></td></tr></table></figure>
+
+<p><img src="/img/postgresql-backup-recovery-2.png" alt=""></p>
+<p>在PostgreSQL中，没有目录来保存在线备份的开始时间和结束时间。然而，当在线备份正在进行时，会有数个文件会被创建和删除。</p>
+<p><code>pg_start_backup(&#39;label&#39;)</code>和<code>pg_stop_backup</code>是两个执行在线备份的系统函数。通过<code>pg_start_backup(&#39;label&#39;)</code>会创建一个文件<code>backup_label</code>在<code>$PGDATA</code>目录下，通过<code>pg_stop_backup()</code>会创建一个文件<code>wal-segement-number.backup</code>在<code>$PGDATA/pg_xlog</code>目录下。<code>backup_label</code>会给出开始时间以及WAL(预写式日志）段的检查点位置，也会通知PostgreSQL实例是处于备份模式。在<code>$PGDATA/pg_xlog</code>目录下的<code>wal-segment-number.backup</code>文件描述了开始和停止时间，带有WAL段号的检查点位置。</p>
+<p>注意： 在<code>pg_stop_backup()</code>之后，PostgreSQL实例就会删除<code>backup_label</code>文件。</p>
+<p>提交你的评论，建议。</p>
+<p>—Raghav</p>
+<p>By Raghavendra </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/13/-翻译-PostgreSQL-9-0-备份-恢复副本/" data-id="f380qjlglazyrfuv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -501,7 +692,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="xvkwjbw7hog8rwrs" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/09/-翻译-PostgreSQL-9-0-内存-进程/" data-id="jah2c575funf75hs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -589,7 +780,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="fjoc95qzrcpt7nqs" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/08/-翻译-PostgreSQL-9-0-构架/" data-id="sdzjlxw95iocxaf4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -700,7 +891,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" data-id="l2txuy60m6fvk9dz" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" data-id="g2xqg85zsfwu4qk1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -750,133 +941,10 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="3ii1e4dcdzv83hwm" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="oirzteifbw21xcjf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-PostgreSQL版本策略" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="article-date">
-  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.postgresql.org/support/versioning/" target="_blank" rel="external">原文</a></p>
-<h2 id="版本策略">版本策略</h2>
-<p>我们始终建议所有用户都运行最新可用的次版本号的发行版，无论你正在使用哪个主版本的PostgreSQL。</p>
-<p>PostgreSQL主版本包含新特性并且大概一年发行一次。主版本是通过增加第一个或第二个版本数字来标识的，例如：9.1 到 9.2 </p>
-<p>主版本通常改变内部系统表和数据文件的格式。这些改变通常是非常复杂的，所以，我们不保证所有存储数据会向后兼容。主版本一般使用 备份/恢复 数据库或者使用 <code>pg_upgrade</code>模块来升级。</p>
-<p>次版本是版本号的第三部分的数字。例如：9.2.3 到 9.2.4。PostgreSQL团队仅在修复bugs时才会增加次版本号。所有用户都尽可能应该升级到最新的次版本号。虽然升级总是会有风险，PostgreSQL次版本升级仅修复那些经常遇到、安全性以及数据崩溃的bugs，以减少升级的风险。社区认为，不升级比升级更危险。</p>
-<p>升级次版本，不要求备份和恢复数据；仅仅只需停止数据库服务器，安装更新的二进制文件，然后重新启动服务器即可。对于某些发行版本，可能需要手工升级，所以，在升级之前，请必须阅读发行版的提示。</p>
-<h2 id="PostgreSQL发行版支持策略">PostgreSQL发行版支持策略</h2>
-<p>PostgreSQL目的是对主版本号完整地支持5年。</p>
-<p>当一个发行版不再受支持时，我们可能（这取决于我们提交者的决定）会继续为源代码进行打上关键的补丁。但项目不会产生正式发行或者二进制包，但是更新后的源代码可以从我们的代码控制系统里获取。</p>
-<p>该策略会在尽最大努力的基础上实行。在极端情况下，它可能在计划的生命周期内就不再被支持了；例如，如果在给定的主版本上发现有一个严重的bug超出了代码稳定性或者要牺牲程序序兼容性来解决的。在这种情况下，该主要版本就要提前退休了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="tbdv8czc0xecq273" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" class="article-date">
-  <time datetime="2014-12-20T01:19:19.000Z" itemprop="datePublished">12月 20 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/">[翻译]在Ubuntu服务器上将PostgreSQL从9.1升级到9.3</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://dba.stackexchange.com/a/60541" target="_blank" rel="external">原文地址</a></p>
-<p>从不同的重大版本升级PostgreSQL（例如，从9.1升级到9.3），基本上有三种方法：</p>
-<h2 id="用_pg_dump_升级">用 pg_dump 升级</h2>
-<p>如果可以的话，首先推荐的方法是使用新版本（9.3）进行二进制备份一个老（9.1）版本数据，然后在新版本创建的集群中恢复数据。</p>
-<p>这种途径，通常，是比较慢的，但是也是最实用的。使它进行得更加快的方法之一是，使用并发。为了并行备份任务，你可以这样子做：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">$</span> <span class="comment">pg_dump</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">format=directory</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">jobs=4</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">no</span><span class="literal">-</span><span class="comment">synchronized</span><span class="literal">-</span><span class="comment">snapshots</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">file=/path/to/mydump</span> <span class="comment">mydatabase</span></div></pre></td></tr></table></figure>
-
-<p>你可以为每个数据库进行这样子的备份，并调整 <code>--jobs=4</code> 参数值到任何值（测试从2到CPU核心数，并看看哪个更快）。当然，在备份期间，没人应该连接到数据库，任何的修改将会导致备份中断（因为非安全选项 <code>--no-synchronized-snapshots</code>）</p>
-<p>之后，你可以使用<code>pg_restore</code>来恢复到新的实例中：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ createdb &lt;<span class="keyword">options</span>&gt; -T template0 mydatabase</div><div class="line">$ pg_restore --<span class="keyword">exit</span>-<span class="keyword">on</span>-error --jobs=<span class="number">4</span> --dbname=mydatabase /path/<span class="keyword">to</span>/mydump</div></pre></td></tr></table></figure>
-
-<p>之后, 建议在数据库上执行<code>ANALYZE</code>命令：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ vacuumdb --analyze-<span class="keyword">only</span> mydatabase</div></pre></td></tr></table></figure>
-
-<p>（如果你可以等待时间的话，仅仅运行 <code>--analyze</code> 来同时进行 VACUUM 数据库并更新可视数据字典）</p>
-<h2 id="使用_pg_upgrade_升级">使用 pg_upgrade 升级</h2>
-<p>另一种方法，是使用扩展包中的 <code>pg_upgrade</code>。它提供了一个非常快速的方法来升级PostgreSQL，就是使用 <code>--link</code> 方法。<br>使用之前，你必须备份整个数据目录，因为在 <code>--link</code> 模式下，如果出错，你可能丢失所有数据（包括新旧数据）。并且，请完整地阅读文档，特别是底部的提示（<code>pg_upgrade</code>有许多限制）</p>
-<h2 id="使用基于复制工具的触发器来升级">使用基于复制工具的触发器来升级</h2>
-<p>另一种升级版本的选项，是使用基于触发器的复制工具 。比如<code>Slony, Bucardo和Londiste</code>。</p>
-<p>这个选项可能用于最少停机时间，但是也是最难操作的。</p>
-<p>这样做的话，需要建立一个 <code>master-slave</code>，主库是你当前版本（9.1），从库是新版本（9.3）。之后，等待第一次同步（系统仍然在生产环境），之后你关闭所有连接到数据库（停机时间从这里开始），等待从库赶上，然后提升（从库）到主库，然后重定向所有客户/应用程序到新版本数据库。打完收工。</p>
-<p><code>Slony</code>文档提供了一步一步地教你使用<code>Slony</code>来升级PostgreSQL.</p>
-<h2 id="应该选择哪个？">应该选择哪个？</h2>
-<p>Well, as always depends, resuming:<br>好了，这要取决于什么，总结一下：</p>
-<p><code>dump+restore</code>是最可靠的，但通常也是最慢的一种（尽管，并行性可以带来更好的结果）</p>
-<p><code>pg_upgrade</code>是对于比较少的停机时间来说是最好的选择之一（如果你能使用的话，看看它的限制）。它通常只需要花数分钟的时间，甚至对于大的数据库也是这样。</p>
-<p><code>触发器复制</code>，毫无疑问是最少停机时间（几乎为0）的做法，但是它真的好难实行，并且我仅仅建议专家（PostgreSQL和复制工具二者都非常熟悉的专家）</p>
-<p>希望我可以帮到你。祝你好运。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/20/-翻译-在Ubuntu服务器上将PostgreSQL从9-1升级到9-3/" data-id="mdl5fmrrth3d1jif" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
@@ -898,7 +966,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">33</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">31</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">35</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">33</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -907,7 +975,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">20</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -925,7 +993,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">20</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -935,6 +1003,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/01/24/-翻译-手把手教你配置流复制/">[翻译]手把手教你配置流复制</a>
+          </li>
         
           <li>
             <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/">[翻译]PostgreSQL中的log, xlog和clog</a>
@@ -950,10 +1022,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/01/14/集群中Session解决方案之Spring-Session/">集群中Session解决方案之Spring Session</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/14/-翻译-PostgreSQL中的死锁/">[翻译]PostgreSQL中的死锁</a>
           </li>
         
       </ul>

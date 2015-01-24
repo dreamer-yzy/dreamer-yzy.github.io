@@ -82,6 +82,149 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-PostgreSQL使用-postgres-fdw-进行跨库操作" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/" class="article-date">
+  <time datetime="2015-01-05T12:20:49.000Z" itemprop="datePublished">1月 5 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/">PostgreSQL使用 postgres_fdw 进行跨库操作</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="说明">说明</h2>
+<p>该 <code>postgres_fdw</code> 模块提供了 远程-数据 包装器 <code>postgres_fdw</code>，它能够用于访问一些保存在外部 PostgreSQL 服务器的数据。</p>
+<p>该模块提供的功能很大程度上与以前的<code>dblink</code>模块重叠。但是<code>postgres_fdw</code> 提供了更加透明和符合标准的语法来访问远程表，并且能够在某些情况下有更好的性能。</p>
+<h2 id="安装extension">安装extension</h2>
+<p>cd contrib/postgres_fdw<br>make install</p>
+<h2 id="安装到数据库">安装到数据库</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># CREATE EXTENSION postgres_fdw;</span></div><div class="line">CREATE EXTENSION</div><div class="line"><span class="variable">test=</span><span class="comment">#</span></div></pre></td></tr></table></figure>
+
+<h2 id="检查是否安装成功">检查是否安装成功</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=<span class="preprocessor"># \dx postgres_fdw;</span></div><div class="line">                             List of installed extensions</div><div class="line">     Name     | Version | Schema |                    Description                    </div><div class="line">--------------+---------+--------+----------------------------------------------------</div><div class="line"> postgres_fdw | <span class="number">1.0</span>     | <span class="keyword">public</span> | foreign-data wrapper <span class="keyword">for</span> remote PostgreSQL <span class="title">servers</span></div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
+
+<h2 id="创建并查看一个远程服务器">创建并查看一个远程服务器</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">test=# \dx postgres_fdw;</div><div class="line">                             List of installed extensions</div><div class="line">     Name     | Version | Schema |                    Description                    </div><div class="line"><span class="comment">--------------+---------+--------+----------------------------------------------------</span></div><div class="line"> postgres_fdw | 1.0     | public | foreign-data wrapper for remote PostgreSQL servers</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=# <span class="operator"><span class="keyword">CREATE</span> <span class="keyword">SERVER</span> postgres_server <span class="keyword">FOREIGN</span> <span class="keyword">DATA</span> WRAPPER postgres_fdw OPTIONS (host <span class="string">'10.0.0.10'</span>, port <span class="string">'5432'</span>, dbname <span class="string">'test'</span>);</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">SERVER</span></span></div><div class="line">test=# \des;</div><div class="line">              List of foreign servers</div><div class="line">      Name       |  Owner   | Foreign-data wrapper</div><div class="line"><span class="comment">-----------------+----------+----------------------</span></div><div class="line">postgres_server | postgres | postgres_fdw</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h2 id="创建一个远程映射用户">创建一个远程映射用户</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">USER</span> MAPPING <span class="keyword">FOR</span> <span class="keyword">PUBLIC</span> <span class="keyword">SERVER</span> postgres_server OPTIONS (<span class="keyword">user</span> <span class="string">'postgres'</span>, <span class="keyword">password</span> <span class="string">'yang'</span>);</span></div></pre></td></tr></table></figure>
+
+<p>user,password 是远程数据库上的用户名和密码</p>
+<h2 id="创建一个远程映射表">创建一个远程映射表</h2>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FOREIGN</span> <span class="keyword">TABLE</span> tcost_foreign (path <span class="built_in">integer</span>, cost <span class="built_in">numeric</span>) <span class="keyword">SERVER</span> postgres_server OPTIONS (schema_name <span class="string">'public'</span>, table_name <span class="string">'tcost'</span>);</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FOREIGN</span> <span class="keyword">TABLE</span></span></div><div class="line">test=#</div></pre></td></tr></table></figure>
+
+<h2 id="操作">操作</h2>
+<p>像它在本地表一样操作就可以了。</p>
+<p>资料：<br>[1] <a href="http://www.postgresql.org/docs/9.3/static/postgres-fdw.html" target="_blank" rel="external">官网</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/05/PostgreSQL使用-postgres-fdw-进行跨库操作/" data-id="k4k5ig2veam10xy5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post--转载-你知道数据库索引的工作原理吗？" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/05/-转载-你知道数据库索引的工作原理吗？/" class="article-date">
+  <time datetime="2015-01-05T12:10:18.000Z" itemprop="datePublished">1月 5 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/数据库/">数据库</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/01/05/-转载-你知道数据库索引的工作原理吗？/">[转载]你知道数据库索引的工作原理吗？</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>转载自：<a href="http://www.ituring.com.cn/article/986" target="_blank" rel="external">http://www.ituring.com.cn/article/986</a><br>作者：李松峰</p>
+<h2 id="发表于_2012-02-04_11:43">发表于 2012-02-04 11:43</h2>
+<blockquote>
+<p>译者按：今天在翻译时无意中搜索到StackOverflow中的这篇文章（问答），觉得有必要翻译出来。不仅因为文章本身写得精彩，更重要的是它昭示了一个写文章（特别是技术文章）的重要法则——5W1H。 原文在此 How does database indexing work?（作者：Xenph Yan）</p>
+</blockquote>
+<p>问：随着数据库的增大，既然索引的作用那么重要，有谁能抛开具体的数据库来解释一下索引的工作原理？</p>
+<p>答：（我自己来回答这个问题，:o-)）</p>
+<h2 id="为什么需要索引">为什么需要索引</h2>
+<p>数据在磁盘上是以块的形式存储的。为确保对磁盘操作的原子性，访问数据的时候会一并访问所有数据块。磁盘上的这些数据块与链表类似，即它们都包含一个数据段和一个指针，指针指向下一个节点（数据块）的内存地址，而且它们都不需要连续存储（即逻辑上相邻的数据块在物理上可以相隔很远）。</p>
+<p>鉴于很多记录只能做到按一个字段排序，所以要查询某个未经排序的字段，就需要使用线性查找，即要访问N/2个数据块，其中N指的是一个表所涵盖的所有数据块。如果该字段是非键字段（也就是说，不包含唯一值），那么就要搜索整个表空间，即要访问全部N个数据块。</p>
+<p>然而，对于经过排序的字段，可以使用二分查找，因此只要访问log2 N个数据块。同样，对于已经排过序的非键字段，只要找到更大的值，也就不用再搜索表中的其他数据块了。这样一来，性能就会有实质性的提升。</p>
+<h2 id="什么是索引">什么是索引</h2>
+<p>索引是对记录按照多个字段进行排序的一种方式。对表中的某个字段建立索引会创建另一种数据结构，其中保存着字段的值，每个值又指向与它相关的记录。这种索引的数据结构是经过排序的，因而可以对其执行二分查找。</p>
+<p>索引的缺点是占用额外的磁盘空间。因为索引保存在MyISAM数据库中，所以如果为同一个表中的很多字段都建立索引，那这个文件可能会很快膨胀到文件系统规定的上限。</p>
+<h2 id="索引的原理">索引的原理</h2>
+<p>首先，来看一个示例数据库表的模式：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">字段名              数据类型         在磁盘上的大小</div><div class="line"><span class="function"><span class="title">id</span> <span class="params">(<span class="variable">Primary</span> key)</span>   U<span class="title">nsigned</span> INT     4 字节</span></div><div class="line"><span class="title">firstName</span>          C<span class="title">har</span><span class="params">(<span class="number">50</span>)</span>         50 字节</div><div class="line"><span class="title">lastName</span>           C<span class="title">har</span><span class="params">(<span class="number">50</span>)</span>         50 字节</div><div class="line"><span class="title">emailAddress</span>       C<span class="title">har</span><span class="params">(<span class="number">100</span>)</span>        100 字节</div></pre></td></tr></table></figure>
+
+<p>注意：这里用<code>char</code>而不用<code>varchar</code>是为了精确地描述数据占用磁盘的大小。这个示例数据库中包含500万行记录，而且没有建立索引。接下来我们就分析针对这个表的两个查询：一个查询使用<code>id</code>（经过排序的键字段），另一个查询使用<code>firstName</code>（未经排序的非键字段）。</p>
+<h2 id="示例分析一">示例分析一</h2>
+<p>对于这个拥有r = 5 000 000条记录的示例数据库，在磁盘上要为每条记录分配 R = 204字节的固定存储空间。这个表保存在MyISAM数据库中，而这个数据库默认的数据库块大小为 B = 1024字节。于是，我们可计算出这个表的分块因数为 bfr = (B/R) = 1024/204 = 5，即磁盘上每个数据块保存5条记录。那么，保存整个表所需的数据块数就是 N = (r/bfr) = 5000000/5 = 1 000 000。</p>
+<p>使用线性查找搜索id字段——这个字段是键字段（每个字段的值唯一），需要访问 N/2 ＝ 500 000个数据块才能找到目标值。不过，因为这个字段是经过排序的，所以可以使用二分查找法，而这样平均只需要访问log2 1000000 = 19.93 = 20 个块。显然，这会给性能带来极大的提升。</p>
+<p>再来看看firstName字段，这个字段是未经排序的，因此不可能使用二分查找，况且这个字段的值也不是唯一的，所以要从表的开头查找末尾，即要访问 N = 1 000 000个数据块。这种情况通过建立索引就能得到改善。</p>
+<p>如果一条索引记录只包含索引字段和一个指向原始记录的指针，那么这条记录肯定要比它所指向的包含更多字段的记录更小。也就是说，索引本身占用的磁盘空间比原来的表更少，因此需要遍历的数据块数也比搜索原来的表更少。以下是firstName字段索引的模式：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">字段名         数据类型        在磁盘上的大小</div><div class="line">firstName     <span class="keyword">Char</span>(<span class="number">50</span>)        <span class="number">50</span> 字节</div><div class="line">（记录指针）    Special         <span class="number">4</span> 字节</div></pre></td></tr></table></figure>
+
+<p>注意：在MySQL中，根据表的大小，指针的大小可能是2、3、4或5字节。</p>
+<h2 id="示例分析二">示例分析二</h2>
+<p>对于这个拥有r = 5 000 000条记录的示例数据库，每条索引记录要占用 R = 54字节磁盘空间，而且同样使用默认的数据块大小 B = 1024字节。那么索引的分块因数就是 bfr = (B/R) = 1024/54 = 18。最终这个表的索引需要占用 N = (r/bfr) = 5000000/18 = 277 778个数据块。</p>
+<p>现在，再搜索firstName字段就可以使用索引来提高性能了。对索引使用二分查找，需要访问 log2 277778 = 18.09 = 19个数据块。再加上为找到实际记录的地址还要访问一个数据块，总共要访问 19 + 1 = 20个数据块，这与搜索未索引的表需要访问277 778个数据块相比，不啻于天壤之别。</p>
+<h2 id="什么时候用索引">什么时候用索引</h2>
+<p>创建索引要额外占用磁盘空间（比如，上面例子中要额外占用277 778个数据块），建立的索引太多可能导致磁盘空间不足。因此，在建立索引时，一定要慎重选择正确的字段。</p>
+<p>由于索引只能提高搜索记录中某个匹配字段的速度，因此在执行插入和删除操作的情况下，仅为输出结果而为字段建立索引，就纯粹是浪费磁盘空间和处理时间了；这种情况下不用建立索引。另外，由于二分查找的原因，数据的基数性（cardinality）或唯一性也非常重要。对基数性为2的字段建立索引，会将数据一分为二，而对基数性为1000的字段，则同样会返回大约1000条记录。在这么低的基数性下，索引的效率将减低至线性查找的水平，而查询优化器会在基数性小于记录数的30%时放弃索引，实际上等于索引纯粹只会浪费空间。</p>
+<h2 id="查询优化器的原理">查询优化器的原理</h2>
+<p>查询优化中最核心的问题就是精确估算不同查询计划的成本。优化器在估算查询计划的成本时，会使用一个数学模型，该模型又依赖于对每个查询计划中涉及的最大数据量的基数性（或者叫重数）的估算。而对基数性的估算又依赖于对查询中谓词选择因数<code>（selection factor of predicates）</code>的估算。过去，数据库系统在估算选择性时，要使用每个字段中值的分布情况的详尽统计信息，比如直方图。这种技术对于估算孤立谓词的选择符效果很好。然而，很多查询的谓词是相互关联的，例如 <code>select count(*) from R where R.make=&#39;Honda&#39; and R.model=&#39;Accord&#39;</code>。查询谓词经常会高度关联（比如，<code>model=&#39;Accord&#39;</code>的前提条件是<code>make=&#39;Honda&#39;</code>），而估计这种关联的选择性非常困难。查询优化器之所以会选择低劣的查询计划，一方面是因为对基数性估算不准，另一方面就是因为遗漏了很多关联性。而这也是为什么数据库管理员应该经常更新数据库统计信息（特别是在重要的数据加载和卸载之后）的原因。（译自维基百科：<a href="http://en.wikipedia.org/wiki/Query_optimizer。）" target="_blank" rel="external">http://en.wikipedia.org/wiki/Query_optimizer。）</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://dreamer-yzy.github.io/2015/01/05/-转载-你知道数据库索引的工作原理吗？/" data-id="in503toos8lg1mx2" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL/">SQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL基础/">SQL基础</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/索引/">索引</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post--翻译-使用部分索引来加速PostgreSQL" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" class="article-date">
@@ -181,7 +324,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" data-id="l2txuy60m6fvk9dz" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/04/-翻译-使用部分索引来加速PostgreSQL/" data-id="g2xqg85zsfwu4qk1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -407,7 +550,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/02/SQL注意事项/" data-id="m6g2945tnkvy282c" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/02/SQL注意事项/" data-id="glyh6wdg1l8wwzuw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL/">SQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL基础/">SQL基础</a></li></ul>
@@ -487,7 +630,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="v4lbnltnlymx15zn" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/PostgreSQL窗口函数中-ROWS-和-RANGE-模式的区别/" data-id="r8s8ma0rqei86zut" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a></li></ul>
@@ -537,7 +680,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="3ii1e4dcdzv83hwm" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/01/01/-翻译-为什么PostgreSQL的logo是一个大象？/" data-id="oirzteifbw21xcjf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
@@ -598,7 +741,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="kyt9nvw98yh9tfpg" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL查看及设置参数、单位、描述等信息/" data-id="oyscmq38i0zwhfue" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -660,7 +803,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="oqg9ykdi9vg4bavz" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL删除表空间/" data-id="5b0mu0wsbkehqyav" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -732,7 +875,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="jjes66m760z9n1ff" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" data-id="20ckqigiapw011vv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a></li></ul>
@@ -916,144 +1059,10 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="g9jr6xik8jth1biy" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL执行计划和成本因子详解/" data-id="tcuw4qnyt4p5dx59" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-PostgreSQL上选择MAX（COUNT）的数据出来" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" class="article-date">
-  <time datetime="2014-12-23T12:54:59.000Z" itemprop="datePublished">12月 23 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/">PostgreSQL上选择MAX（COUNT）的数据出来</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>昨天晚上，和同事讨论了一个SQL的问题，是如何选择根据某字段分组，然后取出MAX  COUNT(XX) 值的数据出来。例如数据是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">test=<span class="preprocessor"># select * from tgroup;</span></div><div class="line">id <span class="string">| age | point</span></div><div class="line">----+-----+-------</div><div class="line">  <span class="number">1</span> <span class="string">|   1 |    11</span></div><div class="line">  <span class="number">2</span> <span class="string">|   1 |    32</span></div><div class="line">  <span class="number">3</span> <span class="string">|   2 |    32</span></div><div class="line">  <span class="number">4</span> <span class="string">|   2 |    13</span></div><div class="line">  <span class="number">5</span> <span class="string">|   2 |    33</span></div><div class="line">  <span class="number">6</span> <span class="string">|   2 |    38</span></div><div class="line">  <span class="number">7</span> <span class="string">|   3 |    38</span></div><div class="line">  <span class="number">8</span> <span class="string">|   2 |    38</span></div><div class="line">  <span class="number">9</span> <span class="string">|   2 |    38</span></div><div class="line"> <span class="number">10</span> <span class="string">|   2 |    38</span></div><div class="line"> <span class="number">11</span> <span class="string">|   2 |    38</span></div><div class="line">(<span class="number">11</span> rows)</div><div class="line"> </div><div class="line">test=<span class="preprocessor">#</span></div></pre></td></tr></table></figure>
-
-<p>现在要选择出根据 POINT 分组里包含个数最大的值。大概意思是：MAX(COUNT(*)) FROM tgroup GROUP BY POINT;<br>所以，一开始，我们的SQL语句是（失败）：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">MAX</span>(<span class="keyword">COUNT</span>(*)) <span class="keyword">FROM</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point;</span></div></pre></td></tr></table></figure>
-
-<p>然而，我们得出的错误是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">aggregate <span class="summary">function calls cannot be nested</span></div></pre></td></tr></table></figure>
-
-<p>原来，聚集函数是不能嵌套调用的。</p>
-<p>然后又想到能不能使用子查询来完成。SQL如下（成功） ：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">sum</span>) <span class="keyword">from</span> ( <span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point) <span class="keyword">as</span> t;</span></div></pre></td></tr></table></figure>
-
-<p>再来一条，不使用子查询，而是使用ORDER BY 结合 LIMIT 来完成，SQL语句如下（成功):</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">sum</span> <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span></div></pre></td></tr></table></figure>
-
-<p>最后使用PG里的CTE表达式最容易理解（成功）：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div></pre></td></tr></table></figure>
-
-<p>那他们的性能是何呢？测试了一千一百五十多万的数据。每条SQL性能如何？</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> tgroup;</span></div><div class="line">  count  </div><div class="line"><span class="comment">----------</span></div><div class="line">11534336</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<h2 id="使用子查询的性能（POINT没有索引）">使用子查询的性能（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">sum</span>) <span class="keyword">from</span> ( <span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point) <span class="keyword">as</span> t;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 3055.716 ms</div></pre></td></tr></table></figure>
-
-<h2 id="ORDER_BY_结合_LIMIT（POINT没有索引）">ORDER BY 结合 LIMIT（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=# <span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="keyword">sum</span> <span class="keyword">from</span> tgroup <span class="keyword">group</span> <span class="keyword">by</span> point <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">sum</span> <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span></div><div class="line">   sum  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 3047.152 ms</div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<h2 id="使用CTE表达式（POINT没有索引）">使用CTE表达式（POINT没有索引）</h2>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">test=#  with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 25675.005 ms</div></pre></td></tr></table></figure>
-
-<p>后面为POINT添加索引，速度只有CTE表达式的加快了一倍（添加索引其实也不太科学，POINT的数据分布不均匀，重复的数据比较多，因为是通过 insert into select 的方式来生成大量数据的，只是想看一下添加索引后的效果）:</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">test=#  with cte as (<span class="operator"><span class="keyword">select</span> <span class="keyword">count</span>(*) over (<span class="keyword">partition</span> <span class="keyword">by</span> point) <span class="keyword">from</span> tgroup) <span class="keyword">select</span> <span class="keyword">max</span>(<span class="keyword">count</span>) <span class="keyword">from</span> cte;</span></div><div class="line">   max  </div><div class="line"><span class="comment">---------</span></div><div class="line">6291456</div><div class="line">(1 row)</div><div class="line"> </div><div class="line">Time: 11735.775 ms</div><div class="line">test=#</div></pre></td></tr></table></figure>
-
-<p>其他两种方式，并没有什么变化。看执行计划，其他两种依然是使用Seq Scan的方式，而添加了索引后，CTE的方式使用了 CTE Scan + IndexOnlyScan的方式。</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="variable">test=</span><span class="comment"># explain  with cte as (select count(*) over (partition by point) from tgroup) select max(count) from cte;</span></div><div class="line">                                                QUERY PLAN                                               </div><div class="line">----------------------------------------------------------------------------------------------------------</div><div class="line"> Aggregate  (<span class="variable">cost=</span><span class="number">955503.54</span>..<span class="number">955503.55</span> <span class="variable">rows=</span><span class="number">1</span> <span class="variable">width=</span><span class="number">8</span>)</div><div class="line">   CTE cte</div><div class="line">     -&gt;  WindowAgg  (<span class="variable">cost=</span><span class="number">0.43</span>..<span class="number">695980.98</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">4</span>)</div><div class="line">           -&gt;  Index Only Scan using tgroup_point on tgroup  (<span class="variable">cost=</span><span class="number">0.43</span>..<span class="number">522965.94</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">4</span>)</div><div class="line">   -&gt;  CTE Scan on cte  (<span class="variable">cost=</span><span class="number">0.00</span>..<span class="number">230686.72</span> <span class="variable">rows=</span><span class="number">11534336</span> <span class="variable">width=</span><span class="number">8</span>)</div><div class="line">(<span class="number">5</span> rows)</div><div class="line"> </div><div class="line">Time: <span class="number">0.909</span> ms</div></pre></td></tr></table></figure>
-
-<h1 id="总结">总结</h1>
-<p>看来没有 WHERE 或其他条件过滤数据而且数据量非常大的情况下，不适宜使用CTE表达式，因为它本质是一个一次性视图，生成一张这么大的视图，性能也快不到哪里去(可能使用物化视图会好点,不过没有测试过）。在大量数据情况下，还是使用普通的全表扫描比使用生成CTE再全表扫描来得快。这也应验了之前翻译篇文章的强调：CTE表达式的作用，真的不是为了加快查询速度，而仅仅是为了方便。冏 ~~。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/23/PostgreSQL上选择MAX（COUNT）的数据出来/" data-id="auaywcywui1ecxc3" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post--翻译-PostgreSQL版本策略" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/12/22/-翻译-PostgreSQL版本策略/" class="article-date">
-  <time datetime="2014-12-22T14:03:26.000Z" itemprop="datePublished">12月 22 2014</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/数据库/">数据库</a>►<a class="article-category-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/12/22/-翻译-PostgreSQL版本策略/">[翻译]PostgreSQL版本策略</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="http://www.postgresql.org/support/versioning/" target="_blank" rel="external">原文</a></p>
-<h2 id="版本策略">版本策略</h2>
-<p>我们始终建议所有用户都运行最新可用的次版本号的发行版，无论你正在使用哪个主版本的PostgreSQL。</p>
-<p>PostgreSQL主版本包含新特性并且大概一年发行一次。主版本是通过增加第一个或第二个版本数字来标识的，例如：9.1 到 9.2 </p>
-<p>主版本通常改变内部系统表和数据文件的格式。这些改变通常是非常复杂的，所以，我们不保证所有存储数据会向后兼容。主版本一般使用 备份/恢复 数据库或者使用 <code>pg_upgrade</code>模块来升级。</p>
-<p>次版本是版本号的第三部分的数字。例如：9.2.3 到 9.2.4。PostgreSQL团队仅在修复bugs时才会增加次版本号。所有用户都尽可能应该升级到最新的次版本号。虽然升级总是会有风险，PostgreSQL次版本升级仅修复那些经常遇到、安全性以及数据崩溃的bugs，以减少升级的风险。社区认为，不升级比升级更危险。</p>
-<p>升级次版本，不要求备份和恢复数据；仅仅只需停止数据库服务器，安装更新的二进制文件，然后重新启动服务器即可。对于某些发行版本，可能需要手工升级，所以，在升级之前，请必须阅读发行版的提示。</p>
-<h2 id="PostgreSQL发行版支持策略">PostgreSQL发行版支持策略</h2>
-<p>PostgreSQL目的是对主版本号完整地支持5年。</p>
-<p>当一个发行版不再受支持时，我们可能（这取决于我们提交者的决定）会继续为源代码进行打上关键的补丁。但项目不会产生正式发行或者二进制包，但是更新后的源代码可以从我们的代码控制系统里获取。</p>
-<p>该策略会在尽最大努力的基础上实行。在极端情况下，它可能在计划的生命周期内就不再被支持了；例如，如果在给定的主版本上发现有一个严重的bug超出了代码稳定性或者要牺牲程序序兼容性来解决的。在这种情况下，该主要版本就要提前退休了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/22/-翻译-PostgreSQL版本策略/" data-id="tbdv8czc0xecq273" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a></li></ul>
 
     </footer>
   </div>
@@ -1075,7 +1084,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">33</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">31</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/Web/">Web</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">35</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/">PostgreSQL</a><span class="category-list-count">33</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL基础学习/">PostgreSQL基础学习</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/PostgreSQL/PostgreSQL管理/">PostgreSQL管理</a><span class="category-list-count">2</span></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/日志/">日志</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/日志/程序员/">程序员</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/电影/">电影</a><span class="category-list-count">1</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/电影/动画/">动画</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/">编程</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/编程/Java/">Java</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/编程/算法/">算法</a><span class="category-list-count">5</span></li></ul></li></ul>
     </div>
   </div>
 
@@ -1084,7 +1093,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">20</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CTE表达式/">CTE表达式</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cookie/">Cookie</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/">HTTP</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/">Hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java-线程/">Java 线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Markdown/">Markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-优化/">PostgreSQL 优化</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-升级/">PostgreSQL 升级</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-基础学习/">PostgreSQL 基础学习</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-案例/">PostgreSQL 案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-管理/">PostgreSQL 管理</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-翻译/">PostgreSQL 翻译</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-读书笔记/">PostgreSQL 读书笔记</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PostgreSQL-高级/">PostgreSQL 高级</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL/">SQL</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SQL基础/">SQL基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Session/">Session</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring/">Spring</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/临时表/">临时表</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/动画/">动画</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/博客/">博客</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/啊哈！算法/">啊哈！算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电影/">电影</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/索引/">索引</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/集群/">集群</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -1102,7 +1111,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">20</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">25</span></li></ul>
     </div>
   </div>
 
@@ -1112,6 +1121,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/01/24/-翻译-手把手教你配置流复制/">[翻译]手把手教你配置流复制</a>
+          </li>
         
           <li>
             <a href="/2015/01/21/-翻译-PostgreSQL中的log-xlog和clog/">[翻译]PostgreSQL中的log, xlog和clog</a>
@@ -1127,10 +1140,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/01/14/集群中Session解决方案之Spring-Session/">集群中Session解决方案之Spring Session</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/14/-翻译-PostgreSQL中的死锁/">[翻译]PostgreSQL中的死锁</a>
           </li>
         
       </ul>
