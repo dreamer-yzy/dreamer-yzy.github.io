@@ -3,23 +3,29 @@
 <head>
   <meta charset="utf-8">
   
-  <title>关于Java中多线程造成的变量共享问题 | PostgreSQL DBA</title>
+  <title>Emacs org-mode基础学习 | PostgreSQL DBA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="起因
-在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
-123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
+  <meta name="description" content="Table of Contents1. 什么是 org-mode2. 入门2.1. 插入标题2.2. 插入链接2.3. 段落2.4. 插入表格2.5. 不同字体2.6. 插入分隔线2.7. 插入块2.8. 插入列表
+
+什么是 org-mode
+
+Org mode is for keeping notes, maintaining TODO lists, planning projects, and">
 <meta property="og:type" content="article">
-<meta property="og:title" content="关于Java中多线程造成的变量共享问题">
-<meta property="og:url" content="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/">
+<meta property="og:title" content="Emacs org-mode基础学习">
+<meta property="og:url" content="http://dreamer-yzy.github.io/2015/04/11/Emacs-org-mode基础学习/">
 <meta property="og:site_name" content="PostgreSQL DBA">
-<meta property="og:description" content="起因
-在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
-123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
+<meta property="og:description" content="Table of Contents1. 什么是 org-mode2. 入门2.1. 插入标题2.2. 插入链接2.3. 段落2.4. 插入表格2.5. 不同字体2.6. 插入分隔线2.7. 插入块2.8. 插入列表
+
+什么是 org-mode
+
+Org mode is for keeping notes, maintaining TODO lists, planning projects, and">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于Java中多线程造成的变量共享问题">
-<meta name="twitter:description" content="起因
-在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：
-123456789101112public boolean isOK(String invitationCode, boolean isSub) {       ValueOperations&lt;String, Object&gt; vo = redisTemplat">
+<meta name="twitter:title" content="Emacs org-mode基础学习">
+<meta name="twitter:description" content="Table of Contents1. 什么是 org-mode2. 入门2.1. 插入标题2.2. 插入链接2.3. 段落2.4. 插入表格2.5. 不同字体2.6. 插入分隔线2.7. 插入块2.8. 插入列表
+
+什么是 org-mode
+
+Org mode is for keeping notes, maintaining TODO lists, planning projects, and">
 
   
     <link rel="alternative" href="/atom.xml" title="PostgreSQL DBA" type="application/atom+xml">
@@ -86,14 +92,14 @@ ga('send', 'pageview');
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-关于Java中多线程造成的变量共享问题" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-Emacs-org-mode基础学习" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2014/12/25/关于Java中多线程造成的变量共享问题/" class="article-date">
-  <time datetime="2014-12-25T14:16:12.000Z" itemprop="datePublished">12月 25 2014</time>
+    <a href="/2015/04/11/Emacs-org-mode基础学习/" class="article-date">
+  <time datetime="2015-04-11T10:00:38.000Z" itemprop="datePublished">4月 11 2015</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/编程/">编程</a>►<a class="article-category-link" href="/categories/编程/Java/">Java</a>
+    <a class="article-category-link" href="/categories/emacs/">emacs</a>
   </div>
 
   </div>
@@ -104,7 +110,7 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      关于Java中多线程造成的变量共享问题
+      Emacs org-mode基础学习
     </h1>
   
 
@@ -112,21 +118,86 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="起因">起因</h2>
-<p>在自己写的一段代码中，使用到了Redis。代码的逻辑是这样子的，先取出数据，然后判断，再然后将该数据进行自减。代码如下：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="built_in">boolean</span> isOK(<span class="built_in">String</span> invitationCode, <span class="built_in">boolean</span> isSub) {</div><div class="line">       ValueOperations&lt;<span class="built_in">String</span>, <span class="built_in">Object</span>&gt; vo = redisTemplate.opsForValue();</div><div class="line">       <span class="built_in">Object</span> count = vo.get(key + invitationCode);</div><div class="line">       <span class="keyword">if</span> (count != <span class="literal">null</span> && Integer.parseInt(count.toString()) &gt;= <span class="number">1</span>) {</div><div class="line">           <span class="keyword">if</span> (isSub) {</div><div class="line">               vo.increment(key + invitationCode, -<span class="number">1</span>);</div><div class="line">           }</div><div class="line">           <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">       } <span class="keyword">else</span> {</div><div class="line">           <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">       }</div><div class="line">   }</div></pre></td></tr></table></figure>
+        <div id="table-of-contents"><br><h2>Table of Contents</h2><br><div id="text-table-of-contents"><br><ul><br><li><a href="#sec-1">1. 什么是 org-mode</a></li><br><li><a href="#sec-2">2. 入门</a><br><ul><br><li><a href="#sec-2-1">2.1. 插入标题</a></li><br><li><a href="#sec-2-2">2.2. 插入链接</a></li><br><li><a href="#sec-2-3">2.3. 段落</a></li><br><li><a href="#sec-2-4">2.4. 插入表格</a></li><br><li><a href="#sec-2-5">2.5. 不同字体</a></li><br><li><a href="#sec-2-6">2.6. 插入分隔线</a></li><br><li><a href="#sec-2-7">2.7. 插入块</a></li><br><li><a href="#sec-2-8">2.8. 插入列表</a></li><br></ul><br></li><br></ul><br></div><br></div>
 
-<h2 id="分析">分析</h2>
-<p>在提交代码的时候，总监复查代码时，提出这段代码可能在并发的时候出现问题：比如有两条线程，都进入到了if(sub){xxx}这段代码，这个时候，就造成了重复多次自减的问题。比如，如果该value是5，那应该减到0就不会再减了，但是这段代码在高并发情况下，可能会出现减到-1的情况。这虽然对于现有的业务影响不大，但是，如果是对于其他的一些比较敏感并且需要精确的数据时，就需要特别注意了。</p>
-<p>关键是之前一直没有怎么意识到这段代码可能会造成的问题。之前一直认为，对于局部变量是不会出现多线程问题的，这倒是没有错，但关键是如果是从其他地方传过来而且在多处地方允许被使用的情况下，就需要注意多线程问题。</p>
+<h1 id="什么是_org-mode">什么是 org-mode<a id="sec-1" name="sec-1"></a></h1>
+<blockquote>
+<p>Org mode is for keeping notes, maintaining TODO lists, planning projects, and authoring documents with a fast and effective plain-text system.</p>
+</blockquote>
+<p>这是官网的标语,我想这一句话,也概括了org-mode的功能.</p>
+<h1 id="入门">入门<a id="sec-2" name="sec-2"></a></h1>
+<h2 id="插入标题">插入标题<a id="sec-2-1" name="sec-2-1"></a></h2>
+<pre><code>*:一级标题
 
+**:二级标题
+
+<span class="keyword">...</span>
+
+注意,*号后面要留一个空格
+</code></pre><h2 id="插入链接">插入链接<a id="sec-2-2" name="sec-2-2"></a></h2>
+<pre><code>[<span class="link_label">[链接地址</span>][<span class="link_reference">title</span>]]
+</code></pre><h2 id="段落">段落<a id="sec-2-3" name="sec-2-3"></a></h2>
+<blockquote>
+<p>对于单个回车换行的文本，认为其属于同一个段落。</p>
+</blockquote>
+<h2 id="插入表格">插入表格<a id="sec-2-4" name="sec-2-4"></a></h2>
+<pre><code>任何以<span class="comment">"|"</span>字符的非空开头的都会被当作是表格的一部分.类似输入如下.(多利用<span class="class">TAB</span>键,会自动补全)
+
+<span class="localvars">| name | age |</span>
+|------+-----|
+<span class="localvars">| yzy  |</span> <span class="number">25</span>  |
+
+表格还可以类似excel那样,可以通过公式,让某列的值是某个函数的结果.非常简单及强大.^_^
+</code></pre><p>快速格式化以逗号,空格,tab等的文本为表格:<br>选中想要生成表格的内容,然后按:</p>
+<p><code>C-c |</code></p>
+<p>就会格式化为表格了</p>
+<h2 id="不同字体">不同字体<a id="sec-2-5" name="sec-2-5"></a></h2>
+<pre><code><span class="keyword">*</span>粗体<span class="keyword">*</span>
+
+/斜体/
+
++删除线+
+
+_下划线_
+
+下标： H_2 O
+
+上标： E=mc^2
+
+等宽字：  =git=  或者 ～git～
+</code></pre><h2 id="插入分隔线">插入分隔线<a id="sec-2-6" name="sec-2-6"></a></h2>
+<p>五条或以上的”-“就会显示为分隔线</p>
+<h2 id="插入块">插入块<a id="sec-2-7" name="sec-2-7"></a></h2>
+<pre><code>| 快捷键 | 标签                            |
+<span class="localvars">| s      |</span> #+begin_src … #+end_src         |
+<span class="localvars">| e      |</span> #+begin_example … #+end_example |
+<span class="localvars">| q      |</span> #+begin_quote … #+end_quote     |
+<span class="localvars">| v      |</span> #+begin_verse … #+end_verse     |
+<span class="localvars">| c      |</span> #+begin_center … #+end_center   |
+<span class="localvars">| l      |</span> #+begin_latex … #+end_latex     |
+| <span class="class">L</span>      | #+<span class="method">latex:</span>                        |
+<span class="localvars">| h      |</span> #+begin_html … #+end_html       |
+| <span class="class">H</span>      | #+<span class="method">html:</span>                         |
+<span class="localvars">| a      |</span> #+begin_ascii … #+end_ascii     |
+| <span class="class">A</span>      | #+<span class="method">ascii:</span>                        |
+<span class="localvars">| i      |</span> #+<span class="method">index:</span> line                   |
+| <span class="class">I</span>      | #+<span class="method">include:</span> line                 |
+</code></pre><h2 id="插入列表">插入列表<a id="sec-2-8" name="sec-2-8"></a></h2>
+<pre><code>无序列表项以‘-’、‘+’或者‘<span class="keyword">*</span>‘开头。
+
+有序列表项以‘1.’或者‘1)’开头。
+
+描述列表用‘::’将项和描述分开。
+
+有序列表和无序列表都以缩进表示层级。只要对齐缩进，不管是换行还是分块都认为是处于当前列表项。
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/" data-id="bfmp65z7gujezrt8" class="article-share-link">Share</a>
+      <a data-url="http://dreamer-yzy.github.io/2015/04/11/Emacs-org-mode基础学习/" data-id="o2ceymtn9oh4ozb1" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-基础学习/">Java 基础学习</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-线程/">Java 线程</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/emacs/">emacs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/org-mode/">org-mode</a></li></ul>
 
     </footer>
   </div>
@@ -134,19 +205,10 @@ ga('send', 'pageview');
     
 <nav id="article-nav">
   
-    <a href="/2014/12/26/PostgreSQL中-copy-和-copy-的区别/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          PostgreSQL中 copy 和 \copy 的区别
-        
-      </div>
-    </a>
   
-  
-    <a href="/2014/12/24/《麦兜，我和我妈妈》电影有感/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2015/04/11/我的Emacs之路/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《麦兜，我和我妈妈》电影有感</div>
+      <div class="article-nav-title">我的Emacs之路</div>
     </a>
   
 </nav>
@@ -157,7 +219,7 @@ ga('send', 'pageview');
 
   <section id="comments">
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-thread-key="post-关于Java中多线程造成的变量共享问题" data-title="关于Java中多线程造成的变量共享问题" data-url="http://dreamer-yzy.github.io/2014/12/25/关于Java中多线程造成的变量共享问题/"></div>
+    <div class="ds-thread" data-thread-key="post-Emacs-org-mode基础学习" data-title="Emacs org-mode基础学习" data-url="http://dreamer-yzy.github.io/2015/04/11/Emacs-org-mode基础学习/"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
